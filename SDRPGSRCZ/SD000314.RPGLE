@@ -18,14 +18,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD052526           Date 07Jan19               *
-      *  Prev Amend No. MD051393           Date 29Jun18               *
+      *  Last Amend No. MD052723           Date 27Feb19               *
+      *  Prev Amend No. MD052526           Date 07Jan19               *
+      *                 MD051393           Date 29Jun18               *
       *                 MD051045           Date 01Jun18               *
       *                 MD039670           Date 26Jul16               *
       *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052723 - Account Holder customer asset not included in     *
+      *             high value calculation. Added asset calculation   *
+      *             for non-account holders' customer.                *
       *  MD052526 - CRS High Value A/C Ident. Tool (SD000314)         *
       *             calculated wrong Total Asset amount               *      
       *  MD051393 - FATCAFilerCategory error                          *
@@ -82,6 +86,9 @@
       ** Joint Accounts by Non Account Holder
      FSDJACCL7  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDJACCD0:SDJACCD1)
+      *                                                                                     MD052723
+      ** Non Account Holders                                                                MD052723
+     FSDCUAHL3  IF   E           K DISK    INFSR(*PSSR)                                     MD052723
       *
       ** Retail Accounts by Customer
      FACCNTLC   IF   E           K DISK    INFSR(*PSSR)
@@ -735,6 +742,22 @@
      C     NHNAHO        READE     SDJACCL7
      C                   ENDDO
       *
+      ** Check for non account holder assets.                                               MD052723
+     C     NHNAHO        SETLL     SDCUAHL3                                                 MD052723
+     C     NHNAHO        READE     SDCUAHL3                                                 MD052723
+      *                                                                                     MD052723
+     C                   DOW       NOT %EOF(SDCUAHL3)                                       MD052723
+     C     CACUST        CHAIN     SDCRSHL1                                                 MD052723
+     C                   IF        %FOUND(SDCRSHL1) AND                                     MD052723
+     C                             ACRHVAL <> 'N'                                           MD052723
+     C                   MOVE      CACUST        WCust                                      MD052723
+      *                                                                                     MD052723
+      ** Calculate assets                                                                   MD052723
+     C                   EXSR      SRCalcAst                                                MD052723
+     C                   ENDIF                                                              MD052723
+     C     NHNAHO        READE     SDCUAHL3                                                 MD052723
+     C                   ENDDO                                                              MD052723
+      *                                                                                     MD052723
       ** Allocate high value indicator
      C                   SELECT
      C                   WHEN      CRTYPE = 'P' and WHvAM >= HghValInd

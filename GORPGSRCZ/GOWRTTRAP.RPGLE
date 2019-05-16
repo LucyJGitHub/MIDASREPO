@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD032884           Date 09Jun15               *
+      *  Last Amend No. MD033110           Date 02Mar19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD032884           Date 09Jun15               *
       *                 MD021097           Date 30Sep13               *
       *                 AR802337           Date 22Aug13               *
       *                 CLE148             Date 23Jul12               *
@@ -40,6 +41,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD033110 - GPPOSNPD records not updated during COB for GL.   *
+      *             Ensure that cob generated GL records will be      *
+      *             processed and GPPOSNPD regenerated.               *
+      *           - Applied for MD052681.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  MD032884 - Performance enhancement for GOCXCLTS. Recompiled  *
       *             due to change in GOTRAPPD.                        *
@@ -186,6 +191,10 @@
                                                                                             BUG12798
      C                   IF        GT_TRAP <> T_TRAP                                        BUG12798
      C                             OR ReservID <> *BLANKS                                   MD021097
+     C                             OR T_GCOB = 'Y'                                          MD033110
+     C                             AND GT_GCOB = 'Y'                                        MD033110
+     C                             AND T_MOD = 'GL'                                         MD033110
+     C                             AND T_CCID = 0                                           MD033110
      C                   EVAL      WUpdate = 'Y'                                            BUG12798
      C                   EVAL      GT_TRAP = T_TRAP
                                                                                 BUG2480

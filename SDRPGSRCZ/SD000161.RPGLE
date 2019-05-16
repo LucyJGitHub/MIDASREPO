@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CGL177             Date 11Jan16               *
-      *  Prev Amend No. MD046248           Date 05Feb18               *
+      *  Last Amend No. MD052508           Date 11Jan19               *
+      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *                 MD046248           Date 05Feb18               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL154             Date 13Oct14               *
       *                 CGL165             Date 15Feb17               *
@@ -37,6 +38,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052508 - FATCA High Value Account Identification Tool -    *
+      *             Tool calculated wrong Total Asset Amount          *
       *  CGL177 - CRS Reporting Phase 2                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -726,7 +729,8 @@
      C                   DOW       NOT %EOF(ACCNTLC)
       *
       ** Saving accounts
-     C                   IF        STYP = 'S' AND LDBL < 0
+     C**********         IF        STYP = 'S' AND LDBL < 0                                  MD052508
+     C                   IF        LDBL < 0                                                 MD052508
       ** Convert to high value currency
      C                   EVAL      PCurr = CCY
      C                   EXSR      SRRtvCurr

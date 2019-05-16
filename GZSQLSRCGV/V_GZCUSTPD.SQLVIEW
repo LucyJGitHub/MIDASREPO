@@ -6,8 +6,9 @@
 /*                                                                             */
 /*       (c) Finastra International Limited 2008                               */
 /*                                                                             */
-/*       Last Amend No. MD046248           Date 27Oct17                        */
-/*       Prev Amend No. CSW216             Date 14Mar16                        */
+/*       Last Amend No. MD051929           Date 20Sep18                        */
+/*       Prev Amend No. MD046248           Date 27Oct17                        */
+/*                      CSW216             Date 14Mar16                        */
 /*                      MD025828           Date 20May14                        */
 /*                      AR679445           Date 12Jun13                        */
 /*                      AR1090811          Date 25Feb13                        */
@@ -28,6 +29,8 @@
 /*                                                                             */
 /*-----------------------------------------------------------------------------*/
 /*                                                                             */
+/*       MD051929 - Customer Deactivated but not displayed as Inactive,        */
+/*                   intraday or after CoB                                     */
 /*       MD046248 - Finastra Rebranding                                        */
 /*       CSW216 - SWIFT Changes 2016 (Recompile)                               */
 /*       MD025828 - Customer Listview                                          */
@@ -70,11 +73,17 @@
 **BBMSTF,*BBIOPC,*BBDEAC,*BBDEDT,*ZONE,*DDSTAT,*********************************:   CAP187 AR1016530
   BBMSTF, BBIOPC, BBDEAC, BBDEDT, ZONE,                                         :          AR1016530
   BBIUSR, BBAUSR,                                                               :           AR679445
-  CASE WHEN BBTYLC = 'D' THEN 'DELETED' ELSE                                    :          AR1049752
-  CASE WHEN DDSTAT = 'C' THEN 'CLOSED'                                          :          AR1016530
-       ELSE 'ACTIVE'                                                            :          AR1016530
+**CASE*WHEN*BBTYLC*=*'D'*THEN*'DELETED'*ELSE************************************: AR1049752 MD051929
+**CASE*WHEN*DDSTAT*=*'C'*THEN*'CLOSED'******************************************: AR1016530 MD051929
+*******ELSE*'ACTIVE'************************************************************: AR1016530 MD051929
 **END AS DDSTAT,                                                                :AR1016530 AR1049752
-  END END AS DDSTAT,                                                            :          AR1049752
+**END*END*AS*DDSTAT,************************************************************: AR1049752 MD051929
+  CASE                                                                          :           MD051929
+     WHEN BBDTDL > 0 THEN 'DELETED'                                             :           MD051929
+     WHEN DDSTAT = 'C' THEN 'CLOSED'                                            :           MD051929
+     WHEN DDSTAT = 'I' THEN 'INACTIVE'                                          :           MD051929
+     ELSE 'ACTIVE'                                                              :           MD051929
+  END AS DDSTAT,                                                                :           MD051929
 **B.CQTAX,B.CQDBRC*||*B.CQDCST*||*B.CQDCCY*||*DIGITS(B.CQDACD)*||***************:    CER049 AR827743
   B.CQTAX,B.CQDBRC CONCAT B.CQDCST CONCAT B.CQDCCY CONCAT                       :           AR827743
   DIGITS(B.CQDACD) CONCAT                                                       :           AR827743

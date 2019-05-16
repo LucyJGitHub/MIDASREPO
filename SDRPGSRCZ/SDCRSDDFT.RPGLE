@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD051393           Date 29Jun18               *
-      *  Prev Amend No. MD050493           Date 05May18               *
+      *  Last Amend No. MD052431           Date 18Dec18               *
+      *  Prev Amend No. MD051393           Date 29Jun18               *
+      *                 MD050493           Date 05May18               *
       *                 MD041522           Date 21Sep16               *
       *                 MD040627           Date 18Aug16               *
       *                 CGL177             Date 11Jan16               *
@@ -20,6 +21,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052431 - CGL157 CRS - Maintain Customer got error 45049010 *
+      *             (The TIN for DE is not set when Local TIN         *
+      *             Mandatory is Y) even if Local TIN is input        *
       *  MD051393 - Authority Holder indicia                          *
       *  MD050493 - Phone Number and mailing Country values becomes   *
       *             blank after Confirm Authorise                     *
@@ -423,7 +427,10 @@
      C                   EVAL      DDCODO = 'Y'
      C                   EVAL      DFCODO = 'Y'
      C                   EVAL      CVCODO = 'Y'                                             MD050493
+     C                   IF        DDTINN = *BLANKS                                         MD052431
+     C                             AND DDTINO <> *BLANKS                                    MD052431
      C                   EVAL      DDTINN = DDTINO
+     C                   ENDIF                                                              MD052431
      C                   EVAL      DFTINO = DDTINO
      C                   IF        DDREPT <> 'N'
      C                             AND DDREPT <> ' '
@@ -802,7 +809,10 @@
      C                   EVAL      DDREPT = 'Y'
      C                   EVAL      DFREPT = 'Y'
      C                   EVAL      CVREPT = 'Y'                                             MD050493
+     C                   IF        DDTINN = *BLANKS                                         MD052431
+     C                             AND DDTINO <> *BLANKS                                    MD052431
      C                   EVAL      DDTINN = DDTINO
+     C                   ENDIF                                                              MD052431
      C                   EVAL      DFTINO = DDTINO
      C                   EXSR      SRVChk
      C                   EXSR      SRVDft
@@ -1006,7 +1016,10 @@
      C     SRVChk        BEGSR
 
      C                   IF        DDCTRR = WCOLC
+     C                   IF        DDTINN = *BLANKS                                         MD052431
+     C                             AND DDTINO <> *BLANKS                                    MD052431
      C                   EVAL      DDTINN = DDTINO
+     C                   ENDIF                                                              MD052431
      C                   EVAL      DFTINO = DDTINO
      C                   EVAL      DDCODO = 'Y'
      C                   EVAL      DFCODO = 'Y'

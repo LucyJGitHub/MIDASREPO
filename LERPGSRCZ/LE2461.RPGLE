@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *  Last Amend No. MD052819           Date 17Apr19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE141             Date 08Feb16               *
       *                 MD031736           Date 02Mar15               *
       *                 AR988331           Date 03Dec12               *
       *                 CLE134             Date 01Aug12               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052819 - Use correct datatype for rate fixing days.        *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           for LE Transactions                                 *
@@ -154,6 +156,7 @@
  
      D WRUN            S              1
      D WBaseRate       S             11P 7
+     D PDaysBckS       S              2S 0                                                  MD052819
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CLE141
      D ArrCCY          DS                                                                     CLE141
      D  L0C1PR                                                                                CLE141
@@ -275,10 +278,12 @@
      C                   Else                                                               MD031736
      C                   Z-add     0             PDaysBck                                   MD031736
      C                   Endif                                                              MD031736
+     C                   Z-add     PDaysBck      PDaysBckS                                  MD052819
      C                   IF        CLE141 = 'Y'                                               CLE141
      C                   CALL      'LEZBDYRF'                                                 CLE141
      C                   PARM      L0VDAT        PInpOutDay                                   CLE141
-     C                   PARM                    PDaysBck                                     CLE141
+     C***********        PARM                    PDaysBck                            CLE141 MD052819
+     C                   PARM                    PDaysBckS                                  MD052819
      C                   PARM                    ArrCCY                                       CLE141
      C                   PARM                    ArrLOC                                       CLE141
      C                   PARM      'B'           PMODE             1                          CLE141

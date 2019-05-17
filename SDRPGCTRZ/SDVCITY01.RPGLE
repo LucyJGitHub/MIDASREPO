@@ -17,10 +17,11 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD050145           Date 30Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 256481B            Date 24Nov08               *
+      *                 256481B            Date 24Nov08               *
       *                 256564             Date 17Sep08               *
       *                 250804A            Date 11Oct07               *
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -32,6 +33,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050145 - Wrong defaulting of Account Owner/Family,         *
+      *             Company Name/First Street of Residence 1,2 fields *
+      *             in Additional Customer Details 1 on Amend         *
+      *             Applied for MD052499.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  256481B - Do not default value for Additional Customer Name  *
       *            and Address if system value is not required        *
@@ -189,15 +194,15 @@
       *****************************************************************
  
      C     SRVCITY       BEGSR
- 
-      ** Set up City, default to BBCNA4 when blank
- 
-     C                   IF        DDCITY = *Blank
-     C                   IF        SVAL11='Y'                                                256481B
+      **********                                                                            MD050145
+      ***Set*up*City,*default*to*BBCNA4*when*blank*********************                     MD050145
+      **********                                                                            MD050145
+     C**********         IF        DDCITY = *Blank                                          MD050145
+     C**********         IF        SVAL11='Y'                                       256481B MD050145
      C**********         EVAL      DDCITY = BBCNA4                                           250804A
-     C                   EVAL      DDCITY = BBCRTN                                           250804A
-     C                   ENDIF                                                               256481B
-     C                   ENDIF
+     C**********         EVAL      DDCITY = BBCRTN                                  250804A MD050145
+     C**********         ENDIF                                                      256481B MD050145
+     C**********         ENDIF                                                              MD050145
  
       ***City*is*Mandatory                                                                    232543
       ** City is Mandatory if Status is 'D'isclosed                                           232543

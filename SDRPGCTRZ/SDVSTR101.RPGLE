@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR808915           Date 29Jul11               *
+      *  Last Amend No. MD050590           Date 30Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR808915           Date 29Jul11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256481B            Date 24Nov08               *
@@ -33,6 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050590 - Customer Screen not defaulting correctly          *
+      *             Appleid for MD052499.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  AR808915 - Old value are kept in the additional customer     *
       *             detail (Child:AR808916)                           *
@@ -192,15 +195,15 @@
       *****************************************************************
  
      C     SRVCNA3       BEGSR
- 
-      ** Set up Street of Residence 1, default to BBCNA2 when blank
- 
-     C                   IF        DDCNA3 = *Blanks
-     C                   IF        SVAL11='Y'                                                256481B
+      **********                                                                            MD050590
+      ***Set*up*Street*of*Residence*1,*default*to*BBCNA2*when*blank****                     MD050590
+      **********                                                                            MD050590
+     C**********         IF        DDCNA3 = *Blanks                                         MD050590
+     C**********         IF        SVAL11='Y'                                       256481B MD050590
      C**********         EVAL      DDCNA3 = BBCNA2                                           250804A
-     C                   EVAL      DDCNA3 = BBCNA3                                           250804A
-     C                   ENDIF                                                               256481B
-     C                   ENDIF
+     C**********         EVAL      DDCNA3 = BBCNA3                                  250804A MD050590
+     C**********         ENDIF                                                      256481B MD050590
+     C**********         ENDIF                                                              MD050590
  
       ** If Street of Residence 1 still blank, this is a mandatory entry
       ** If Status is 'D'isclosed                                                             232543

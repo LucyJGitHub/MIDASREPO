@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD022651           Date 10Oct13               *
+      *  Last Amend No. MD050145           Date 30Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD022651           Date 10Oct13               *
       *                 MD021510           Date 09Aug13               *
       *                 AR978528           Date 21May12               *
       *                 CER059             Date 19Jul10               *
@@ -38,6 +39,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050145 - Wrong defaulting of Account Owner/Family,         *
+      *             Company Name/First Street of Residence 1,2 fields *
+      *             in Additional Customer Details 1 on Amend         *
+      *             Applied for MD052499.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  MD022651 - Impossible to amend additional customer details   *
       *  MD021510 -  Account Owner/Family and Company Name/First Name *
@@ -302,16 +307,16 @@
 als  C                   MOVEL     'USR4770'     MsgIDXAr(Idx)
      C                   GOTO      ENDVAL
      C                   ENDIF
-                                                                                            BUG22667
-      ** Set up First Name, default to BBCNA2 when blank                                    BUG22667
-      ** And for customer only (not for non account holder)                                 AR978528
-                                                                                            BUG22667
-     C                   IF        DDCNA2 = *Blanks                                         BUG22667
+      **********                                                                   BUG22667 MD050145
+      ***Set*up*First*Name,*default*to*BBCNA2*when*blank***************            BUG22667 MD050145
+      ***And*for*customer*only*(not*for*non*account*holder)************            AR978528 MD050145
+      **********                                                                   BUG22667 MD050145
+     C**********         IF        DDCNA2 = *Blanks                                BUG22667 MD050145
      C**********                   AND DDCUST <> *BLANKS                           AR978528 MD021510
-     C                             AND DDCUST <> *BLANKS AND                                MD021510
-     C                             DDACTN = 'I'                                             MD021510
-     C                   EVAL      DDCNA2 = BBCNA2                                          BUG22667
-     C                   ENDIF                                                              BUG22667
+     C**********                   AND DDCUST <> *BLANKS AND                       MD021510 MD050145
+     C**********                   DDACTN = 'I'                                    MD021510 MD050145
+     C**********         EVAL      DDCNA2 = BBCNA2                                 BUG22667 MD050145
+     C**********         ENDIF                                                     BUG22667 MD050145
  
       ** First Name should start with a character
  

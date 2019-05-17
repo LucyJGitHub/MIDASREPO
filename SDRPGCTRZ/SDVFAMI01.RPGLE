@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD021510           Date 09Aug13               *
+      *  Last Amend No. MD050145           Date 30Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD021510           Date 09Aug13               *
       *                 CER059             Date 19Jul10               *
       *                 BUG22667           Date 11Feb09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -35,6 +36,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050145 - Wrong defaulting of Account Owner/Family,         *
+      *             Company Name/First Street of Residence 1,2 fields *
+      *             in Additional Customer Details 1 on Amend         *
+      *             Applied for MD052499.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  MD021510 -  Account Owner/Family and Company Name/First Name *
       *              are being populated from Repair Queue even no    *
@@ -223,14 +228,14 @@
       *****************************************************************
  
      C     SRVCNA1       BEGSR
-                                                                                            BUG22667
-      ** Set up Family Name, default to BBCNA1 when blank                                   BUG22667
-                                                                                            BUG22667
+      **********                                                                   BUG22667 MD050145
+      ***Set*up*Family*Name,*default*to*BBCNA1*when*blank**************            BUG22667 MD050145
+      **********                                                                   BUG22667 MD050145
      C**********         IF        DDCNA1 = *Blanks                                BUG22667 MD021510
-     C                   IF        DDCNA1 = *BLANKS AND                                     MD021510
-     C                             DDACTN = 'I'                                             MD021510
-     C                   EVAL      DDCNA1 = BBCNA1                                          BUG22667
-     C                   ENDIF                                                              BUG22667
+     C**********         IF        DDCNA1 = *BLANKS AND                            MD021510 MD050145
+     C**********                   DDACTN = 'I'                                    MD021510 MD050145
+     C**********         EVAL      DDCNA1 = BBCNA1                                 BUG22667 MD050145
+     C**********         ENDIF                                                     BUG22667 MD050145
  
       ** Family Name should start with a character
  

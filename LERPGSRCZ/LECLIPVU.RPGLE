@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD052478           Date 15Jan19               *
-      *  Prev Amend No. MD052134           Date 18Oct18               *
+      *  Last Amend No. MD053143           Date 04Apr19               *      
+      *  Prev Amend No. MD052478           Date 15Jan19               *
+      *                 MD052134           Date 18Oct18               *
       *                 MD034521A          Date 14Sep15               *
       *                 MD039547           Date 20Sep16               *
       *                 MD041649           Date 06Oct16               *
@@ -135,6 +136,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053143 - CLE141 Business Day Convention processing to be   *
+      *             applied for loan start date rate fixing.          *
       *  MD052478 - Dump occur in LECLIPR due to parameter mismatch.  *
       *  MD052134 - Serious Midas Error Occurred when attempting to   *
       *             input a LE Particiapation Sold                    *
@@ -1969,7 +1972,9 @@
       ** Customer Loans Primary Details OK inds                                              BUG3721
      C                   PARM                    ClilFilFmt                                  BUG3721
      C                   PARM                    TranInPrim                                  BUG3721
-     C                   PARM                    OKClPrim
+     C                   PARM                    OKClPrim                                                                                           MD053143
+      ** Business Day Convention Screen Detail                                              MD053143
+     C                   PARM                    TranInSeven                                MD053143
 
       * OUTPUTS
 

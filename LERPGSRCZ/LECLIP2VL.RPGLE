@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD052279           Date 14Nov18               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. MD053143           Date 04Apr19               *      
+      *  Prev Amend No. MD052279           Date 14Nov18               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034840           Date 10Feb17               *
       *                 MD041917           Date 20Dec16               *
@@ -114,6 +115,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053143 - CLE141 Business Day Convention processing to be   *
+      *             applied for loan start date rate fixing.          *      
       *  MD052279 - Negative rate loan got unexpected error 45021183  *
       *             (Entry is not allowed for discounted loans or zero*
       *             interests) and 45021165 (Valid rate is req. if no *
@@ -488,6 +491,11 @@
      D TranInScr3    E DS                  EXTNAME(LECLI3PD)                                 BUG8526
       ** Incoming Transaction screen 3                                                       BUG8526
       *
+     D TranInScr7    E DS                  EXTNAME(LECLI7PD)                                MD053143
+     D  TrCurPR                1     30                                                     MD053143
+     D  TrLocPR               31     60                                                     MD053143
+      ** Incoming Transaction - Business Day Conv Screen                                    MD053143
+                                                                                            MD053143
      D ClilFilFmt    E DS                  EXTNAME(CLOANCL) PREFIX(@@)
       * (Current) Loans record CL in file Format
  
@@ -766,6 +774,11 @@
      D PFinalRate      S             11P 7                                                  AR847249
      D PModule         S              6                                                       CRE073
      D PCurset         S              2  0                                                    CRE073
+     D CLE141          S              1                                                     MD053143
+     D PInpOutDay      S              5  0                                                  MD053143
+     D PDaysBck        S              2S 0                                                  MD053143
+     D PMODE           S              1                                                     MD053143
+     D StartRateFix    S              1                                                     MD053143
       *                                                                                       CLE064
      D XDAYS           S              4S 0                                                    CLE064
      D*XFREQ****       S              1  0                                           CLE064 AR747825
@@ -775,7 +788,8 @@
       **                                                                                    MD031736
      D PSysVal01       S             20A   INZ('UseRateFixingDayatSt')                      MD031736
      D PCurSet01       S            200A                                                    MD031736
-     D PSysVal02       S             20A                                                    MD031736
+     D*PSysVal02       S             20A                                           MD031736 MD053143
+     D PSysVal02       S             20A   INZ('RateFixingAtStartDat')                      MD053143
      D PCurSet02       S            200A                                                    MD031736
      D PSysVal03       S             20A                                                    MD031736
      D PCurSet03       S            200A                                                    MD031736
@@ -1223,6 +1237,7 @@
      C     DDBRTT        ANDNE     *BLANKS
      C     BPBRCF        ANDEQ     'Y'
      C     WSVVD         IFLT      BAVDNR
+     C     StartRateFix  OREQ      'Y'                                                      MD053143
      C                   Z-ADD     WSVVD         ZDAYNO                                       246516
      C                   MOVE      @KEY1         ZCCY                                         246516
      C                   MOVE      *BLANKS       ZLOC                                         246516
@@ -1231,9 +1246,25 @@
      C                   Else                                                               MD031736
      C                   Z-Add     0             ZNRDYS                                     MD031736
      C                   Endif                                                              MD031736
+      *                                                                                     MD053143
+     C     CLE141        IFEQ      'Y'                                                      MD053143
+     C                   CALL      'LEZBDYRF'                                               MD053143
+     C                   PARM      WSVVD         PInpOutDay                                 MD053143
+     C                   PARM      ZNRDYS        PDaysBck                                   MD053143
+     C                   PARM                    TrCurPR                                    MD053143
+     C                   PARM                    TrLocPR                                    MD053143
+     C                   PARM      'B'           PMODE                                      MD053143
+     C                   PARM      *ZEROS        @KEY3                                      MD053143
+     C                   ELSE                                                               MD053143
      C                   EXSR      ZBKDT                                                      246516
      C                   MOVEL     ZDYNBR        @KEY3                                        246516
+     C                   ENDIF                                                              MD053143
      C                   MOVEL     DDBRTT        @KEY2N                                       246516
+      *                                                                                     MD053143
+     C     StartRateFix  IFEQ      'Y'                                                      MD053143
+     C     @KEY3         ANDGE     BAVDNR                                                   MD053143
+     C                   Z-ADD     BANBRT        BASER                                      MD053143
+     C                   ELSE                                                               MD053143
      C                   CALL      'AOBSHSR0'                                                 246516
      C                   PARM      *BLANKS       @RTCD                                        246516
      C                   PARM      '*KEY   '     @OPTN                                        246516
@@ -1246,6 +1277,7 @@
      C                   ELSE                                                                 246516
      C                   Z-ADD     BACBSR        BASER
      C                   END                                                                  246516
+     C                   ENDIF                                                              MD053143
      C                   ELSE
      C                   Z-ADD     BANBRT        BASER
      C                   ENDIF
@@ -5963,6 +5995,10 @@ E004 C                   ENDIF
      C                   PARM                    CliLFilFmt                                  BUG3721
      C                   PARM                    TranInScr1                                  BUG3721
      C                   PARM                    OKFlags1DS                                  BUG3721
+                                                                                            MD053143
+      ** Business Day Convention Screen Detail                                              MD053143
+     C                   PARM                    TranInScr7                                 MD053143
+      ** OUTPUTS                                                                            MD053143
       *
       ***  Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS
@@ -6293,6 +6329,19 @@ E004 C                   ENDIF
      C                   IF        @RTCD = *BLANKS                                            CRE073
      C                   EVAL      CRE073 = 'Y'                                               CRE073
      C                   ENDIF                                                                CRE073
+      *                                                                                     MD053143
+      ** Determine if CLE141 is switched on                                                 MD053143
+      *                                                                                     MD053143
+     C                   MOVE      'N'           CLE141                                     MD053143
+     C                   CALLB     'AOSARDR0'                                               MD053143
+     C                   PARM      *BLANKS       @RTCD                                      MD053143
+     C                   PARM      '*VERIFY'     @OPTN                                      MD053143
+     C                   PARM      'CLE141'      @SARD                                      MD053143
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD053143
+      *                                                                                     MD053143
+     C                   IF        @RTCD = *BLANKS                                          MD053143
+     C                   EVAL      CLE141 = 'Y'                                             MD053143
+     C                   ENDIF                                                              MD053143
       *                                                                                     MD031736
       ** Check if CLE011 is ON.                                                             MD031736
       *                                                                                     MD031736
@@ -6319,6 +6368,7 @@ E004 C                   ENDIF
      C                   IF        CLE011 = 'Y'                                             MD031736
       *                                                                                     MD031736
      C                   EVAL      RateFixSt = 'N'                                          MD031736
+     C                   EVAL      StartRateFix = 'N'                                       MD053143
       *                                                                                     MD031736
      C                   CALLB     'AOSVALR0'                                               MD031736
      C                   PARM      *BLANKS       PRtCd                                      MD031736
@@ -6345,6 +6395,7 @@ E004 C                   ENDIF
       *                                                                                     MD031736
      C                   IF        PRtCd = *BLANKS                                          MD031736
      C                   MOVEL     PCurSet01     RateFixSt                                  MD031736
+     C                   MOVEL     PCurSet02     StartRateFix                               MD053143
      C                   ELSE                                                               MD031736
       *                                                                                     MD031736
      C                   If        PRtcd <> '*NRF   ' AND                                   MD031736

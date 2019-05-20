@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD029076           Date 03Mar15              */
+/*       Last Amend No. MD051718           Date 17May18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD029076           Date 03Mar15              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -40,6 +41,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD051718 - REC0880 always fails during the day with         */
+/*                  'Internal Failure in compiler or subroutine' in  */
+/*                  GOGLOBGL                                         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD029076 - REC0880 create dumps in Module GOGLOBGL calling  */
 /*                  GPGLJENHPD                                       */
@@ -87,7 +91,7 @@
 /*********************************************************************/
 /*                                                                   */
              PGM        PARM(&BNUM &WRKSTN)
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
@@ -183,11 +187,11 @@
 /* START OF FIX S01413 */
              CALL       PGM(SF0410) PARM(&GROUP &USER &SLEVEL &TIMEO  +
                           &ERRORC &MULT)
- 
+
              IF         COND(&MULT *EQ '  ') THEN(DO)
                 CHGVAR     VAR(&MULT) VALUE('GB')
              ENDDO
- 
+
              CHGVAR     VAR(&MIDAS) VALUE(&MULT *CAT 'MIDAS')
              OVRMSGF    MSGF(MIDAS) TOMSGF(&MIDAS)
              CHGVAR     VAR(&CGMSGF) VALUE(&MULT *CAT 'CGUSRMSG')     /*088206*/
@@ -245,10 +249,10 @@
              GOTO       CMDLBL(ABNOR)                                                     /*CCG015*/
              ENDDO                                                                        /*CCG015*/
              ENDDO                                                                        /*205448*/
- 
+
 /*/COPY WNCPYSRC,REC0880002                                          */
              CALL PGM(RE0880) PARM(&BNUM)
- 
+
              MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(DO)
              GOTO       CMDLBL(ABNOR)                                 /*136208*/
              ENDDO                                                    /*136208*/
@@ -266,20 +270,20 @@
              GOTO       CMDLBL(ABNOR)                                 /*136208*/
              ENDDO                                                    /*136208*/
              ENDDO                                                    /*192597*/
- 
+
              SNDPGMMSG  MSG('REC0880 - Ended normally for batch' +
                           *BCAT &BNUM *BCAT 'from device' +
                           *BCAT &WRKSTN) TOMSGQ(MRUNQ)                                   /*241672A*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                   /*241672A*/
                                                                                          /*241672A*/
              GOTO       CMDLBL(ENDPGM)                                /*136208*/
- 
+
 ABNOR:                                                                /*136208*/
              IF         COND(%SWITCH(XX1XXXXX)) THEN(DO)                                 /*241672A*/
              CHGVAR     VAR(&GLHLCK) VALUE('Y')                                          /*241672A*/
              MONMSG     MSGID(RPG0000 CPF0000 MCH0000)                                   /*241672A*/
              ENDDO                                                                       /*241672A*/
- 
+
 /* UDC module must be on in order to call a Correspondence Manager program                /*205448*/
              IF         COND(%SST(&FMT 101 1) *EQ 'Y') THEN(DO)                           /*205448*/
              CHGVAR     VAR(&ACTION) VALUE('*CLEAR  ')                                    /*CCG015*/
@@ -298,7 +302,7 @@ ABNOR:                                                                /*136208*/
              MONMSG     MSGID(RPG0000 CPF0000 MCH0000)                /*136208*/
 /***************GOTO ENDPGM                                           /*136208*/
 /************ENDDO                                                    /*136208*/
- 
+
 /*/COPY WNCPYSRC,REC0880003                                          */
              IF COND(%SWITCH(XXXXXX11)) THEN(DO)
                RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)                    /*E17597*/
@@ -345,7 +349,7 @@ ABNOR:                                                                /*136208*/
                           *BCAT &BNUM *BCAT 'from device' +
                           *BCAT &WRKSTN) TOMSGQ(MRUNQ MOPERQ)                            /*241672A*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                   /*241672A*/
- 
+
 /*DPGM:      ENDPGM                                                   /*E17597*/
 /*DPGM:******ENDCMTCTL                                                /*E17597*/
 /*ENDPGM:**/                                                                  /*CSC022*/ /*BUG2714*/
@@ -356,7 +360,7 @@ ABNOR:                                                                /*136208*/
              ENDCMTCTL                                                                   /*BUG2714*/
              MONMSG     MSGID(RPG0000 CPF0000 MCH0000)                /*136208*/
 /**********  ENDDO                                                            /*CSC022*/ /*BUG2714*/
-             RCLRSC                                                   /*S01117*/
+/**********  RCLRSC */                                                           /*S01117 MD051718*/
              MONMSG     MSGID(RPG0000 CPF0000 MCH0000)                /*136208*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')

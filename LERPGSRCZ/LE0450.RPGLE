@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD047693           Date 30Jan18               *
-      *  Prev Amend No. MD050018           Date 05Nov18               *
+      *  Last Amend No. AR1097303          Date 16May19               *
+      *  Prev Amend No. MD047693           Date 30Jan18               *
+      *                 MD050018           Date 05Nov18               *
       *                 MD050007           Date 05Nov18               *
       *                 MD050139           Date 23Mar18               *
       *                 MD052549           Date 07Jan19               *
@@ -402,9 +403,13 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1097303 - After Loan Rollover Date, the fields ISDT and    *
+      *              FMDT on CLOANCL are changed.  Rename ISDT and    *
+      *              FMDT (Initial start/Final maturity date).        *
+      *            - Applied for MD-53456                             *
       *  MD047693 - Rollover Dates are not 'modified' to be the       *
       *             Previous Working Day, if the Month End falls on a *
-      *             holiday                                           *      
+      *             holiday                                           *
       *  MD050018 - PDP Enhancement: Generate Projected Accnt Movment *
       *             for Input Cycle Principal Increase Events to PDCL *
       *  MD050007 - PDP Enhancement: Manual PDCL Generates Projected  *
@@ -4184,6 +4189,8 @@ L118 I                             P   72   77 7RTSPL
      I              BICC                        BICCX                                       AR855749
      I              XRFI                        XRFIX                                       AR855749
      I              XRFN                        XRFNX                                       AR855749
+     I              ISDT                        ISDTX                                      AR1097303
+     I              FMDT                        FMDTX                                      AR1097303
      I              LOIC                        LOICX
      I              OCDT                        OCDTX                                             AR
      I              EAIR                        EAIRX                                             AR

@@ -17,10 +17,11 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD045076           Date 14May19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. BUG21078           Date 17Sep08               *
+      *                 BUG21078           Date 17Sep08               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01.03 ----------------------------------------*
@@ -33,6 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD045076 - Statement Frequency Issue during Deletion of      *
+      *             Customer                                          *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG21078 - Apply fix BUG14245                                *
       *  BUG14245 - Frequency Statement Validation should be done     *
@@ -171,14 +174,17 @@
      C                   Eval      MsgIdXAr(Idx) = 'USR0600'
      C                   ENDIF
  
-      ** If classification is S D I. Statement Frequency should not be blank                BUG14245
+      ***If*classification*is*S*D*I.*Statement*Frequency*should*not*be*blank       BUG14245 MD045076
+      ** If classification is S or D,Statement Frequency should not be blank                MD045076
                                                                                             BUG14245
-     C                   IF        (DDCLAS = 'S' or DDCLAS = 'D' or                         BUG14245
-     C                              DDCLAS = 'I') and                                       BUG14245
+     C**********         IF        (DDCLAS = 'S' or DDCLAS = 'D' or                BUG14245 MD045076
+     C**********                    DDCLAS = 'I') and                              BUG14245 MD045076
+     C                   IF        (DDCLAS = 'S' or DDCLAS = 'D') and                       MD045076
      C                              DDSTFQ = *BLANKS                                        BUG14245
                                                                                             BUG14245
       ** Err: 'Statement Frequency Required if classification is                            BUG14245
-      ** I D or S'                                                                          BUG14245
+      ** I D or S'                                                                 BUG14245 MD045076
+      ** D or S'                                                                            MD045076
      C                   Eval      DDSTFQOK = 'N'                                           BUG14245
      C                   Eval      Idx = Idx + 1                                            BUG14245
      C                   Eval      FldNamXAr(Idx) = 'DDSTFQ    '                            BUG14245

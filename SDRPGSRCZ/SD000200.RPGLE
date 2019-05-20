@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034087           Date 11Apr15               *
+      *  Last Amend No. MD052648           Date 20May19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD034087           Date 11Apr15               *
       *                 MD034079           Date 10Apr15               *
       *                 MD033128           Date 25Feb15               *
       *                 MD036917           Date 22Dec15               *
@@ -23,6 +24,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD052648 - FATCA Electronic Search for US Indicia Tool: not  *
+      *             possible to select from SD table via '?' and ‘1’  *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034087 - Incorrect behavior when selecting a record in     *
       *             FATCA Classification Code                         *
@@ -46,11 +49,11 @@
       *****************************************************************
      FSD000200DFCF   E             WORKSTN SFILE(SD000200S0:SflRRN)
      F                                     INFSR(*PSSR)
- 
+
       ** Classification Codes File - Output
      F***SDFATCPD  IF   E             DISK                                                  MD036917
      FSDFATCL1  IF   E           K DISK                                                     MD036917
- 
+
      D Up              C                   'ABCDEFGHIJKLMNOPQRS-                            MD029834
      D                                     TUVWXYZ'                                         MD029834
      D Lo              C                   'abcdefghijklmnopqrs-                            MD029834
@@ -93,7 +96,7 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS ICD retrieval
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
@@ -103,17 +106,17 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for access programs, Long Data Structure
      D FatCDS        E DS                  EXTNAME(SDFATCPD)
- 
+
      D*/COPY ZACPYSRC,PSDS
- 
+
      DPSDS            SDS
- 
+
       ** Procedure name
      D PSProcName        *PROC
- 
+
       ** Job name
      D PSJobName             244    253
- 
+
       ** User name
      D PSUser                254    263
      D/COPY ZACPYSRC,STD_D_SPEC
@@ -156,11 +159,11 @@
      C                   MOVEL     @OPTN         DBKEY                          ************
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   EVAL      *IN74 = *OFF
      C                   EVAL      *IN75 = *OFF
      C                   EVAL      *IN76 = *OFF
- 
+
      C                   IF        Mode = '*MAINT'
      C                   EVAL      *IN74 = *ON
      C                   ELSEIF    Mode = '*SELECT'
@@ -169,11 +172,11 @@
      C                   ELSEIF    Mode = '*ENQRY'
      C                   EVAL      *IN76 = *ON
      C                   ENDIF
- 
+
       *
       * Return point for Refresh option.
      C     START         TAG
- 
+
       * Initialise subfile.
      C                   EXSR      InitSfl
       *
@@ -181,7 +184,7 @@
      C                   EXSR      BuildSfl
       *
       * Process when action taken from screen.
- 
+
      C     PRCSSF9       TAG                                                                MD036806
                                                                                             MD036806
      C                   IF        *INKI = *ON
@@ -235,7 +238,7 @@
      C**********         EVAL      *IN05 = *ON                                              MD029834
      C**********         GOTO      ProcSflE                                                 MD029834
      C**********         ENDIF                                                              MD029834
- 
+
      C**********         IF        DPCD <> *blank                                           MD029834
      C**********         EVAL      FilterDesc = DPCD                                        MD029834
      C**********         EVAL      *IN05 = *ON                                              MD029834
@@ -244,7 +247,7 @@
      C
       *
       * If user has used an option on a record
- 
+
      C                   READC     SD000200S0
      C                   IF        (%EOF) AND                                               MD029834
      C                             DPCC = *BLANKS AND                                       MD029834
@@ -261,7 +264,7 @@
      C                   IF        DCACTN <> *BLANKS
      C                   EXSR      ValidateOpt
      C**********         ENDIF                                                              MD029834
- 
+
      C                   IF        Err = 0 and
      C                             (Mode = '*MAINT' or Mode = '*ENQRY')
       * Process details
@@ -269,8 +272,12 @@
      C                   EVAL      DetClsCode = DCCODE
      C                   EXSR      DetPgm
      C                   ENDIF
+                                                                                            MD052648
+     C                   IF        Err = 0 and Mode = '*SELECT'                             MD052648
+     C                   GOTO      ProcSflE                                                 MD052648
+     C                   ENDIF                                                              MD052648
      C                   ENDIF                                                              MD029834
- 
+
       * Reset validated/processed option taken
      C**********         EVAL      DCACTN = ''                                              MD029834
      C                   UPDATE    SD000200S0                                               MD029834
@@ -328,12 +335,12 @@
       *****************************************************************
       *
      C     ClrMsgQue     BEGSR
- 
+
       * Clear messages from program message queue
      C                   CALL      'Y2CLMSC'
      C                   PARM                    ZAPGM
      C                   PARM      '*SAME'       ZAPGRL
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -358,7 +365,7 @@
      C**********         EVAL      DPCC = *BLANKS                                           MD029834
      C**********         EVAL      DPCD = *BLANKS                                           MD029834
      C                   WRITE     #MSGCTL
- 
+
      C                   SELECT
      C                   WHEN      MODE = '*MAINT'
      C                   EVAL      *IN77 = *OFF
@@ -403,9 +410,9 @@
      C                   IF        FCRECI = '*'
      C                   GOTO      ReadNext
      C                   ENDIF
- 
+
      C**********         EVAL      SflRRN = SflRRN + 1                                      MD029834
- 
+
      C**********         IF        MATCH = 1                                                MD029834
      C                   IF        MATCH = 0                                                MD029834
      C                             AND (DPCC <> *BLANKS                                     MD029834
@@ -434,7 +441,7 @@
      C                   EVAL      *IN80 = *OFF
      C                   EVAL      SflRRN = SflRRN + 1                                      MD029834
      C                   ENDIF                                                              MD033128
- 
+
      C     ReadNext      TAG
      C                   READ      SDFATCD0
      C                   ENDDO
@@ -446,7 +453,7 @@
      C                             AND FCRECI = '*'                                         MD033128
      C                   EXSR      NoRecords
      C                   ENDIF
- 
+
       *
       ** Display subfile / Prompt user selection
       *
@@ -517,18 +524,18 @@
       *****************************************************************
       *
      C     ValidateOpt   BEGSR
- 
+
      C                   EVAL      Err = 0
      C                   SELECT
- 
+
      C                   WHEN      MODE = '*SELECT' AND DCACTN = '1'
- 
+
      C                   EVAL      RetCode = *BLANKS
      C                   EVAL      ClsCode = DCCODE
      C                   EVAL      ClsDesc = DCDESC
- 
+
      C                   EVAL      *IN03 = *ON
- 
+
      C                   WHEN      (MODE = '*MAINT' AND
      C                                 ( DCACTN = 'A'
      C                                OR DCACTN = 'D'
@@ -544,7 +551,7 @@
      C                   WRITE     #MSGCTL
      C
      C                   EVAL      Err = 1
- 
+
      C                   ENDIF
      C
      C                   OTHER
@@ -569,9 +576,9 @@
      C                   EVAL      MATCH = 1                                                MD029834
      C                   EVAL      FrsPass = '1'                                            MD029834
      C                   ENDIF                                                              MD029834
- 
+
      C                   ENDSL
- 
+
       *
      C     ValidateOptE  ENDSR
       *
@@ -590,7 +597,7 @@
      C     FindMatch     BEGSR
       *
      C                   IF        FilterCode <> *BLANKS
- 
+
       ** Check Code Filter Match
      C**********         IF        %trim(FilterCode) =                                      MD033546
      C**********                    %subst(FCCODE:1:%len(%trim(FilterCode)))                MD033546
@@ -602,7 +609,7 @@
      C**********         EVAL      FilterCode = *BLANKS                                     MD033546
      C**********         EVAL      FilterDesc = *BLANKS                                     MD033546
      C                   ENDIF
- 
+
      C                   ELSEIF    FilterDesc <> *BLANKS
                                                                                             MD029834
      C                   EVAL      WWDPCD = FilterDesc                                      MD029834
@@ -618,7 +625,7 @@
      C                   EVAL      MATCH = SflRRN
      C**********         EVAL      FilterDesc = *BLANKS                                     MD029834
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       *
@@ -643,11 +650,11 @@
      C                   PARM      Mode          DetMode
      C                   PARM      *Blanks       DetRetCode
      C                   PARM                    DetClsCode
- 
+
      C                   IF        DetRetCode <> *Blanks
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        DetActn = 'I'                                            MD033128
      C                   EVAL      NoRecSts = *OFF                                          MD033128
      C                   ENDIF                                                              MD033128

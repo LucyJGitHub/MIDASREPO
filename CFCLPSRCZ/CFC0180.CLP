@@ -25,6 +25,7 @@
 /*                                                                   */
 /*     MD053298 - TRAM application cannot process .dat files as      */
 /*                midas.dat file is created too soon by the          */
+/*                CFCONTROL job                                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*     CCB020 - COB Restructure - Secondary COB Infrastructure       */
 /*     S01310 - SWIFT RATIONALISATION                                */

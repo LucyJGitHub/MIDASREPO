@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD050212           Date 02Apr18               *
-      *  Prev Amend No. MD051563           Date 19Jul18               *
+      *  Last Amend No. MD031234           Date 16May19               *
+      *  Prev Amend No. MD020755           Date 16May19               *
+      *                 MD050212           Date 02Apr18               *
+      *                 MD051563           Date 19Jul18               *
       *                 MD051393           Date 29Jun18               *
       *                 MD051206           Date 11Jun18               *
       *                 MD051230           Date 08Jun18               *
@@ -141,6 +143,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031234 - Marketing information not updated on CLINTCB      *
+      *             when inserting customer.                          *
+      *           - Applied for MD-52640.                             *
+      *  MD020755 - CLINTCB not updated for SDCRMKPD.                 *
+      *           - Applied for MD-52640.                             *
       *  MD050212 - Replication processing for PF/SDCUSTXC            *
       *  MD051563 - On COB run, Component GOC0100 failed due to       *
       *             Customer Related Duplicate Key Error              *
@@ -5730,22 +5737,32 @@
 
      C     *IN90         IFEQ      '1'
       * USER: Processing if Data record not found
-     C                   MOVEL     *BLANK        WUGPC1            4
-     C                   MOVEL     *BLANK        WUGPC2            4
-     C                   MOVEL     *BLANK        WUGPC3            4
-     C                   MOVEL     *BLANK        WUGPC4            4
-     C                   MOVEL     *BLANK        WUGPC5            4
+     C**********         MOVEL     *BLANK        WUGPC1            4                        MD031234
+     C**********         MOVEL     *BLANK        WUGPC2            4                        MD031234
+     C**********         MOVEL     *BLANK        WUGPC3            4                        MD031234
+     C**********         MOVEL     *BLANK        WUGPC4            4                        MD031234
+     C**********         MOVEL     *BLANK        WUGPC5            4                        MD031234
+     C                   MOVEL     A_MIGPC1      WUGPC1            4                        MD031234
+     C                   MOVEL     A_MIGPC2      WUGPC2            4                        MD031234
+     C                   MOVEL     A_MIGPC3      WUGPC3            4                        MD031234
+     C                   MOVEL     A_MIGPC4      WUGPC4            4                        MD031234
+     C                   MOVEL     A_MIGPC5      WUGPC5            4                        MD031234
      C                   GOTO      SOEXIT
      C                   END
 
       * USER: Process Data record
       * PAR = DB1 By name
      C     *IN90         IFEQ      '0'
-     C                   MOVEL     D7GPC1        WUGPC1
-     C                   MOVEL     D7GPC2        WUGPC2
-     C                   MOVEL     D7GPC3        WUGPC3
-     C                   MOVEL     D7GPC4        WUGPC4
-     C                   MOVEL     D7GPC5        WUGPC5
+     C**********         MOVEL     D7GPC1        WUGPC1                                     MD020755
+     C**********         MOVEL     D7GPC2        WUGPC2                                     MD020755
+     C**********         MOVEL     D7GPC3        WUGPC3                                     MD020755
+     C**********         MOVEL     D7GPC4        WUGPC4                                     MD020755
+     C**********         MOVEL     D7GPC5        WUGPC5                                     MD020755
+     C                   MOVEL     A_MIGPC1      WUGPC1                                     MD020755
+     C                   MOVEL     A_MIGPC2      WUGPC2                                     MD020755
+     C                   MOVEL     A_MIGPC3      WUGPC3                                     MD020755
+     C                   MOVEL     A_MIGPC4      WUGPC4                                     MD020755
+     C                   MOVEL     A_MIGPC5      WUGPC5                                     MD020755
      C                   END
 
       *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLMOD                                                    *
 /*EXI *  TEXT('Midas SD Tax Deducted for Customer Defined Non-Tax')
@@ -17,12 +17,14 @@
       *             (This is due to expiry date of certificate being  *
       *             earlier than Interest payment date)               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CER069  *CREATE    Date 03Jul14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER069  *CREATE    Date 03Jul14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER069 - German Tax Enhancement                              *
       *                                                               *
       *****************************************************************
@@ -40,20 +42,20 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** SD Tax Deducted for Cust Defined Non-Tax - Input
      FSDTSCHPD  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Tax Deducted for Cust Defined Non-Tax - Detail
      FSD000819P1O    E             PRINTER INFDS(SPOOL1)
      F                                     USROPN
      F                                     INFSR(*PSSR)
- 
+
       ** Tax Deducted for Cust Defined Non-Tax - Audit
      FSD000819AUO    E             PRINTER INFDS(SPOOLU)
      F                                     USROPN
      F                                     INFSR(*PSSR)
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Arrays and Data Structures  ¦
       ** ¦ =======  ==========================  ¦
@@ -67,19 +69,19 @@
       **                                    181 1830DBase
       **                                    184 193 DBMod
       **                                    194 203 DBProc
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  Extname(SDBANKPD)
- 
+
       ** External DS for Additional Customer Details
      D SDACUS        E DS                  Extname(SDACUSPD)
- 
+
       ** External DS for Customer Details
      D SDCUST        E DS                  Extname(SDCUSTPD)
- 
+
       ** Standing data - Currencies
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       **  Short DS for access programs
      D DSFDY         E DS                  Extname(DSFDY)
       *
@@ -89,24 +91,24 @@
       *
       ** DS for access objects - short data structure
      D DSLDY         E DS                  EXTNAME(DSLDY)
- 
+
       ** File Information Data Structure for SD000819P1
      D SPOOL1          DS
      D   SFILE1               83     92
      D   SFNUM1              123    124B 0
      D   OFLLN1              188    189B 0
      D   PRTLN1              367    368B 0
- 
+
       ** File Information Data Structure for SD000819AU
      D SPOOLU          DS
      D   SFILEU               83     92
      D   SFNUMU              123    124B 0
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Declared variables          ¦
       ** ¦ =======  ==================          ¦
       ** +--------------------------------------+
- 
+
       ** Parameters for access object programs
      D PRtCd           S              7A
      D POptn           S              7A
@@ -144,8 +146,8 @@
      D ZSnumU          S              6  0
      D ZSerr           S              1
      D NET_INT         S             15  0 INZ(*Zeros)
- 
- 
+
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -157,34 +159,34 @@
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
       ** Set file pointer to first record and do initial read.
- 
+
      C     *Loval        SETLL     SDTSCHPD
- 
+
      C                   READ      SDTSCHPD
- 
+
       ** Read Details until end of file
- 
+
      C                   DOW       Not %EOF(SDTSCHPD)
- 
+
      C                   EXSR      SRPrint1
- 
+
      C                   READ      SDTSCHPD
- 
+
      C                   ENDDO
- 
+
      C                   IF        WNoRec > 0
      C                   EVAL      RqdLn1 = 4
      C                   EVAL      DifLn1 = OFLLN1 - PRTLN1
      C                   IF        DifLn1 <= RqdLn1
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
       ** Write out report trailer.
      C                   WRITE     TRAILP1
      C                   ENDIF
- 
+
      C                   EXSR      SRAudit
       *
      C                   EVAL      *InLR = *On
@@ -196,16 +198,16 @@
       *                                                               *
       *****************************************************************
      C     SRPrint1      BEGSR
- 
+
       ** Output details on report
      C                   IF        WOpen <> 'Y'
      C                   EVAL      WOpen = 'Y'
      C                   OPEN      SD000819P1
- 
+
       ** Ensure Detail Spool File recorded by RCF.
- 
+
      C                   EVAL      ZSnum = SFNUM1
- 
+
      C                   CALL      'ZSFILE2'
      C                   PARM                    PSeq
      C                   PARM      'SD000819'    PRName
@@ -213,45 +215,45 @@
      C                   PARM                    SFILE1
      C                   PARM                    ZSnum
      C                   PARM      *Blank        ZSerr
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
- 
+
      C                   IF        ZSERR = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      RqdLn1 = 3
      C                   EVAL      DifLn1 = OFLLN1 - PRTLN1
- 
+
       ** For initial print of details or overflow has occured, print the Header
       ** of the report.
- 
+
      C                   IF        DifLn1 <= RqdLn1 OR
      C                             WFirst = 'Y'
      C                   WRITE     HEADP1
      C                   EVAL      WFIRST = 'N'
      C                   ENDIF
- 
+
       ** Write Details to Print fields
- 
+
       ** Customer Number
      C                   EVAL      RCUST = TRCUST
- 
+
       ** Customer Report Name
      C                   EVAL      RCRNM = TRCRNM
- 
+
       ** Customer Town
      C                   EVAL      RCRTN = TRCRTN
- 
+
       ** Country of Location
      C                   EVAL      RCOLC = TRCOLC
- 
+
       ** Certificate Value Date
      C                   EVAL      ZDAYNO = TRCVDT
      C                   EXSR      SRZDate2
@@ -275,13 +277,13 @@
       *
       ** Currency
      C                   EVAL      RCCY = TRCCY
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    TRCCY
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDCURRPD'
@@ -330,13 +332,13 @@
       *                                                               *
       *****************************************************************
      C     SRZDate2      BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE
      C                   PARM                    ZADATE
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -346,13 +348,13 @@
       *                                                               *
       *****************************************************************
      C     SRAudit       BEGSR
- 
+
      C                   OPEN      SD000819AU
- 
+
       ** Ensure Audit Spool File recorded by RCF.
- 
+
      C                   EVAL      ZSnumU = SFNUMU
- 
+
      C                   CALL      'ZSFILE2'
      C                   PARM                    PSeq
      C                   PARM      'SD000819'    PRName
@@ -360,21 +362,21 @@
      C                   PARM                    SFILEU
      C                   PARM                    ZSnumU
      C                   PARM      *Blank        ZSerr
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
- 
+
      C                   IF        ZSERR = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
      C                   WRITE     HEADAU
- 
+
       ** If there is a DB Error, Output the DB Error Information.
- 
+
      C                   IF        *INU7 = *ON
      C                   WRITE     DBERROR
      C                   WRITE     FOOTER
@@ -393,7 +395,7 @@
       *
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -403,21 +405,21 @@
       *                                                               *
       *****************************************************************
      C     *InzSr        BEGSR
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
       ** Initialize variables
- 
+
      C                   EVAL      WCurr_RunDay = 0
      C                   EVAL      FirstRec = 'Y'
- 
+
       ** Access Bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *Blanks       PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        PRtCd <> *Blanks
      C     *Lock         IN        LDA
      C                   EVAL      DBKey = POptn
@@ -428,18 +430,18 @@
      C                   ELSE
      C                   EVAL      WCurr_RunDay = BJRDNB
      C                   ENDIF
- 
+
      C                   EVAL      RqdLn1 = 0
      C                   EVAL      DifLn1 = 0
      C                   EVAL      PrtLn1 = 0
- 
+
       ** Database fields
- 
+
      C                   EVAL      DBKey  = *Blanks
      C                   EVAL      DBFile = *Blanks
      C                   EVAL      DBase  = *Zeros
      C                   EVAL      DBPgm  = 'SD000819'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -456,17 +458,17 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *Blanks
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   EXSR      SRAudit
      C                   ENDIF
- 
+
      C                   EVAL      *InU7 = *On
      C                   EVAL      *InU8 = *On
      C                   EVAL      *InLR = *On
- 
+
      C                   RETURN
- 
+
      C                   ENDSR

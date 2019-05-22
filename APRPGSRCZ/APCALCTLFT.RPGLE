@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 CFT039             Date 28Sep12               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension                           *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions (recompile) *
       *  CFT039 - SWIFT Mapping of Field Ordering Bank                *
@@ -206,8 +208,10 @@
  
       ** Incoming transaction blocks
      D Trans1          S            500A
-     D Trans2          S                   LIKE(Trans1)
-     D Trans3          S                   LIKE(Trans1)
+     D*Trans2***       S                   LIKE(Trans1)                                       CSD102
+     D*Trans3***       S                   LIKE(Trans1)                                       CSD102
+     D Trans2          S           1000A                                                      CSD102
+     D Trans3          S           1000A                                                      CSD102
      D Trans4          S                   LIKE(Trans1)
      D Trans5          S                   LIKE(Trans1)
      D Trans6          S                   LIKE(Trans1)

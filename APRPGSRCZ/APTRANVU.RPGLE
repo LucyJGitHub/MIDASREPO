@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD050928A          Date 28Jun18               *
-      *  Prev Amend No. MD050928           Date 15May18               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD050928A          Date 28Jun18               *
+      *                 MD050928           Date 15May18               *
       *                 MD050345           Date 04Apr18               *
       *                 MD050342           Date 04Apr18               *
       *                 CGL157             Date 17Aug15               *
@@ -216,6 +217,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension                           *
       *  MD050928A - Reinstate codes by CFT157 as codes on FTOP* files*
       *              were reversed.                                   *
       *  MD050928 - SP15_MQ: Unclear error message - Error validating *
@@ -756,7 +758,8 @@
      D TransType       S              4
      D Parm            S           1000
      D Buffer          S           6000
-     D ApHead          S            200                                                     AR971184
+     D***ApHead*         S            200                                            AR971184 CSD102
+     D ApHead          S            318                                                       CSD102
       * In order to allow for growing and variable buffers, this buffer must be split up
       * Any APIs requiring more than 6000 buffer should use buffer2
      D BufferTotal     S           9999

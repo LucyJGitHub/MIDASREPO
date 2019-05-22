@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD047369A          Date 24Jan18               *      
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD047369A          Date 24Jan18               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR1090283          Date 10Aug16               *
       *                 MD025111           Date 24Feb14               *
       *                 CFT151             Date 21Mar14               *
@@ -74,6 +75,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension                           *
       *  MD047369A - Funds transfter does not check block Dr flag on  *
       *              beneficary customer account.                     *      
       *  MD046248 - Finastra Rebranding                               *
@@ -4902,6 +4904,11 @@
      C                   EXSR      SRScrn_M                                     CFT014
      C                   ENDDO                                                  CFT014
       *                                                                         CFT014
+     C                   EVAL      WScrn = 'F'                                                CSD102
+     C                   IF        CSW209 = 'Y'                                               CSD102
+     C                   EVAL      WScrn = 'N'                                                CSD102
+     C                   ENDIF                                                                CSD102
+      *                                                                                       CSD102
      C                   ELSE                                                   CFT014
       *                                                                         CFT014
       ** Display confirmation screen.                                           CFT014

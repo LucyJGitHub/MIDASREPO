@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD050928A          Date 28Jun18               *
-      *  Prev Amend No. MD050928           Date 15May18               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD050928A          Date 28Jun18               *
+      *                 MD050928           Date 15May18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042042           Date 14Feb17               *
       *                 MD044395           Date 08Mar17               *
@@ -106,6 +107,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD050928A -OPAY inserted as unauthorised even AutoAUTH = 'Y' *
       *             Re-instate codes reversed by MD033098.  CFT157    *
       *             codes were reversed on APTRANVU and on FTOP* files*
@@ -229,9 +231,9 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
      F/COPY WNCPYSRC,FTOPAYVUF1
       *****************************************************************
       ** +--------------------------------------+
@@ -251,50 +253,50 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API *CTL modules.
      D/COPY ZACPYSRC,APICTLARR
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -306,7 +308,7 @@
                                                                                               CRE067
       ** The maximum size of the appended error arrays                                        CRE067
      D XArrayMax       C                   CONST(20)                                          CRE067
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -324,10 +326,10 @@
                                                                                               CRE067
       ** Array of error message data                                                          CRE067
      D WMsgDtaXAr      S                   DIM(XArrayMax) LIKE(#MsgData)                      CRE067
- 
+
       * Incoming Header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
- 
+
       * Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(FTOPY1PD)
      D TranInSecA    E DS                  EXTNAME(FTOPY2PD)
@@ -343,58 +345,58 @@
       *                                                                                       CFT039
       ** FT OPAY API Ordering Bank Details                                                    CFT039
      D TranInfoFlds  E DS                  EXTNAME(FTOPIFPD)                                  CFT039
- 
+
      D ValidPmnt     E DS                  EXTNAME(FTVOPAYPD)
       * Valid Payments layout
- 
+
      D ValidPmntB    E DS                  EXTNAME(FTVOPY2PD)
       ** Valid Payments layout B
                                                                                               CER001
      D PValidPmntX   E DS                  EXTNAME(FTVOPLX1PD)                                CER001
       * Valid Payments layout - extension file                                                CER001
- 
+
      D PmntFilFmt    E DS                  EXTNAME(OTPAYDD)
       * (Current) Transaction in File Format
- 
+
      D PmntFilFmX    E DS                  EXTNAME(OTPAYXPD)
       ** (Current) Transaction in File Format Extension
                                                                                               CER001
      D PSvRcdX       E DS                  EXTNAME(FTOPX1PD)                                  CER001
      D                                     PREFIX(SV)                                         CER001
       ** Transaction in File Format Extension                                                 CER001
- 
+
      D CurTrPrim     E DS                  EXTNAME(FTOPY1PD)
      D                                     PREFIX(@)
       * (Current) Transaction in Screen Format - 1st screen (level 1)
- 
+
      D CurTrPrm2     E DS                  EXTNAME(FTOPY1APD)
      D                                     PREFIX(@)
       ** (Current) Transaction in Screen Format - 1st screen (level 2)
- 
+
      D CurTrSeco     E DS                  EXTNAME(FTOPY2PD)
      D                                     PREFIX(@)
       * (Current) Transaction in Screen Format - 2nd screen (level 2)
- 
+
      D CurTrThrd     E DS                  EXTNAME(FTOPY3PD)
      D                                     PREFIX(@)
       * (Current) Transaction in Screen Format - 2nd screen (level 2)
- 
+
      D CurTrFour     E DS                  EXTNAME(FTOPY4PD)
      D                                     PREFIX(@)
       * (Current) Transaction in Screen Format - 3rd screen (level 2)
- 
+
      D CurTr5th      E DS                  EXTNAME(FTOPY5PD)
      D                                     PREFIX(@)
       ** (Current) Transaction in Screen Format - 3rd screen (level 2)
- 
+
      D CurTr6th      E DS                  EXTNAME(FTOPY6PD)
      D                                     PREFIX(@)
       ** (Current) Transaction in Screen Format - 4th screen (level 2)
- 
+
      D CurTr7th      E DS                  EXTNAME(FTOPY7PD)
      D                                     PREFIX(@)
       ** (Current) Transaction in Screen Format - Margin Info
- 
+
      D CurTrCovA     E DS                  EXTNAME(FTOPYAPD)                                  CSW209
      D                                     PREFIX(@)                                          CSW209
       ** (Current) Transaction in Screen Format - Cover Message                               CSW209
@@ -424,23 +426,23 @@
      D                                     PREFIX(@C)                                         CSW209
      D CurTrCovC@    E DS                  EXTNAME(FTOPYCPD)                                  CSW209
      D                                     PREFIX(@C)                                         CSW209
- 
+
      D OKFlag1DS     E DS                  EXTNAME(FTEOPY1PD)
       ** Flags to indicate wheter transaction fields are valid for screen 1
       ** (Screen 1 Level 1)
- 
+
      D OKFlag2DS     E DS                  EXTNAME(FTEOPY2PD)
       ** Flags to indicate wheter transaction fields are valid for screen 2
       ** (Screen 1 Level 2)
- 
+
      D OKFlag3DS     E DS                  EXTNAME(FTEOPY3PD)
       ** Flags to indicate wheter transaction fields are valid for screen 3
       ** (Screen 2 Level 2)
- 
+
      D OKFlag4DS     E DS                  EXTNAME(FTEOPY4PD)
       ** Flags to indicate wheter transaction fields are valid for screen 4
       ** (Charges and Commission Screen 3 Level 2)
- 
+
      D OKFlag5DS     E DS                  EXTNAME(FTEOPY5PD)
       ** Flags to indicate wheter transaction fields are valid for screen 5
       ** (Margin Information Screen 4 Level 2)
@@ -472,7 +474,7 @@
      D  #1SNCO               137    146                                                       CER001
      D  #1DSTT               147    147                                                       CER001
      D  #1DST1               148    182                                                       CER001
- 
+
      D ExtData       E DS                  EXTNAME(FTOPEXPD)
      D/COPY OFCPYSRCZ,CFT148_007                                                              CFT148
      D RegData       E DS                  EXTNAME(FTOPRXPD)                                  CER001
@@ -491,42 +493,42 @@
      D @C@PayDelAmt  E                     EXTFLD(@SPDAM)
      D @C@PayAmount  E                     EXTFLD(@SPYAM)
      D @C@SettleAmt  E                     EXTFLD(@SSMAM)
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * First DS for Access programs - short data structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * Second DS for Access programs - long data structure
- 
+
      D*OTPAYD***     E DS                  EXTNAME(OTPAYDA)                                   CFT151
       ***** DATA AREA FOR ORDINARY PAYMENT REF NUMBERING                                      CFT151
       ** DS for next Outgoing Payment Reference Number                                        CFT151
      D OTPAYD          DS             4                                                       CFT151
      D  WOTSQ                  1      4  0                                                    CFT151
                                                                                               CFT151
- 
+
      D RGPAYD        E DS                  EXTNAME(RGPAYDA)
       *     DATA AREA FOR REGULAR PAYMENT REF NUMBERING
       *
- 
+
       ** Valid Outgoing Payments Extension File (default)
      D DEFVALIDX     E DS                  EXTNAME(FTVOPY2PD)
      D                                     PREFIX(D#)
- 
+
       * Valid Payments layout (default)
      D DEFVALID      E DS                  EXTNAME(FTVOPAYPD)
      D                                     PREFIX(D#)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
       * External data structure for currency codes
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  244540
      D  QQDFA1       E                     EXTFLD(QQDFAC)                                     244540
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)                                  244540
@@ -534,7 +536,7 @@
       * External DS for Funds Transfer details
      D SDFTFR        E DS                  EXTNAME(SDFTFRPD)
      D  WRATDIS               44     48  4
- 
+
       ** Externally described DS for Counterpary nostro                                     MD030906
      D SDCNST        E DS                  EXTNAME(SDCNSTPD)                                MD030906
                                                                                             MD030906
@@ -560,18 +562,18 @@
       *                                                                                       CER030
      D CurTr7BthCp   E DS                  EXTNAME(FTOPY7BPD)                                 CER030
      D                                     PREFIX(C)                                          CER030
- 
- 
+
+
       *  User / Branch data area
      D ZMUSER          DS            17
      D  WUSRID                 1     10
      D  WDFBR                 11     13
      D  WDPPT                 14     16
- 
+
       * Data structure to retrieve multi branch indicator
      DRUNDAT           DS
      D WMBIN                  13     13
- 
+
      D                 DS
       *     REDEFINE IPREF FOR INSERTS
      D  IPREF                  1     15
@@ -619,19 +621,19 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Error message field(s)
      D     Msg1        S                   LIKE(#MsgID)
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Index for arrays of error message ids etc in Amend validation
      D AmIdx           S              3P 0
- 
+
       ** Fields (500A) to receive the incoming transaction
      D***Trans5001       S            500A                                                   CSF011A
      D***Trans5002       S            500A                                                   CSF011A
@@ -657,34 +659,34 @@
       *                                                                                       262664
      D TransIn7and8    S           1000A
      D RegData500      S            500A                                                      CER001
- 
+
       ** Flag to indicate outcome of call to lower level module
      D AmendOK         S              1A   INZ('Y')
- 
+
       ** Overall Transaction status, to be passed to the Message Handler
      D TranStatus      S              1A
- 
+
       ** A code to indicate the calling function to the lower level modules
      D OPAY            S              4A   INZ('OPAY')
- 
+
       ** Payment & Receipt dates, passed to Settlements Validation routine.
       ** spaces in parameter list not used by this function
      D PayDat          S              5P 0 INZ(99999)
      D RecDat          S              5P 0 INZ(99999)
- 
+
       ** Value Date as a Midas Day Number to be placed in either Payment
       **  or Receipt Date
      D ValDateMDN      S              5P 0
- 
+
       ** Blank fields, passed to Settlements Defaulting routine, to fill
       ** spaces in parameter list not used by this function
      D Blank2          S              2A   INZ(*BLANKS)
      D Blank4          S              4A   INZ(*BLANKS)
      D Blank6          S              6A   INZ(*BLANKS)
- 
+
       ** Error Flag for call to Standard routines (equates to *IN99)
      D ErrorFlag       S              1A   INZ('N')
- 
+
       ** Flags to indicate whether substitution is required in
       ** each of the various parts the transaction
      D RepPrim         S              1A   inz('N')
@@ -697,7 +699,7 @@
      D RepMarg         S              1A   inz('N')
      D RepCovA         S              1A   inz('N')                                           CSW209
      D RepCovC         S              1A   inz('N')                                           CSW209
- 
+
       * Msg Unique Reference
      D SHMSGR          S              8  0
      D SHMSGR@         S              8  0
@@ -742,14 +744,14 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,FTOPAYC020
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -765,9 +767,9 @@
      C     *DTAARA       DEFINE                  ZMUSER                                      BUG7029
      C                   IN        ZMUSER                                                    BUG7029
      C                   UNLOCK    ZMUSER                                                    BUG7029
- 
+
       /COPY WNCPYSRC,FTOPAYC001
- 
+
      C                   MOVEL     Trans5001     TranInPrim
      C                   MOVEL     Trans5002     TranInPrmB
      C                   MOVEL     Trans5003     TranInSecA
@@ -790,21 +792,21 @@
       *                                                                                       262664
      C                   MOVEL     RegData500    RegData                                    BUG10128
      C/COPY WNCPYSRC,FTOPAYVUC5
- 
+
       * Reset variables gradually updated
- 
+
      C                   EXSR      RESETCYCLE
- 
+
       *  Validate Action Code
- 
+
      C                   EXSR      ValidateAc
- 
+
       *  If error in validation of action code, fail this input
       *
      C     Idx           IFNE      0
      C                   GOTO      INVALID
      C                   END
- 
+
      C     SACTION       IFEQ      'I'                                                        244540
      C     SACTION       OREQ      'A'                                                        244540
      C                   If        @CFT014 = 'Y'                                              244540
@@ -817,62 +819,62 @@
      C                   EndIf                                                                244540
      C                   EndIf                                                                244540
       *  Processing depends upon Action Code
- 
+
      C                   SELECT
- 
+
      C                   WHEN      SACTION = 'I'
       *  Processing for Inserts
      C                   EXSR      ValidateTr
- 
+
      C                   WHEN      SACTION = 'A'
       *  Processing for Amends
- 
+
       * Check for the existence of the replacement character; if this is
       * used, only the changed data has been sent, and all occurrences of
       * the replacement character must be replaced with the corresponding
       * character from the original transaction.
      C                   if        GHSUBS <> *blank
- 
+
      C     GHSUBS        scan      TranInPrim                             99
      C                   if        *in99
      C                   eval      RepPrim = 'Y'
      C                   endif
- 
+
      C     GHSUBS        scan      TranInSecA                             99
      C                   if        *in99
      C                   eval      RepSecA = 'Y'
      C                   endif
- 
+
      C     GHSUBS        scan      TranInSecB                             99
      C                   if        *in99
      C                   eval      RepSecB = 'Y'
      C                   endif
- 
+
      C     GHSUBS        scan      TranInThir                             99
      C                   if        *in99
      C                   eval      RepThir = 'Y'
      C                   endif
- 
+
      C     GHSUBS        scan      TranInPrmB                             99
      C                   if        *in99
      C                   eval      RepPrmB = 'Y'
      C                   endif
- 
+
      C     GHSUBS        scan      TranInThrB                             99
      C                   if        *in99
      C                   eval      RepThrB = 'Y'
      C                   endif
- 
+
      C     GHSUBS        scan      TranInFour                             99
      C                   if        *in99
      C                   eval      RepFour = 'Y'
      C                   endif
- 
+
      C     GHSUBS        scan      TranInMarg                             99
      C                   if        *in99
      C                   eval      RepMarg = 'Y'
      C                   endif
- 
+
      C                   IF        CSW209 = 'Y'                                               CSW209
                                                                                               CSW209
      C     GHSUBS        SCAN      TranInCovA                             99                  CSW209
@@ -894,7 +896,7 @@
      C                              RepFour = 'Y' OR RepMarg = 'Y')
      C                   EXSR      DtaSubs
      C                   endif
- 
+
      C                   IF        CSW209 = 'Y'                                               CSW209
      C                   IF        (RepCovA = 'Y' OR RepCovC = 'Y')                           CSW209
      C                   EXSR      DtaSubs                                                    CSW209
@@ -903,11 +905,11 @@
                                                                                               CSW209
      C                   endif
       **                 (End of "if GHSUBS <> *blank")
- 
+
      C                   EXSR      SetupAmend
      C                   EXSR      ValidateTr
      C                   EXSR      ValdateAmd
- 
+
      C                   ENDSL
       *
      C                   IF        Idx <> 0 AND UpdateYN <> 'Y' AND                           CRE067
@@ -943,20 +945,20 @@
      C                   ENDIF                                                                CRE067
                                                                                               CRE067
      C     INVALID       TAG
- 
+
       ** Populate Account Details                                                             CSF011
                                                                                               CSF011
      C                   EXSR      SrCustActN                                                 CSF011
                                                                                               CSF011
       *  Write to database
- 
+
      C     UpdateYN      IFEQ      'Y'
      C     Idx           ANDEQ     0
      C                   EXSR      WriteToDB
      C                   ENDIF
- 
+
      C                   SETON                                        LR
- 
+
      C                   MOVEL     OTOPMSGR      PMSGR             8                          CSD083
      C                   MOVEL     RegData       RegData1          2                          CSF011
      C                   MOVE      RegData       RegData2         18                          CSF011
@@ -1000,7 +1002,7 @@
      C                                        + StopFTDta                                   MD050928
                                                                                               CSF011
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1009,7 +1011,7 @@
       *    transaction IDs supplied                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     ValidateAc    BEGSR
       *
       * Set retrieve mode to '*FRONT' (Access using Front Office ID)
@@ -1033,66 +1035,66 @@
      C                   ELSE                                                               AR971184
      C                   MOVEL     '      '      ModeofOp
      C                   ENDIF                                                              AR971184
- 
+
       * Validate action code versus transaction IDs supplied
       * This function will set up the Midas payment reference.
       *
       * The transaction in file format from the FT database
       * is retrieved as well.
- 
+
       * Input is Level 1
      C                   MOVE      '1'           @Level            1
- 
+
      C                   RESET                   ReturnCode
      C                   CALLB     'FTOPAYRTV'
- 
+
       * INPUTS
- 
+
       * Return code
      C                   PARM                    ReturnCode
- 
+
       * Mode = '*FRONT' (FRONT OFFICE TRANSACTION INTERFACE)
      C                   PARM                    ModeofOp          6
       *
       * Response mode
      C                   PARM      'S'           APRESPMODE
- 
+
       * Action Code
      C                   PARM                    SACTION
- 
+
       * Front Office Transaction ID
      C                   PARM                    APFOTranID
- 
+
       * (Midas) Payment Reference
      C                   PARM                    SPREF
- 
+
       * Booking branch
      C                   PARM                    SBRCA
- 
+
       * Level 1/2 indicator
      C                   PARM                    @Level            1
      C                   PARM                    Val@Fields
- 
+
       * OUTPUTS
- 
+
       * (Current) transaction in file format
      C                   PARM                    PmntFilFmt
      C                   PARM                    PmntFilFmX
- 
+
       * OK - Action code
      C                   PARM                    OKACTION
- 
+
       * OK - Payment reference
      C                   PARM                    OKPREF
- 
+
       * OK - Booking branch
      C                   PARM                    OKBRCA
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
      C/COPY WNCPYSRC,FTOPAYVUCA
@@ -1130,7 +1132,7 @@
      C                   ENDIF                                                                CER001
       *                                                                                       CER001
      C/COPY WNCPYSRC,FTOPAYVUC9
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1140,30 +1142,30 @@
       *    of Amendments.                                             *
       *                                                               *
       *****************************************************************
- 
+
      C     SetupAmend    BEGSR
- 
+
       * For Amends, put the complete (pre-existing) payment into the Valid
       *  file record - fields in this will be updated during  processing
      C                   MOVE      PmntFilFmt    ValidPmnt
      C                   MOVE      PmntFilFmX    ValidPmntB
- 
+
       *  (Certain groups of fields on the paymt may not be supplied for an
       *  amendment. If this is the case some defaulting from existing
       *  database values may need to be done here.)
- 
+
       ** CONVERSION OF FILE FIELDS TO SCREEN FORMAT
- 
+
      C                   RESET                   ReturnCode
      C                   CALLB     'FTOPAYCVT'
- 
+
       * INPUTS
       * Return Code
      C                   PARM                    ReturnCode
       * (Current) Payment in file format
      C                   PARM                    PmntFilFmt
      C                   PARM                    PmntFilFmX
- 
+
       * OUTPUTS
       * (Current) Payment in screen format
      C                   PARM                    CurTrPrim
@@ -1179,13 +1181,13 @@
      C                   PARM                    CurTr7Ath                                    CER030
      C                   PARM                    CurTr7Bth                                    CER030
      C                   PARM                    SDFTFR
- 
+
       *  Validation Work Fields
      C                   PARM                    Val@Fields
- 
+
       * Status
      C                   PARM                    PmntStatus       24
- 
+
       * Msg Unique Reference
      C                   PARM                    SHMSGR
       * Part Number
@@ -1199,11 +1201,11 @@
       * ValidateTr - Routine to validate the main tranaction details  *
       *                                                               *
       *****************************************************************
- 
+
      C     ValidateTr    BEGSR
- 
+
       * Validate Level One details
- 
+
      C                   EXSR      ValdL1Detl
       *                                                                                       CFT045
       ** Default Outgoing Payments Extended Settlement Instructions details                   CFT045
@@ -1219,11 +1221,11 @@
      C     Idx           IFNE      0
      C                   GOTO      EValidTr
      C                   END
- 
+
       * Validate Level Two details if not blank, else assume Level One
       * input only.
       * Also validate level 2 details when 'level joiner' = 'Y'                               243991
- 
+
      C     TranInSecA    IFNE      *BLANKS
      C     TranInSecB    ORNE      *BLANKS
      C     TranInThir    ORNE      *BLANKS
@@ -1234,7 +1236,7 @@
      C     TranInMarB    ORNE      *BLANKS                                                    CER030
      C     RegData       ORNE      *BLANKS                                                    CER001
      C     BTLVJN        OREQ      'Y'                                                        243991
- 
+
      C                   EXSR      ValdL2Detl
       *
       *  If error in validation, fail this input
@@ -1242,23 +1244,23 @@
      C     Idx           IFNE      0
      C                   GOTO      EValidTr
      C                   END
- 
+
       ** Validate Screen 3 Level 2 details
- 
+
      C                   ExSr      ValdS3Detl
- 
+
       ** If error in validation, fail this input
- 
+
      C     Idx           IfNe      0
      C                   Goto      EValidTr
      C                   EndIf
- 
+
       * Validate Charges/Commission details
       *  - Default values
      C                   IF        @CFT009 = 'N'
      C                   EXSR      DeftCCDetl
      C                   ENDIF
- 
+
      C                   EXSR      ValdCCDetl
       *
       *  If error in validation, fail this input
@@ -1266,24 +1268,24 @@
      C     Idx           IFNE      0
      C                   GOTO      EValidTr
      C                   END
- 
+
       ** Validate Margin Info
- 
+
      C                   ExSr      ValdMargin
- 
+
       ** Ensure currencies for charges screen are derived
- 
+
      C     SACTION       IFEQ      'I'
      C     SACTION       OREQ      'A'                                                       BUG6280
      C                   ExSr      GetChgCcys
      C                   ENDIF
- 
+
       ** If error in validation, fail this input
- 
+
      C     Idx           IfNe      0
      C                   Goto      EValidTr
      C                   EndIf
- 
+
      C                   IF        CSW209 = 'Y'                                               CSW209
                                                                                               CSW209
       ** Validate Cover Message info                                                          CSW209
@@ -1319,7 +1321,7 @@
      C                   END                                                                  CER001
                                                                                               CER001
      C                   END
- 
+
      C     EValidTr      ENDSR
       *****************************************************************
       /EJECT
@@ -1330,7 +1332,7 @@
       *****************************************************************
      C     ValdL1Detl    BEGSR
      C/COPY OFCPYSRCZ,CFT148_008                                                              CFT148
- 
+
      C                   CALLB     'FTOPAY1VL'
       * Response mode (1A), from source system common header
      C                   PARM      'S'           APRespMode
@@ -1344,7 +1346,7 @@
      C                   PARM                    TranInfoFlds                                 CFT039
       * Custom Extra Data file data
      C                   PARM                    ExtData
- 
+
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFlag1DS
       * Error fields/message IDs/message data (arrays) from/to caller
@@ -1376,9 +1378,9 @@
      C                   PARM                    InputUser                                  MD042042
                                                                                               257758
      C/COPY WNCPYSRC,FTOPAYVUC7
- 
- 
- 
+
+
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1388,7 +1390,7 @@
       *              (This corresponds to the second input screen)    *
       *****************************************************************
      C     ValdL2Detl    BEGSR
- 
+
      C                   CALLB     'FTOPAY2VL'
       * Response mode (1A), from source system common header
      C                   PARM      'S'           APRespMode
@@ -1420,8 +1422,8 @@
      C                   PARM                    ValidPmntB
       *  Validation Work Fields from/to caller
      C                   Parm                    Val@Fields
- 
- 
+
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1431,13 +1433,13 @@
       *              for Inserts                                      *
       *****************************************************************
      C     DeftCCDetl    BEGSR
- 
+
      C                   CALLB     'FTOPAY3DT'
       *
       * INPUTS :
       * Response mode
      C                   PARM      'S'           APRespMode
- 
+
       * Transaction information (DS) from source system (Level 1)
      C                   PARM                    TranInPrim
       * Level 2 details
@@ -1448,7 +1450,7 @@
      C                   PARM                    TranInFour
       * Valid Payment layout (DS) from/to caller
      C                   PARM                    PmntFilFmt
- 
+
       * Custom Extra Data file data
      C                   PARM                    ExtData
       *
@@ -1457,34 +1459,34 @@
       *
       ** Recalcution flag.
      C                   PARM                    PReCalc           1
- 
+
       * OUTPUTS :
- 
+
       ** OK inds
      C                   PARM                    OKFlag1DS
      C                   PARM                    OKFlag4DS
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       * Valid Payment layout (DS) from/to caller
      C                   PARM                    ValidPmnt
       *  Validation Work Fields from/to caller
      C                   PARM                    Val@Fields
       *  Extra rate required for FTVCHPY module
      C                   Parm                    O2XRTE
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1527,7 +1529,7 @@
      C**********         EVAL      TranSec1 =                                   250345      MD041641
      C**********                   %XLATE(LowerCase:UpperCase:TranInThir)       250345      MD041641
      C**********         EVAL      TranInThir = TranSec1                        250345      MD041641
- 
+
      C                   CALLB     'FTOPAY3VL'
       * Response mode (1A), from source system common header
      C                   PARM      'S'           APRespMode
@@ -1561,10 +1563,10 @@
       *  Validation Work Fields from/to caller
      C                   Parm                    Val@Fields
      C                   PARM                    InputUser                                  MD042042
- 
- 
+
+
      C                   ENDSR
- 
+
       *****************************************************************
       /Title Sr/ValdCCDetl
       *****************************************************************
@@ -1577,9 +1579,9 @@
       *  FTOPAY4VL  - Charges and Commissions validation module       *
       *                                                               *
       *****************************************************************
- 
+
      C     ValdCCDetl    BegSr
- 
+
      C                   CallB     'FTOPAY4VL'
      C                   Parm      'S'           APRespMode
      C                   Parm                    TranInPrim
@@ -1610,9 +1612,9 @@
       ** Charges to the debit of - field changed (Y or blank)
      C                   PARM                    PCDROCHG          1
      C                   PARM                    InputUser                                  MD042042
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /Title Sr/ValdMargin
       *****************************************************************
@@ -1625,9 +1627,9 @@
       *  FTOPAY5VL  - Margin Info validation module                   *
       *                                                               *
       *****************************************************************
- 
+
      C     ValdMargin    BegSr
- 
+
      C                   CallB     'FTOPAY5VL'
      C                   Parm      'S'           APRespMode
      C                   Parm                    TranInPrim
@@ -1648,9 +1650,9 @@
      C                   Parm                    ValidPmnt
      C                   Parm                    Val@Fields
      C                   PARM                    O2TTCD                                       CER030
- 
+
      C                   EndSr
- 
+
       *****************************************************************
       /EJECT
       /Title Sr/ValdCoverA                                                                    CSW209
@@ -1732,14 +1734,14 @@
       *    are amendable.                                             *
       *                                                               *
       *****************************************************************
- 
+
      C     ValdateAmd    BEGSR
- 
- 
+
+
       ** AMEND CHECKING
      C                   RESET                   ReturnCode
      C                   CALLB     'FTOPAYAMD'
- 
+
       * INPUTS
       * Return Code
      C                   PARM                    ReturnCode
@@ -1764,7 +1766,7 @@
       * (Current) Payment in file format
      C                   PARM                    PmntFilFmt
      C                   PARM                    PmntFilFmX
- 
+
       * OUTPUTS
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFlag1DS
@@ -1782,16 +1784,16 @@
      C                   PARM                    AmendOk           1
       * Reset of Fields in Error Required (Y/N)
      C                   PARM      'N'           ResetErrs         1
- 
+
       ** If any errors overwrite previous error information
- 
+
      C                   IF        AmIdx <> 0
      C                   MOVEA     AmMsgIdArr    MsgidArr
      C                   MOVEA     AmFldNamAr    FldNameArr
      C                   MOVEA     AmMsgDtaAr    MsgDtaArr
      C                   Z-ADD     AmIdx         Idx
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT                                                                                  CER001
       *****************************************************************                       CER001
@@ -1844,20 +1846,20 @@
       /EJECT
       *****************************************************************
      C     WriteToDB     BEGSR
- 
+
      C                   IF        SACTION = 'I'
      C/COPY WNCPYSRC,FTOPAYVUC1
      C                   EXSR      SETUPPYREF
      C/COPY WNCPYSRC,FTOPAYVUC2
      C                   ENDIF
- 
+
      C                   MOVEL     SPREF         OTPREF
- 
+
      C     Idx           IFEQ      0
      C                   EXSR      SETUPVALID
      C                   EXSR      UpdateDB
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1867,40 +1869,40 @@
       *    updated during each run of this program                    *
       *                                                               *
       *****************************************************************
- 
+
      C     RESETCYCLE    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIDArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIdx
- 
+
      C                   RESET                   AmFldNamAr
      C                   RESET                   AmMsgIDArr
      C                   RESET                   AmMsgDtaAr
      C                   RESET                   AmIdx
- 
+
      C                   RESET                   FldNoArr
- 
- 
+
+
       ** Initialise all OK flags to 'Y'
- 
+
      C                   Eval      OKFlag1DS = (*All'Y')
      C                   Eval      OKFlag2DS = (*All'Y')
      C                   Eval      OKFlag3DS = (*All'Y')
      C                   Eval      OKFlag4DS = (*All'Y')
      C                   Eval      OKFlag5DS = (*All'Y')
- 
+
      C                   RESET                   AmendOK
- 
+
      C                   RESET                   PayDat
      C                   RESET                   RecDat
- 
+
      C                   CLEAR                   ValidPmnt
      C                   CLEAR                   ValidPmntB
                                                                                              CSF011A
@@ -1956,7 +1958,7 @@
      C                   EVAL      DDCDTN = *BLANKS                                          CSF011A
      C                   EVAL      DDCDAN = *BLANKS                                          CSF011A
      C                   EVAL      DDCDSW = *BLANKS                                          CSF011A
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1965,32 +1967,32 @@
       * SETUPPYREF - Generate Payment Reference for Inserts           *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPPYREF    BEGSR
- 
+
      C                   IF           SPREF  = *blanks
      C                             OR SPREF  = *zeros
- 
+
      C                   EXSR      SETPAYREF
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SPREF'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    OKPREF
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       ** If payment reference was entered, put it in the file field
      C                   ELSE
      C                   MOVE      SPREF         OTPREF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2000,9 +2002,9 @@
       *    Valid file record.                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
- 
+
       * For Deletes & Authorises, put the complete (pre-existing) Payment
       *  into the Valid file record
      C                   IF           SACTION = 'D'
@@ -2011,7 +2013,7 @@
      C                   MOVE      PmntFilFmt    ValidPmnt
      C                   MOVE      PmntFilFmX    ValidPmntB
      C                   ENDIF
- 
+
      C                   IF        SACTION = 'S' AND CFT157 = 'Y'                             CFT157
      C                   IF        AAUTH = 'Y'                                                CFT157
      C                   EVAL      OTSUSR = WUSRID                                            CFT157
@@ -2024,7 +2026,7 @@
       * Set Valid file field(s) that are needed for all Action Codes
      C                   EVAL      OTCHTP = SACTION
      C                   EVAL      OTRECI = 'D'
- 
+
       * Include Header fields that need to be o/p to the Valid file
                                                                                               244537
       * Do not override header fields from existing transaction.                              244537
@@ -2034,9 +2036,9 @@
      C                   EVAL      OTREPA = APRprLocn
                                                                                               244537
      C                   ENDIF                                                                244537
- 
+
       ** Setup valid extension file
- 
+
      C                   If        (@CFT003 = 'Y') Or (@CFT014 = 'Y')
      C                             OR (@CFT009 = 'Y')
      C                   Eval      O2RECI = 'D'
@@ -2056,7 +2058,7 @@
      C                             AND @TimeStamp <> *BLANKS                                 BUG4728
      C                   MOVEL     @TimeStamp    OTTMESTMP                                   BUG4196
      C                   ENDIF                                                               BUG4196
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2065,27 +2067,27 @@
       * UPDATEDB - Update Database                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     UPDATEDB      BEGSR
- 
+
       ** Set up fields on Val@Fields
      C                   EXSR      SetParms
- 
+
      C                   CALLB     'FTOPAYUPD'
       *  Return Code
      C                   PARM                    @@RTCD           10
- 
+
       *  OK Flags
      C                   Parm                    OKFlag1DS
      C                   Parm                    OKFlag2DS
      C                   Parm                    OKFlag3DS
      C                   Parm                    OKFlag4DS
      C                   Parm                    OKFlag5DS
- 
+
       * New Valid payment layout
      C                   PARM                    ValidPmnt
      C                   PARM                    ValidPmntB
- 
+
       *  Validation Work Fields
      C                   Parm                    Val@Fields
       *                                                                                       CAP211
@@ -2151,7 +2153,7 @@
      C                   MOVEL     'MMM1067'     MsgIdArr(1)
      C
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2161,12 +2163,12 @@
       *                                                               *
       *****************************************************************
      C     SetParms      BEGSR
- 
+
       * Charges branch
       * If single branch...
      C                   If        @MBIN = 'N'
      C                   Eval      @PYBR = BJSBRC
- 
+
      C                   Else
       * Else,if multi branched...
      C                   MOVEL     'Y'           BKOBRU            1
@@ -2176,7 +2178,7 @@
      C                   Else
      C                   Eval      @PYBR = OTBRCA
      C                   End
- 
+
      C                   End
      C                   ENDSR
       *****************************************************************
@@ -2188,17 +2190,17 @@
       *
      C                   MOVE      SPYTP         PmntType
      C                   MOVE      SSTTP         StmtType
- 
+
      **  Convert rundate to YYMMDD format.
      C                   CALLB     'ZDATE2'
      C                   PARM      BJRDNB        ZDAYNO            5 0
      C                   PARM      'M'           ZDATFM            1
      C                   PARM      *ZEROS        ZDATE             6 0
      C                   PARM      *BLANK        ZADATE            7
- 
+
      C                   MOVE      ZDATE         RUNDYY
      C                   MOVEL     ZDATE         RUNDMD
- 
+
      **  Get sequence number from data area.
      C     PYTP          IFEQ      'RP'
      C     *LOCK         IN        RGPAYD
@@ -2225,9 +2227,9 @@
      C                   PARM                    WNEWSQ            4                          CFT151
      C                   ENDIF                                                                CFT151
      C                   END
- 
+
      C                   MOVE      IPREF         SPREF
- 
+
       *
      C                   ENDSR
       *****************************************************************
@@ -2238,11 +2240,11 @@
       *              calling CVT module during insert                 *
       *                                                               *
       *****************************************************************
- 
+
      C     GetChgCcys    BEGSR
- 
+
       * Save fields before calling FTOPAYCVT to get charge currencies
- 
+
      C                   CALLB     'FTOPAYCVT'
       * INPUTS
       * Return Code
@@ -2250,7 +2252,7 @@
       * (Current) Payment in file format
      C                   PARM                    ValidPmnt
      C                   PARM                    ValidPmntB
- 
+
       * OUTPUTS
       * (Current) Payment in screen format
      C                   PARM                    CurTrPrim@
@@ -2266,22 +2268,22 @@
      C                   PARM                    CurTr7AthCp                                  CER030
      C                   PARM                    CurTr7BthCp                                  CER030
      C                   PARM                    SDFTFR
- 
+
       *  Validation Work Fields
      C**********         PARM                    Val@Fields@                                 BUG4163
      C                   PARM                    Val@Fields                                  BUG4163
- 
+
       * Status
      C                   PARM                    PmntStatus@      24
- 
+
       * Msg Unique Reference
      C                   PARM                    SHMSGR@
       * Part Number
      C                   PARM                    SHPART@
      C                   PARM      *BLANKS       BtnPressed                                AR1090283
- 
+
       ** Move necessary currency and amounts
- 
+
      C                   MOVE      @CSTRCM       STRCM
      C                   MOVE      @CSCHCM       SCHCM                                       BUG6864
      C                   MOVE      @CSTXCH       STXCH
@@ -2303,7 +2305,7 @@
      C                   MOVE      @CSCCYB1      SCCYB1
      C                   MOVE      @CSCCYB2      SCCYB2
      C                   MOVE      @CSCCYB3      SCCYB3
- 
+
      C                   ENDSR
      C/COPY WNCPYSRC,FTOPAYVUC3
       *****************************************************************
@@ -2313,9 +2315,9 @@
       * DtaSubs - Data Substitution                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     DtaSubs       begsr
- 
+
       ** Convert file fields to screen format
      C                   reset                   ReturnCode
      C                   callb     'FTOPAYCVT'
@@ -2325,7 +2327,7 @@
       * (Current) Payment in file format
      C                   PARM                    PmntFilFmt
      C                   PARM                    PmntFilFmX
- 
+
       * OUTPUTS
       * (Current) Payment in screen format
      C                   PARM                    CurTrPrim
@@ -2341,13 +2343,13 @@
      C                   PARM                    CurTr7Ath                                    CER030
      C                   PARM                    CurTr7Bth                                    CER030
      C                   PARM                    SDFTFR
- 
+
       *  Validation Work Fields
      C                   PARM                    Val@Fields
- 
+
       * Status
      C                   PARM                    PmntStatus       24
- 
+
       * Msg Unique Reference
      C                   PARM                    SHMSGR
       * Part Number
@@ -2355,9 +2357,9 @@
      C                   PARM      *BLANKS       BtnPressed                                AR1090283
       ** Substitute the data for the various parts of the transaction,
       ** dependent on the flags that were set earlier.
- 
+
      C                   if        RepPrim = 'Y'
- 
+
      C                   clear                   IncData
      C                   clear                   CurData
      C                   RESET                   ReturnCode
@@ -2370,13 +2372,13 @@
      C                   PARM      TranInPrim    IncData        2000
       * Current Data
      C                   PARM      CurTrPrim     CurData        2000
- 
+
      C                   MOVEL     IncDATA       TranInPrim
- 
+
      C                   endif
- 
+
      C                   if        RepSecA = 'Y'
- 
+
      C                   clear                   IncData
      C                   clear                   CurData
      C                   RESET                   ReturnCode
@@ -2389,13 +2391,13 @@
      C                   PARM      TranInSecA    IncData
       * Current Data
      C                   PARM      CurTrSeco     CurData
- 
+
      C                   MOVEL     IncDATA       TranInSecA
- 
+
      C                   endif
- 
+
      C                   if        RepSecB = 'Y'
- 
+
      C                   clear                   IncData
      C                   clear                   CurData
      C                   RESET                   ReturnCode
@@ -2408,13 +2410,13 @@
      C                   PARM      TranInSecB    IncData
       * Current Data
      C                   PARM      CurTrThrd     CurData
- 
+
      C                   MOVEL     IncDATA       TranInSecB
- 
+
      C                   endif
- 
+
      C                   if        RepThir = 'Y'
- 
+
      C                   clear                   IncData
      C                   clear                   CurData
      C                   RESET                   ReturnCode
@@ -2427,69 +2429,69 @@
      C                   PARM      TranInThir    IncData
       * Current Data
      C                   PARM      CurTrFour     CurData
- 
+
      C                   MOVEL     IncDATA       TranInThir
- 
+
      C                   endif
- 
+
      C                   If        RepPrmB = 'Y'
      C                   Clear                   IncData
      C                   Clear                   CurData
      C                   Reset                   ReturnCode
- 
+
      C                   CallB     'APDTASUBS'
      C                   Parm                    ReturnCode
      C                   Parm                    GHSUBS
      C                   Parm      TranInPrmB    IncData
      C                   Parm      CurTrPrm2     CurData
- 
+
      C                   Movel     IncDATA       TranInPrmB
      C                   EndIf
- 
+
      C                   If        RepThrB = 'Y'
      C                   Clear                   IncData
      C                   Clear                   CurData
      C                   Reset                   ReturnCode
- 
+
      C                   CallB     'APDTASUBS'
      C                   Parm                    ReturnCode
      C                   Parm                    GHSUBS
      C                   Parm      TranInThrB    IncData
      C                   Parm      CurTr5th      CurData
- 
+
      C                   Movel     IncDATA       TranInThrB
      C                   EndIf
- 
+
      C                   If        RepFour = 'Y'
      C                   Clear                   IncData
      C                   Clear                   CurData
      C                   Reset                   ReturnCode
- 
+
      C                   CallB     'APDTASUBS'
      C                   Parm                    ReturnCode
      C                   Parm                    GHSUBS
      C                   Parm      TranInFour    IncData
      C                   Parm      CurTr6th      CurData
- 
+
      C                   Movel     IncDATA       TranInFour
      C                   EndIf
- 
+
      C                   If        RepMarg = 'Y'
      C                   Clear                   IncData
      C                   Clear                   CurData
      C                   Reset                   ReturnCode
- 
+
      C                   CallB     'APDTASUBS'
      C                   Parm                    ReturnCode
      C                   Parm                    GHSUBS
      C                   Parm      TranInMarg    IncData
      C                   Parm      CurTr7th      CurData
- 
+
      C                   Movel     IncDATA       TranInMarg
      C                   EndIf
- 
+
      C                   endsr
- 
+
       *****************************************************************
       /EJECT                                                                                  CSF011
       *****************************************************************                       CSF011
@@ -2886,9 +2888,9 @@
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -2908,11 +2910,11 @@
      C                   PARM                    Trans5009C                                   262664
      C                   PARM                    Trans5013                                    CFT039
      C                   PARM                    Trans5012                                    CER049
- 
+
      C                   PARM                    RegData500                                   CER001
      C                   PARM                    ExtData
      C                   PARM                    StopFTDta                                  MD050928
- 
+
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
@@ -2927,16 +2929,16 @@
      C                   PARM                    @TimeStamp       26                         BUG4196
      C                   PARM                    AAuth             1                        BUG22150
      C                   PARM                    InputUser                                  MD042042
- 
+
       * Set up the names of the message files from which the message handler
       * will get the messages
      C                   EVAL      MsgFArray(1) = 'FTUSRMSG'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
      C                   EVAL      MsgFArray(3) = 'MEMSG'                                     CSW206
- 
+
       * Hook to enable non-core message files to be included
      D/COPY WNCPYSRC,FTOPAYM01
- 
+
       * Clear fields used invalidation
      C                   Clear                   Val@Fields
       **********                                                                             BUG7029
@@ -2944,33 +2946,33 @@
      C******DTAARA       Define                  ZMUSER                                      BUG7029
      C**********         In        ZMUSER                                                    BUG7029
      C**********         Unlock    ZMUSER                                                    BUG7029
- 
+
      C                   Eval      @DFBR = WDFBR
      C                   Eval      @DPPT = WDPPT
- 
+
       * Get RUNDAT to access Multi Branch Indicator
      C     *DTAARA       Define                  RUNDAT
      C                   In        RUNDAT
      C                   Unlock    RUNDAT
- 
+
      C                   Eval      @MBIN = WMBIN
- 
+
       ** Access Bank details via access program
       *  (database error handling done in access program)
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       * Access Funds Transfer details via access program
       *  (database error handling done in access program)
      C                   CALL      'AOFTFRR0'
      C                   Parm      '*DBERR'      @RTCD
      C                   Parm      '*FIRST'      @OPTN
      C     SDFTFR        Parm      SDFTFR        DSFDY
- 
+
      C                   Eval      @RATDIS = WRATDIS
- 
+
       * Access SAR details file to determine if CEU006 is on.
       *
      C                   CALLB     'AOSARDR0'
@@ -2978,7 +2980,7 @@
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'CEU006'      @SARD
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        @RTCD <> *Blanks and
      C                             @RTCD <> '*NRF   '
      C     *LOCK         In        LDA
@@ -2988,13 +2990,13 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   End
- 
+
      C                   If        @RTCD = *Blanks
      C                   Movel     'Y'           @CEU006           1
      C                   Else
      C                   Movel     'N'           @CEU006
      C                   End
- 
+
       * Access SAR details file to determine if S01494 is on.
       *
      C                   CALLB     'AOSARDR0'
@@ -3002,7 +3004,7 @@
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'S01494'      @SARD
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        @RTCD <> *Blanks and
      C                             @RTCD <> '*NRF   '
      C     *LOCK         In        LDA
@@ -3012,13 +3014,13 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   End
- 
+
      C                   If        @RTCD = *Blanks
      C                   Movel     'Y'           @01494
      C                   Else
      C                   Movel     'N'           @01494
      C                   End
- 
+
       * Access SAR details file to determine if S01499 is on.
       *
      C                   CALLB     'AOSARDR0'
@@ -3026,7 +3028,7 @@
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'S01499'      @SARD
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        @RTCD <> *Blanks and
      C                             @RTCD <> '*NRF   '
      C     *LOCK         In        LDA
@@ -3036,13 +3038,13 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   End
- 
+
      C                   If        @RTCD = *Blanks
      C                   Movel     'Y'           @01499
      C                   Else
      C                   Movel     'N'           @01499
      C                   End
- 
+
       * Access SAR details file to see if CFT003 is installed.
       *
      C                   CALLB     'AOSARDR0'
@@ -3050,7 +3052,7 @@
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'CFT003'      @SARD
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        @RTCD <> *Blanks and
      C                             @RTCD <> '*NRF   '
      C                   Movel     'SCSARDPD'    DBFILE                         * DBERROR 004 *
@@ -3058,21 +3060,21 @@
      C                   Movel     'CFT003'      DBKEY
      C                   Exsr      *PSSR
      C                   End
- 
+
      C                   If        @RTCD = *Blanks
      C                   Movel     'Y'           @CFT003
      C                   Else
      C                   Movel     'N'           @CFT003
      C                   End
- 
+
       ** Access SAR details file to see if CFT014 is installed.
- 
+
      C                   CallB     'AOSARDR0'
      C                   Parm      *Blanks       @RTCD
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'CFT014'      @SARD
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        @RTCD <> *Blanks and
      C                             @RTCD <> '*NRF   '
      C                   Movel     'SCSARDPD'    DBFILE                         * DBERROR 005 *
@@ -3080,13 +3082,13 @@
      C                   Movel     'CFT014'      DBKEY
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
      C                   If        @RTCD = *Blanks
      C                   Movel     'Y'           @CFT014
      C                   Else
      C                   Movel     'N'           @CFT014
      C                   EndIf
- 
+
       * Access SAR details file to see if S01508 is installed.
       *
      C                   CALLB     'AOSARDR0'
@@ -3094,7 +3096,7 @@
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'S01508'      @SARD
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        @RTCD <> *Blanks and
      C                             @RTCD <> '*NRF   '
      C                   Movel     'SCSARDPD'    DBFILE                         * DBERROR 006 *
@@ -3102,13 +3104,13 @@
      C                   Movel     'S01508'      DBKEY
      C                   Exsr      *PSSR
      C                   End
- 
+
      C                   If        @RTCD = *Blanks
      C                   Movel     'Y'           @01508
      C                   Else
      C                   Movel     'N'           @01508
      C                   End
- 
+
       * Access SAR details file to see if S01506 is installed.
       *
      C                   CALLB     'AOSARDR0'
@@ -3116,7 +3118,7 @@
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'S01506'      @SARD
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        @RTCD <> *Blanks and
      C                             @RTCD <> '*NRF   '
      C                   Movel     'SCSARDPD'    DBFILE                         * DBERROR 007 *
@@ -3124,13 +3126,13 @@
      C                   Movel     'S01506'      DBKEY
      C                   Exsr      *PSSR
      C                   End
- 
+
      C                   If        @RTCD = *Blanks
      C                   Movel     'Y'           @01506
      C                   Else
      C                   Movel     'N'           @01506
      C                   End
- 
+
       * Access SAR details file to see if CFT004 is installed.
       *
      C                   CALLB     'AOSARDR0'
@@ -3138,7 +3140,7 @@
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'CFT004'      @SARD
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        @RTCD = *Blanks
      C                   Movel     'Y'           @CFT004
      C                   Else
@@ -3152,7 +3154,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CFT009'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        @RTCD = *BLANKS
      C                   MOVEL     'Y'           @CFT009
      C                   ELSE
@@ -3166,7 +3168,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CFT010'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        @RTCD = *BLANKS
      C                   MOVEL     'Y'           @CFT010
      C                   ELSE
@@ -3230,7 +3232,7 @@
      C                   EVAL      @CGL014 = 'N'                                              CGL014
      C                   ENDIF                                                                CGL014
                                                                                               CGL014
- 
+
       **                                                                                      CSC022
       ** Access SAR details to see if CSC022 is switched on                                   CSC022
       **                                                                                      CSC022
@@ -3316,24 +3318,24 @@
      C                   Parm      '*KEY   '     @OPTN
      C                   Parm                    @K101             3
      C     SDCURR        Parm      SDCURR        DSSDY
- 
+
      C                   Eval      @BCDP = A6NBDP
- 
+
       ** Access API ICD via access program
      C                   CALLB     'AOAPIR0'
      C                   PARM      '*DBERR '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDAPI         PARM      SDAPI         DSFDY
- 
+
       * Calculate Run Date
      C                   CALLB     'ZDATE2'
      C                   Parm      BJRDNB        ZDAYNO
      C                   Parm                    BJDFIN
      C                   Parm      0             ZDATE
      C                   Parm      *Blanks       ZADATE
- 
+
      C                   Eval      @RUNN = ZDATE
- 
+
       * Calculate Back Value Date
      C                   Eval      @BVLD = BJRDNB - BJBVPD
                                                                                             BUG18500
@@ -3395,16 +3397,16 @@
      C                   ELSE                                                                 CFT157
      C                   EVAL      CFT157 = 'N'                                               CFT157
      C                   ENDIF                                                                CFT157
- 
+
       * Set up User id
      C                   Eval      PSUSER = WUSRID
      C                   Eval      @USRID = PSUSER
- 
- 
+
+
       *  Data areas for Payment reference numbering.
      C     *DTAARA       DEFINE    OTPAYDA       OTPAYD
      C     *DTAARA       DEFINE    RGPAYDA       RGPAYD
- 
+
      C                   ENDSR
       *****************************************************************
       /Title Sr/SrBMT103                                                                      244540

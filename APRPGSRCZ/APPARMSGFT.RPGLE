@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 CFT039             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension                           *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions (recompile) *
       *  CFT039 - SWIFT Mapping of Field Ordering Bank                *
@@ -93,10 +95,12 @@
  
       ** Data structure for incoming message formats
      D*BUFFER***       DS          6000                                                       CFT039
-     D BUFFER          DS         12000                                                       CFT039
+     D*BUFFER***       DS         12000                                                CFT039 CSD102
+     D BUFFER          DS         29997                                                       CSD102
      D  TYPE                   1      8
      D  USERID                33     42
-     D  PASSWORD              43     52
+     D**PASSWORD              43     52                                                       CSD102
+     D  PASSWORD              43    170                                                       CSD102
  
      D PaySttmt      E DS                  EXTNAME(SDESSPPD)
       * Pay Settlement Instructions

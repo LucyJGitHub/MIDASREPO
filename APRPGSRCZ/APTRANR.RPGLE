@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD052550           Date 07Jan19               *
-      *  Prev Amend No. MD044880           Date 15Jan18               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD052550           Date 07Jan19               *
+      *                 MD044880           Date 15Jan18               *
       *               . MD046248           Date 27Oct17               *
       *                 MD039986           Date 10Aug16               *
       *                 AR1090283          Date 10Aug16               *
@@ -79,6 +80,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension                           *
       *  MD052550 - Missed out line of code during reversal of        *
       *             fix MD-51830.                                     *
       *  MD044880 - BOE Switched On Testing and Fixing                *
@@ -227,7 +229,8 @@
      D TransType       S              4
      D Parm            S           1000
      D Buffer          S           6000
-     D ApHead          S            200                                                     AR971184
+     D***ApHead*         S            200                                            AR971184 CSD102
+     D ApHead          S            318                                                       CSD102
       * In order to allow for growing and variable buffers, this buffer must be split up
       * Any APIs requiring more than 6000 buffer should use buffer2
      D BufferTotal     S           9999

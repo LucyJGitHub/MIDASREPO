@@ -15,14 +15,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD044342           Date 01Mar17               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD044342           Date 01Mar17               *
       *                 MD033895           Date 16Apr15               *
       *                 MD023747           Date 23Nov13               *
       *                 AR884111A *CREATE  Date 25Jan12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044342 - Business date in BF is not being updated          *
       *  MD033895 - Password retrieval issue during COB               *
@@ -167,7 +169,8 @@
      D   P@OP10                      20A   CONST
      D   P@VL10                     200A   CONST
       *
-     D UT000033        PR                  EXTPGM('UT000033')
+     D*UT000033        PR                  EXTPGM('UT000033')
+     D SD000404        PR                  EXTPGM('SD000404')
      D  PReturnCode                   7A
      D  PAction                       1A   CONST
      D  PValidList                   10A   CONST
@@ -177,8 +180,9 @@
      D**PPass2                      256A   CONST                                            MD033895
      D**PDescr                       50A                                                    MD033895
      D  PuserName                   100A                                                    MD033895
-     D  PPass1                      600A                                                    MD033895
-     D  PPass2                      600A   CONST                                            MD033895
+     D**PPass1                      600A                                             MD033895 CSD101
+     D  PPass1                      128A                                                      CSD101
+     D**PPass2                      600A   CONST                                     MD033895 CSD101
      D  PDescr                     1000A                                                    MD033895
       *
       *  Call back procedure to call at the start of each XML element received
@@ -295,21 +299,32 @@
  
                  wIpAddress = %subst(wIpAddrSVal:1:64);
                  wUserName =  %subst(wUserNmSVal:1:30);
-                 wValLstLoc = %subst(wGPrefSVal:1:2) + 'GMLIB';
-                 wUserNmVlDl = wUserName;
+          //     wValLstLoc = %subst(wGPrefSVal:1:2) + 'GMLIB';                             //CSD101
+                 wValLstLoc = %subst(wZPrefSVal:1:2) + 'DMLIB';                             //CSD101
+          //     wUserNmVlDl = wUserName;                                                   //CSD101
+                 wUserNmVlDl = 'BANKFUSION_' + wUserName;                                   //CSD101
  
        //Retrieve password from validation list
  
-                     UT000033(wReturnCode
-                            : 'F'
-                            : 'GPLDAPVL'
-                            : wValLstLoc
-                            : wUserNmVlDl
-                            : wPass1
-                            : ' '
-                            : wDescr
-                            );
+          //         UT000033(wReturnCode                                                   //CSD101
+          //                : 'F'                                                           //CSD101
+          //                : 'GPLDAPVL'                                                    //CSD101
+          //                : wValLstLoc                                                    //CSD101
+          //                : wUserNmVlDl                                                   //CSD101
+          //                : wPass1                                                        //CSD101
+          //                : ' '                                                           //CSD101
+          //                : wDescr                                                        //CSD101
+          //                );                                                              //CSD101
  
+                     SD000404(wReturnCode                                                   //CSD101
+                            : 'F'                                                           //CSD101
+                            : 'SDINTFVL'                                                    //CSD101
+                            : wValLstLoc                                                    //CSD101
+                            : wUserNmVlDl                                                   //CSD101
+                            : wPass1                                                        //CSD101
+                            : wDescr                                                        //CSD101
+                            );                                                              //CSD101
+                                                                                            //CSD101
                   wPassword = wPass1;
  
           wSoapAction = %trim(setSpAction);

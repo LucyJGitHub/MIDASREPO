@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD044588           Date 09Mar17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD044588           Date 09Mar17               *
       *                 CFT049             Date 20Feb15               *
       *                 AR898165           Date 10Nov14               *
       *                 MD030940           Date 08Oct14               *
@@ -120,6 +121,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044588 - Transactions sent via SOAP that falls under       *
       *             CFT049 contains 'N' in the Authorise field        *

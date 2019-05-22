@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD037804           Date 25May16               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD037804           Date 25May16               *
       *                 AR924677           Date 03Nov14               *
       *                 MD030940           Date 08Oct14               *
       *                 CFT157             Date 29Aug14               *
@@ -91,6 +92,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037804 - Unnecessary DUMP produced by FTIPAYUPD module     *
       *  AR924677 - Amend of an authorized payment should return it   *

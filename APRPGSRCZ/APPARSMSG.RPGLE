@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 CIR017             Date 10Apr14               *
       *                 CGL132             Date 01May13               *
       *                 CSD092             Date 01May13               *
@@ -70,6 +71,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension                           *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions (recompile) *
       *  CIR017 - SIRS Business Day Conventions for both legs         *
@@ -195,10 +197,12 @@
  
       ** Data structure for incoming message formats
      D*BUFFER***       DS          6000                                                       CFT039
-     D BUFFER          DS         12000                                                       CFT039
+     D*BUFFER***       DS         12000                                                CFT039 CSD102
+     D BUFFER          DS         29997                                                       CSD102
      D  TYPE                   1      8
      D  USERID                33     42
-     D  PASSWORD              43     52
+     D**PASSWORD              43     52                                                       CSD102
+     D  PASSWORD              43    170                                                       CSD102
  
      D PaySttmt      E DS                  EXTNAME(SDESSPPD)
       * Pay Settlement Instructions
@@ -221,6 +225,25 @@
       ** External DS for SAR Details                                                          CAS011
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CAS011
  
+     D  DLRIS1In     E DS                  EXTNAME(DLRIS1PD)                                  CSD102
+     D  DLRIS2In     E DS                  EXTNAME(DLRIS2PD)                                  CSD102
+     D  DLRIS3In     E DS                  EXTNAME(DLRIS3PD)                                  CSD102
+     D  DLRIS4In     E DS                  EXTNAME(DLRIS4PD)                                  CSD102
+     D  SDSW13In     E DS                  EXTNAME(SDSW13PD)                                  CSD102
+     D                                     PREFIX(S13)                                        CSD102
+                                                                                              CSD102
+     D InSwift2013     DS                                                                     CSD102
+     D   DLRIS1DS                          LIKE(DLRIS1In)                                     CSD102
+     D   DLRIS2DS                          LIKE(DLRIS2In)                                     CSD102
+     D   DLRIS3DS                          LIKE(DLRIS3In)                                     CSD102
+     D   DLRIS4DS                          LIKE(DLRIS4In)                                     CSD102
+      * Reporting Information                                                                 CSD102
+                                                                                              CSD102
+     D Trans9999_2     DS          9999                                                       CSD102
+     D  SDSW13Ds                           LIKE(SDSW13In)                                     CSD102
+     D  Trans2Fil8942              8942                                                       CSD102
+                                                                                              CSD102
+     D Trans9999_3     DS          9999                                                       CSD102
       ** Work variables used by CAP067
      D REP1Ln          S              4P 0
      D REP2Ln          S              4P 0
@@ -1870,6 +1893,9 @@
      C                   PARM                    RegData                                      CER001
      C                   PARM                    ExtData
      C                   PARM                    OthDData
+     C                   PARM                    InSwift2013                                  CSD102
+     C                   PARM                    Trans9999_2                                  CSD102
+     C                   PARM                    Trans9999_3                                  CSD102
      C                   PARM                    Bypass            1
  
       ** Set up the procedure/module/program names

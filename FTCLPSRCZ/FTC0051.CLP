@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD021757           Date 14Aug13              */
+/*       Last Amend No. CSD102             Date 08Jan19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD021757           Date 14Aug13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CSD102 - Password Length Extension                          */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD021757 - CAP211 Override OTXL0                            */
 /*       CSC022 - Commitment Control Changes for MidasPlus           */
@@ -171,7 +173,9 @@
              OVRDBF     FILE(INPAY)    SHARE(*NO)
              OVRDBF     FILE(INPAYXL0)    SHARE(*NO)                  /*CFT014*/
 /** If Incoming Payment, then override OTXL0 introduced by CAP211 */                    /*MD021757*/
-             IF         COND(&PROG *EQ 'FTIPAYSIN') THEN(DO)                            /*MD021757*/
+/*           IF         COND(&PROG *EQ 'FTIPAYSIN') THEN(DO)                     /*MD021757 CSD102*/
+             IF         COND((&PROG *EQ 'FTIPAYSIN') *OR (&PROG *EQ +
+                          'FTIPAYRPR')) THEN(DO)                                          /*CSD102*/
              OVRDBF     FILE(OTXL0) TOFILE(OTPAYXL0) SHARE(*NO)                         /*MD021757*/
              OVRDBF     FILE(OTPAYOVR) TOFILE(OTPAY) SHARE(*NO)                         /*MD021757*/
              ENDDO                                                                      /*MD021757*/

@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD039105           Date 06Jun16               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD039105           Date 06Jun16               *
       *                 CSW216             Date 14Mar16               *
       *                 CPK030             Date 11Apr14               *
       *                 CSW214             Date 25Nov14               *
@@ -55,6 +56,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension                           *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039105 - Data truncation encountered when trying to insert *
       *             CUSD MQ and SOAP transaction with UDF fields      *
@@ -201,7 +203,8 @@
      D BUFFER          DS         29997                                                       CSW213
      D  TYPE                   1      8
      D  USERID                33     42
-     D  PASSWORD              43     52
+     D**PASSWORD              43     52                                                       CSD102
+     D  PASSWORD              43    170                                                       CSD102
  
       ** The include below brings in the return code structure that
       ** is used in calls to OS/400 APIs.
@@ -317,6 +320,7 @@
       ** APHEAD parameter.
  
      C     APRETCODE     IFNE      *BLANKS
+     C                   EVAL      PASSWORD = *BLANKS                                         CSD102
      C                   WRITE     APEXCPERD0
      C                   EVAL      APRETCODE = *BLANKS
       ** Perform a commit to ensure that message cannot be read again
@@ -326,6 +330,9 @@
       ** If required, validate the Profile / Password
      C                   IF        GHPWCR = 'Y'
      C                   EXSR      ValPrfPwd
+     C                   ELSE                                                                 CSD102
+     C                   EVAL      PASSWORD = *BLANKS                                         CSD102
+     C                   EVAL      APPASSWORD = *BLANKS                                       CSD102
      C                   ENDIF
  
       ** QUESI is the Error MSGID from the API call
@@ -435,7 +442,24 @@
       ** Load the entire message header into the API Dump data area so that
       **  dumps in any lower level modules will include the key information
      C     *Lock         IN        APDump
-     C                   MOVEL     APHEAD        APDUMP
+     C**********         MOVEL     APHEAD        APDUMP                                       CSD102
+     C                   MOVEL     APTGTTYPE     ARTGTTYPE                                    CSD102
+     C                   MOVEL     APTGTSYS      ARTGTSYS                                     CSD102
+     C                   MOVEL     APSRCTYPE     ARSRCTYPE                                    CSD102
+     C                   MOVEL     APSRCSYS      ARSRCSYS                                     CSD102
+     C                   MOVEL     APUSERID      ARUSERID                                     CSD102
+     C                   MOVEL     *BLANKS       ARPASSWORD                                   CSD102
+     C                   MOVEL     APFORMAT      ARFORMAT                                     CSD102
+     C                   MOVEL     APVERSION     ARVERSION                                    CSD102
+     C                   MOVEL     APRPYQUEUE    ARRPYQUEUE                                   CSD102
+     C                   MOVEL     APRESPMODE    ARRESPMODE                                   CSD102
+     C                   MOVEL     APMAPLOCN     ARMAPLOCN                                    CSD102
+     C                   MOVEL     APFOTRANID    ARFOTRANID                                   CSD102
+     C                   MOVEL     APFOASOCID    ARFOASOCID                                   CSD102
+     C                   MOVEL     APCNFVALFO    ARCNFVALFO                                   CSD102
+     C                   MOVEL     APRPRLOCN     ARRPRLOCN                                    CSD102
+     C                   MOVEL     APRETCODE     ARRETCODE                                    CSD102
+     C                   MOVEL     APMIDUSR      ARMIDUSR                                     CSD102
      C                   OUT       APDump
  
       ** Validate

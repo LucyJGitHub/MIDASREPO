@@ -30,8 +30,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1090283          Date 10Aug16               *
+      *  Last Amend No. MD042042           Date 22Mar19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
+      *                 AR1090283          Date 10Aug16               *
       *                 CFT151             Date 21Mar14               *
       *                 258944             Date 23Jan13               *
       *                 CFT148             Date 23Jan13               *
@@ -99,6 +101,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD042042 - Input User Information is replaced by WIP         *
+      *             Authoriser in Authorizing in "HATS"               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1090283 - Customer details not visible for enquire.        *
       *              (Child: AR1090284)                               *
@@ -1714,6 +1719,7 @@
                                                                                               257361
       *  Funds Transfer Details                                                               257361
      C                   PARM                    SDFTFR                                       257361
+     C                   PARM                    InputUser        10                        MD042042
      C/COPY WNCPYSRC,FTOPAYCC10
  
  

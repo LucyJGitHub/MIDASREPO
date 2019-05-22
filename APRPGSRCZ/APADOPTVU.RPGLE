@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD022060           Date 27Aug13               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD022060           Date 27Aug13               *
       *                 AR971184           Date 28May12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension                           *
       *  MD046248 - Finastra Rebranding                               *
       *  MD022060 - Reverse fix BUG12784. It limits the system to     *
       *             retrieve a length beyond 4800 for buffer 2 and 3  *
@@ -93,7 +95,8 @@
      D*MsgArrOUT*******S           2000                                                       BG1105
      D VarMsgArrO      S          32000    VARYING                                            BG1105
      D APIRetC         S              1
-     D ApHead          S            200                                                     AR971184
+     D***ApHead*         S            200                                            AR971184 CSD102
+     D ApHead          S            318                                                       CSD102
  
      D Jobd            DS            20
      D JobDName                1     10    INZ('MIDASIC   ')

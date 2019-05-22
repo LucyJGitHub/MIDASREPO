@@ -11,12 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD031644           Date 09Jan15               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD031644           Date 09Jan15               *
       *                 CFT158  *CREATE    Date 14Nov14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD031644 - SP7 Build issue (Rework of CFT158 Return          *
       *             Status of Interfaced FT Payments). Unable         *

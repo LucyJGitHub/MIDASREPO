@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR898162           Date 25Nov14               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR898162           Date 25Nov14               *
       *                 CFT157             Date 29Aug14               *
       *                 AR895223           Date 19Nov12               *
       *                 CFT120             Date 28Sep12               *
@@ -54,6 +55,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension                           *
       *  MD046248 - Finastra Rebranding                               *
       *  AR898162 - Charge codes passed via API are lost              *
       *             (Child: AR898163)                                 *
@@ -223,6 +225,7 @@
  
       *  Transaction details file parameter for FT000980
      D TRNDET          DS          3000
+     D  D#DATE              2822   2824P 0                                                    CSD102
  
       *  Transaction details extension file parameter for FT000980
      D TRNEXT          DS          3000
@@ -393,6 +396,7 @@
       *
      C                   CLEAR                   TRNDET
      C                   CLEAR                   TRNEXT
+     C                   EVAL      D#DATE = 0                                                 CSD102
  
      C                   EVAL      P#IPFILFMT = NWIPFILFMT
      C                   EVAL      P#IP2FILFMT = NWIP2FILFMT

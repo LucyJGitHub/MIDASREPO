@@ -1,8 +1,8 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2001)
+     H COPYRIGHT('(c) Finastra International Limited 2001')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas AB Internal contracts interface controller')
+/*EXI *  TEXT('Midas AB Internal contracts interface controller')     *
       *****************************************************************
       *                                                               *
       *  Midas - Internal Contracts (Dealing) Module                  *
@@ -24,12 +24,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 13Jan06               *
+      *                 CSD027             Date 13Jan06               *
       *                 CDL038             Date 10May05               *
       *                 CSC022             Date 24Feb04               *
       *                 CAP084             Date 02Feb04               *
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Recompiled due to PF changes.                       *
       *  CDL038 - Extended Deal Sub Type (Recompile)                  *

@@ -33,12 +33,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CFT163             Date 04May18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. CFT163             Date 04May18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CAP212  *CREATE    Date 15Sep14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  CFT163 - FT Nostro Transfer Authorisation (RPG)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP212 - FT Nostro Transfer API                              *

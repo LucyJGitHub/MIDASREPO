@@ -11,13 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD043066           Date 12Dec16               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD043066           Date 12Dec16               *
       *                 MD042950           Date 01Dec16               *
       *                 CGL154  *CREATE    Date 13Oct14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD043066 - FATCA Payment amount reflected is incorrect for   *
       *             an account holder with exception included in the  *

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE101             Date 27Aug14               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE101             Date 27Aug14               *
       *                 CRE095             Date 25Apr14               *
       *                 CGL165             Date 17Feb15               *
       *                 CRE090             Date 14Feb14               *
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE101 - Interim Interest Statement on a Frequency           *
       *           Added hooks: CRE101_006, CRE101_007, CRE101_008,    *
@@ -111,8 +113,8 @@
      F                                     PREFIX(RE_)
      FRECOM     IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(RC_)
-     FREAPWDL0  IF   E           K DISK    INFSR(*PSSR)
-     F                                     PREFIX(RW_)
+     F**********REAPWDL0  IF   E           K DISK    INFSR(*PSSR)                             CSD101
+     F**********                                     PREFIX(RW_)                              CSD101
      FREPRPNPD  IF   E           K DISK    INFSR(*PSSR)                                       CRE015
  
      FGLACSHL0  IF   E           K DISK    INFSR(*PSSR)
@@ -140,10 +142,10 @@
      F                                     RENAME(RECMSHD0:RECMSHD1)
       ** Midas RE commission Details Shadow File
  
-     FREPWSHL0  IF   E           K DISK    INFSR(*PSSR)
-     F                                     PREFIX(RW_)
-     FREPWSHL1  UF A E           K DISK    INFSR(*PSSR)
-     F                                     RENAME(REPWSHD0:REPWSHD1)
+     F***REPWSHL0  IF   E           K DISK    INFSR(*PSSR)                                    CSD101
+     F***                                     PREFIX(RW_)                                     CSD101
+     F***REPWSHL1  UF A E           K DISK    INFSR(*PSSR)                                    CSD101
+     F***                                     RENAME(REPWSHD0:REPWSHD1)                       CSD101
       ** Midas RE Paswword Details Shadow File
                                                                                               CRE015
      FREPRSHL0  IF   E           K DISK    INFSR(*PSSR)                                       CRE015
@@ -254,8 +256,8 @@
      D                                     PREFIX(RC_)
       * Stored Ret Commission details file format fields
  
-     D @1DREAPW      E DS                  EXTNAME(REAPWDPD)
-     D                                     PREFIX(RW_)
+     D***@1DREAPW      E DS                  EXTNAME(REAPWDPD)                                CSD101
+     D***                                    PREFIX(RW_)                                      CSD101
       * Stored Ret Password details file format fields
  
      D #1DACCNT      E DS                  EXTNAME(ACCNTAB) PREFIX(#AC)
@@ -279,10 +281,10 @@
      D DRECOMex              287    296                                                      BUG2733
       * Stored Ret Commission details Shadow file format fields
  
-     D #1DREAPW      E DS                  EXTNAME(REAPWDPD) PREFIX(#RW)
-     D DREAPWsh                1     33                                                      BUG2733
-     D DREAPWex               34     43                                                      BUG2733
-      * Stored Ret Password details Shadow File format fields
+     D***#1DREAPW      E DS                  EXTNAME(REAPWDPD) PREFIX(#RW)                    CSD101
+     D***DREAPWsh                1     33                                             BUG2733 CSD101
+     D***DREAPWex               34     43                                             BUG2733 CSD101
+      **Stored*Ret*Password*details*Shadow*File*format*fields**********                       CSD101
                                                                                               TDA084
      D GLVAMRI       E DS                  EXTNAME(GLVAMRIPD)                                 TDA084
      D GLVAMRIsh               1    144                                                       TDA084
@@ -291,10 +293,12 @@
      D                                     PREFIX(CO_)                                       BUG2733
      D GLVAMCOsh               1    286                                                      BUG2733
      D GLVAMCOex             354    363                                                      BUG2733
-     D GLVAMPW       E DS                  EXTNAME(GLVAMPWPD)                                BUG2733
-     D                                     PREFIX(CV_)                                       BUG2733
-     D GLVAMPWsh               1     33                                                      BUG2733
-     D GLVAMPWex             101    110                                                      BUG2733
+     D GLVAMPW       E DS                  EXTNAME(GLVAMPWPD)                         BUG2733 CSD101
+     D                                     PREFIX(CV_)                                BUG2733 CSD101
+     D***GLVAMPWsh               1     33                                             BUG2733 CSD101
+     D***GLVAMPWex             101    110                                             BUG2733 CSD101
+     D GLVAMPWsh               1    146                                                       CSD101
+     D GLVAMPWex             214    223                                                       CSD101
      D GLVAMPP       E DS                  EXTNAME(GLVAMPPPD)                                 CRE015
      D/COPY OFCPYSRCZ,CRE101_006                                                              CRE101
  
@@ -322,7 +326,7 @@
      D  MAINUBA                            LIKE(@1DACCNT)
      D  EXT1UBA                            LIKE(@1DACCNTBX)
      D***EXT2UBA                          LIKE(@1DREIAC)                                      225539
-     D  EXT2UBA                            LIKE(@1DREAPW)                                     225539
+     D***EXT2UBA                            LIKE(@1DREAPW)                             225539 CSD101
      D  EXT3UBA                            LIKE(@1DRECOM)
      D***EXT4UBA                         LIKE(@1DREAPW)                                       225539
      D  EXT4UBA                            LIKE(@1DREIAC)                                     225539
@@ -334,7 +338,7 @@
      D  MAINUPA                            LIKE(@1DACCNT)
      D  EXT1UPA                            LIKE(@1DACCNTBX)
      D***EXT2UPA                           LIKE(@1DREIAC)                                     225539
-     D  EXT2UPA                            LIKE(@1DREAPW)                                     225539
+     D***EXT2UPA                            LIKE(@1DREAPW)                             225539 CSD101
      D  EXT3UPA                            LIKE(@1DRECOM)
      D***EXT4UPA                           LIKE(@1DREAPW)                                     225539
      D  EXT4UPA                            LIKE(@1DREIAC)                                     225539
@@ -351,7 +355,7 @@
      D CMD1            S              1    DIM(50) CTDATA PERRCD(50)
      D CMD2            S              1    DIM(50) CTDATA PERRCD(50)
      D CMD3            S              1    DIM(50) CTDATA PERRCD(50)
-     D CMD4            S              1    DIM(50) CTDATA PERRCD(50)
+     D***CMD4            S              1    DIM(50) CTDATA PERRCD(50)                        CSD101
      D CMD5            S              1    DIM(50) CTDATA PERRCD(50)                          CRE015
  
       ** Array to hold commitment jobs name                                                   CSC022
@@ -500,20 +504,20 @@
      C                   IF        CRT101='Y' and CRT001='Y' and
      C                             AC_ATYP='R' and AC_STYP='S'
       *
-     C     Accntkey      CHAIN     REAPWDL0                           85
-     C                   IF        *IN85 = '1' AND ALACTN = 'A'
-     C     *LOCK         IN        LDA
-     C                   MOVEL     'REAPWDPD'    DBFILE
-     C                   MOVEL     '006'         DBASE
-     C                   MOVEL     PKEY          DBKEY
-     C                   OUT       LDA
-     C                   EXSR      *PSSR
-     C                   ELSE
+     C*****Accntkey      CHAIN     REAPWDL0                           85                      CSD101
+     C**********         IF        *IN85 = '1' AND ALACTN = 'A'                               CSD101
+     C******LOCK         IN        LDA                                                        CSD101
+     C**********         MOVEL     'REAPWDPD'    DBFILE                                       CSD101
+     C**********         MOVEL     '006'         DBASE                                        CSD101
+     C**********         MOVEL     PKEY          DBKEY                                        CSD101
+     C**********         OUT       LDA                                                        CSD101
+     C**********         EXSR      *PSSR                                                      CSD101
+     C**********         ELSE                                                                 CSD101
      C**********         MOVEL     *BLANKS       EXT4UBA                                      225539
      C**********         MOVEL     @1DREAPW      EXT4UBA                                      225539
-     C                   MOVEL     *BLANKS       EXT2UBA                                      225539
-     C                   MOVEL     @1DREAPW      EXT2UBA                                      225539
-     C                   ENDIF
+     C**********         MOVEL     *BLANKS       EXT2UBA                               225539 CSD101
+     C**********         MOVEL     @1DREAPW      EXT2UBA                               225539 CSD101
+     C**********         ENDIF                                                                CSD101
       *
      C                   ENDIF
                                                                                               CRE015
@@ -618,29 +622,29 @@
       *
      C                   ENDIF
  
-     C     Accntkey      CHAIN     REPWSHL0                           90
+     C*****Accntkey      CHAIN     REPWSHL0                           90                      CSD101
       *
-     C                   IF        *IN90 = '1'
-     C                   CLEAR                   @1DREAPW
+     C**********         IF        *IN90 = '1'                                                CSD101
+     C**********         CLEAR                   @1DREAPW                                     CSD101
      C**********         MOVEL     @1DREAPW      EXT4UBA                                      225539
      C**********         MOVEL     @1DREAPW      EXT4UPA                                      225539
-     C                   MOVEL     @1DREAPW      EXT2UBA                                      225539
-     C                   MOVEL     @1DREAPW      EXT2UPA                                      225539
+     C**********         MOVEL     @1DREAPW      EXT2UBA                               225539 CSD101
+     C**********         MOVEL     @1DREAPW      EXT2UPA                               225539 CSD101
       *
-     C                   ELSE
-     C                   IF        ALACTN = 'A'
+     C**********         ELSE                                                                 CSD101
+     C**********         IF        ALACTN = 'A'                                               CSD101
      C**********         MOVEL     *BLANKS       EXT4UPA                                      225539
      C**********         MOVEL     @1DREAPW      EXT4UPA                                      225539
-     C                   MOVEL     *BLANKS       EXT2UPA                                      225539
-     C                   MOVEL     @1DREAPW      EXT2UPA                                      225539
-     C                   ELSE
+     C**********         MOVEL     *BLANKS       EXT2UPA                               225539 CSD101
+     C**********         MOVEL     @1DREAPW      EXT2UPA                               225539 CSD101
+     C**********         ELSE                                                                 CSD101
      C**********         MOVEL     *BLANKS       EXT4UBA                                      225539
      C**********         MOVEL     @1DREAPW      EXT4UBA                                      225539
-     C                   MOVEL     *BLANKS       EXT2UBA                                      225539
-     C                   MOVEL     @1DREAPW      EXT2UBA                                      225539
-     C                   ENDIF
+     C**********         MOVEL     *BLANKS       EXT2UBA                               225539 CSD101
+     C**********         MOVEL     @1DREAPW      EXT2UBA                               225539 CSD101
+     C**********         ENDIF                                                                CSD101
       *
-     C                   ENDIF
+     C**********         ENDIF                                                                CSD101
                                                                                               CRE015
       ** Period and penalty details                                                           CRE015
                                                                                               CRE015
@@ -789,11 +793,11 @@
      C                   IF        CRT101='Y' and CRT001='Y' and
      C                             AC_ATYP='R' and AC_STYP='S'
       *
-     C     Accntkey      CHAIN     REPWSHL1                           96
-      *
-     C                   IF        *IN96 = '0'
-     C                   DELETE    REPWSHD1
-     C                   ENDIF
+     C*****Accntkey      CHAIN     REPWSHL1                           96                      CSD101
+      *                                                                                       CSD101
+     C**********         IF        *IN96 = '0'                                                CSD101
+     C**********         DELETE    REPWSHD1                                                   CSD101
+     C**********         ENDIF
       *
      C                   ENDIF
       *                                                                                      BUG3825
@@ -906,21 +910,21 @@
       ** If CRT101 (Password on Retail Accounts) is installed and
       ** CRT001 (Retail Teller System) is on
       *
-     C                   IF        CRT101='Y' and CRT001='Y' and
-     C                             AC_ATYP='R' and AC_STYP='S'
+     C**********         IF        CRT101='Y' and CRT001='Y' and                              CSD101
+     C**********                   AC_ATYP='R' and AC_STYP='S'                                CSD101
       *
-     C     Accntkey      CHAIN     REPWSHL0                           90
+     C*****Accntkey      CHAIN     REPWSHL0                           90                      CSD101
       *
-     C                   IF        *IN90 = '0'
-     C                   MOVEL     @1DREAPW      #1DREAPW
-     C                   ENDIF
+     C**********         IF        *IN90 = '0'                                                CSD101
+     C**********         MOVEL     @1DREAPW      #1DREAPW                                     CSD101
+     C**********         ENDIF                                                                CSD101
       *
       ** Clear Data Structure
-     C                   ELSE
+     C**********         ELSE                                                                 CSD101
       *
-     C                   CLEAR                   @1DREAPW
-     C                   MOVEL     @1DREAPW      #1DREAPW
-     C                   ENDIF
+     C**********         CLEAR                   @1DREAPW                                     CSD101
+     C**********         MOVEL     @1DREAPW      #1DREAPW                                     CSD101
+     C**********         ENDIF                                                                CSD101
       *---------------------------------------------------------------                        CRE015
                                                                                               CRE015
      C                   CLEAR                   GLVAMPP                                      CRE015
@@ -1001,8 +1005,8 @@
      C                   MOVEL     DRECOMsh      GLVAMCOsh                                   BUG2733
      C                   MOVEL     DRECOMex      GLVAMCOex                                   BUG2733
      C                   CLEAR                   GLVAMPW                                     BUG2733
-     C                   MOVEL     DREAPWsh      GLVAMPWsh                                   BUG2733
-     C                   MOVEL     DREAPWex      GLVAMPWex                                   BUG2733
+     C**********         MOVEL     DREAPWsh      GLVAMPWsh                            BUG2733 CSD101
+     C**********         MOVEL     DREAPWex      GLVAMPWex                            BUG2733 CSD101
      C/COPY OFCPYSRCZ,CRE101_007                                                              CRE101
      C                   CALLB     'GLAMADUPD'
      C                   PARM      *BLANKS       @RTCD
@@ -1111,10 +1115,10 @@
      C                   PARM                    CMD3
      C                   PARM                    CMDLEN
  
-      * Override REPWSHL0
-     C                   CALL      'QCMDEXC'
-     C                   PARM                    CMD4
-     C                   PARM                    CMDLEN
+      **Override*REPWSHL0**********************************************                       CSD101
+     C**********         CALL      'QCMDEXC'                                                  CSD101
+     C**********         PARM                    CMD4                                         CSD101
+     C**********         PARM                    CMDLEN                                       CSD101
                                                                                               CRE015
       * Override REPRSHL0                                                                     CRE015
      C                   CALL      'QCMDEXC'                                                  CRE015
@@ -1446,6 +1450,7 @@
       ********************************************************************
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
+      * Removed ** CMD4 OVRDBF FILE(REPWSHL0) TOFILE(REPWSHL0) SHARE(*NO)                     CSD101
 **  CPY@
 (c) Finastra International Limited 2002
 ** CMD
@@ -1456,7 +1461,5 @@ OVRDBF FILE(GLBXSHL0) TOFILE(GLBXSHL0) SHARE(*NO)
 OVRDBF FILE(REIASHL0) TOFILE(REIASHL0) SHARE(*NO)
 ** CMD3
 OVRDBF FILE(RECMSHL0) TOFILE(RECMSHL0) SHARE(*NO)
-** CMD4
-OVRDBF FILE(REPWSHL0) TOFILE(REPWSHL0) SHARE(*NO)
 ** CMD5                                                                                       CRE015
 OVRDBF FILE(REPRSHL0) TOFILE(REPRSHL0) SHARE(*NO)                                             CRE015

@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1021393          Date 13Nov18               *
-      *  Prev Amend No. 224697             Date 13Nov18               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 AR1021393          Date 13Nov18               *
+      *                 224697             Date 13Nov18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034366           Date 09Sep15               *
       *                 MD042832           Date 23Nov16               *
@@ -130,6 +132,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  AR1021393 - Wrong balances on account statement. Use balance *
       *              from GLACBTPD only if a/c not opened on rundate. *
       *              (Child: AR1021396)                               *
@@ -383,8 +387,8 @@
      FREODHSL0  UF A E           K DISK    COMMIT
      F                                     PREFIX(RO_)
 
-     FREAPWDL0  UF A E           K DISK    COMMIT
-     F                                     PREFIX(RW_)
+     F***REAPWDL0  UF A E           K DISK    COMMIT                                          CSD101
+     F**********                              PREFIX(RW_)                                     CSD101
 
      F***STRAN**   UF   E             DISK    COMMIT                                        AR900144
      FSTRAN     UF A E             DISK    COMMIT                                           AR900144
@@ -441,9 +445,9 @@
      F                                     PREFIX(TRC_)                                       CSD012
       * UPD : RE Retail Commission shadow file by key                                         CSD012
                                                                                               CSD012
-     FREPWSHL0  UF A E           K DISK    COMMIT                                             CSD012
-     F                                     PREFIX(TRW_)                                       CSD012
-      * UPD : RE Retail accnt Password Shadow file by key                                     CSD012
+     F***REPWSHL0  UF A E           K DISK    COMMIT                                   CSD012 CSD101
+     F***                                     PREFIX(TRW_)                             CSD012 CSD101
+      **UPD*:*RE*Retail*accnt*Password*Shadow*file*by*key**************                CSD012 CSD101
 
       ** Compliance Watch Hit List                                                            CSD015
      FSDCWHTL1  IF   E           K DISK                                                       CSD015
@@ -522,8 +526,9 @@
       * Current Account in File Format (Extension File)
      D CACOFilFmt    E DS                  EXTNAME(RECOMD)
      D                                     PREFIX(CC_)
-      * Current Account in File Format (Extension File)
-     D CAPWFilFmt    E DS                  EXTNAME(REAPWDPD)
+      **Current*Account*in*File*Format*(Extension File)****************                       CSD101
+     D***CAPWFilFmt    E DS                  EXTNAME(REAPWDPD)                                CSD101
+     D CAPWFilFmt    E DS                  EXTNAME(GLVAMPWPD)                                 CSD101
      D                                     PREFIX(CD_)
                                                                                               CRE015
      D CAPPFilFmt    E DS                  EXTNAME(REPENAPD)                                  CRE015
@@ -548,7 +553,7 @@
      D GLVAMCOsh               1    286                                                       CSD012
      D GLVAMPW       E DS                  EXTNAME(GLVAMPWPD)
      D GLPWACOD      E                     EXTFLD(QQACOD)                                     CGL029
-     D GLVAMPWsh               1     33                                                       CSD012
+     D***GLVAMPWsh               1     33                                              CSD012 CSD101
      D GLVAMPP       E DS                  EXTNAME(GLVAMPPPD)                                 CRE015
      D**GLVAMPPsh              1   6968                                                CRE015 CRE073
      D  GLVAMPPsh              1   7904                                                       CRE073
@@ -563,8 +568,8 @@
      D                                     PREFIX(TRE_)                                       CSD012
      D REVCMSH       E DS                  EXTNAME(RECMSHPD)                                  CSD012
      D                                     PREFIX(TRC_)                                       CSD012
-     D REVPWSH       E DS                  EXTNAME(REPWSHPD)                                  CSD012
-     D                                     PREFIX(TRW_)                                       CSD012
+     D***REVPWSH       E DS                  EXTNAME(REPWSHPD)                         CSD012 CSD101
+     D***                                     PREFIX(TRW_)                             CSD012 CSD101
      D REVPENA       E DS                  EXTNAME(REPRSHPD)                                  CRE015
      D                                     PREFIX(TRP_)                                       CRE015
 
@@ -598,9 +603,9 @@
      D RECOMDATA     E DS                  EXTNAME(RECOMD)                                    CSD012
      D                                     PREFIX(RC_)                                        CSD012
                                                                                               CSD012
-      **  Externally described Data Structure for Retail                                      CSD012
-     D REAPWDATA     E DS                  EXTNAME(REAPWDPD)                                  CSD012
-     D                                     PREFIX(RW_)                                        CSD012
+      **  Externally described Data Structure for Retail                               CSD012 CSD101
+     D***REAPWDATA     E DS                  EXTNAME(REAPWDPD)                         CSD012 CSD101
+     D**********                             PREFIX(RW_)                               CSD012 CSD101
                                                                                               CSD012
      D REPRPN        E DS                  EXTNAME(REPRPNPD)                                  CRE015
      D ArrFilBuf       S                   DIM(26) LIKE(REPRPN)                               CRE015
@@ -696,7 +701,7 @@
      D CMD2            S              1    DIM(50) CTDATA PERRCD(50)                          CSD012
      D CMD3            S              1    DIM(50) CTDATA PERRCD(50)                          CSD012
      D CMD4            S              1    DIM(50) CTDATA PERRCD(50)                          CSD012
-     D CMD5            S              1    DIM(50) CTDATA PERRCD(50)                          CSD012
+     D***CMD5            S              1    DIM(50) CTDATA PERRCD(50)                 CSD012 CSD101
                                                                                               CSD012
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
@@ -902,6 +907,13 @@
      D Branch                 22     24                                                       CGL029
      D** Data Structure For Account Key Database Error
 
+     D CHKACC2         DS            24                                                       CSD101
+     D KCNUM2                  1      6                                                       CSD101
+     D KCCY2                   7      9                                                       CSD101
+     D KACOD2                 10     19                                                       CSD101
+     D KACSQ2                 20     21                                                       CSD101
+     D KBRCA2                 22     24                                                       CSD101
+                                                                                              CSD101
       ** Array for enhancement CSD015                                                         CSD015
      D ARRTAG          S             15    DIM(2) CTDATA                                      CSD015
      D ArrEvnt         S              1    DIM(26) CTDATA PERRCD(26)                          CRE015
@@ -985,6 +997,14 @@
      D/COPY WNCPYSRC,GLH00574
      D CRE072          S              1A                                                      CRE072
      D CTI006          S              1A                                                    MD034725
+                                                                                              CSD101
+     D PReturnCode     S              7A                                                      CSD101
+     D PAction         S              1A                                                      CSD101
+     D PValidList      S             10A   INZ('SDINTFVL')                                    CSD101
+     D PLibrary        S             10A                                                      CSD101
+     D PIDName         S            100A                                                      CSD101
+     D PPass1          S            128A                                                      CSD101
+     D PDescr          S           1000A                                                      CSD101
      I**
      I** RENAME REACR FIELDS
      I**
@@ -1123,13 +1143,14 @@
      C                   IF        CRT101='Y' and CRT001='Y' and                              CSD012
      C                             AMATYP='R' and AMSTYP='S'                                  CSD012
       *                                                                                       CSD012
-     C     Accntkey      CHAIN     REAPWDL0                           80                      CSD012
-     C     *IN80         IFEQ      *OFF                                                       CSD012
-     C     REAPWDATA     ANDEQ     GLVAMPWsh                                                  CSD012
+     C*****Accntkey      CHAIN     REAPWDL0                           80               CSD012 CSD101
+     C******IN80         IFEQ      *OFF                                                CSD012 CSD101
+     C*****REAPWDATA     ANDEQ     GLVAMPWsh                                           CSD012 CSD101
                                                                                               CGL029
       ** Compare extended account code as well                                                CGL029
-     C     RW_ACOD       ANDEQ     PWACOD                                                     CGL029
-     C     AMCHTP        ANDEQ     'A'                                                        CSD012
+     C*****RW_ACOD       ANDEQ     PWACOD                                              CGL029 CSD101
+     C*****AMCHTP        ANDEQ     'A'                                                 CSD012 CSD101
+     C     AMCHTP        IFEQ      'A'                                                        CSD101
      C                   ELSE                                                                 CSD012
      C                   MOVEL     'Y'           YESUPDAT                                     CSD012
      C                   ENDIF                                                                CSD012
@@ -1598,15 +1619,15 @@
      C                   IF        CRT101='Y' and CRT001='Y' and                              CSD012
      C                             AMATYP='R' and AMSTYP='S'                                  CSD012
       *                                                                                       CSD012
-     C     Accntkey      CHAIN     REPWSHL0                           94                      CSD012
-      * If record does not exist write details to customer shadow file                        CSD012
-     C     *IN94         IFEQ      *ON                                                        CSD012
+     C*****Accntkey      CHAIN     REPWSHL0                           94               CSD012 CSD101
+      * If record does not exist write details to customer shadow file                 CSD012 CSD101
+     C******IN94         IFEQ      *ON                                                 CSD012 CSD101
       *                                                                                       CSD012
-     C                   CLEAR                   REPWSHD0                                     CRE101
-     C                   MOVEL     GLVAMPW       REVPWSH                                      CSD012
+     C**********         CLEAR                   REPWSHD0                              CRE101 CSD101
+     C**********         MOVEL     GLVAMPW       REVPWSH                               CSD012 CSD101
       *                                                                                       CSD012
-     C                   WRITE     REPWSHD0                                                   CSD012
-     C                   ENDIF                                                                CSD012
+     C**********         WRITE     REPWSHD0                                            CSD012 CSD101
+     C**********         ENDIF                                                         CSD012 CSD101
       *                                                                                       CSD012
      C                   ENDIF                                                                CSD012
       *End-----------------------7-------------------------------------                       CSD012
@@ -1873,6 +1894,7 @@
      C                   PARM                    CARIFilFmt
      C                   PARM                    CACOFilFmt
      C                   PARM                    CAPWFilFmt
+     C                   PARM                    DDPSWD          128                          CSD101
      C                   PARM                    CAPPFilFmt                                   CRE015
      C/COPY OFCPYSRCZ,CRE101_026                                                              CRE101
       * OK - Action code
@@ -3635,26 +3657,59 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   IF        CRT101='Y' and CRT001='Y' and
      C                             AMATYP='R' and AMSTYP='S'
       *
-      ** Write Password to file REAPWDPD
+      ***Write*Password*to*file*REAPWDPD*******************************                       CSD101
       *
-     C     AccntKey      CHAIN     REAPWDL0                           8081
+     C*****AccntKey      CHAIN     REAPWDL0                           8081                    CSD101
       ** DATABASE ERROR
-     C     *IN80         IFEQ      '0'
-     C     *IN81         OREQ      '1'
-     C                   MOVEL     DBerrKey      DBKEY
-     C                   MOVEL     'REAPWDPD'    DBFILE                         ************
-     C                   MOVEL     '019'         DBASE                          * DBERR 019*
-     C                   EXSR      SRERR                                        ************
-     C                   ENDIF
-     C                   CLEAR                   REAPWDD0                                     CRE101
-     C                   EVAL      RW_CNUM=PWCNUM
-     C                   EVAL      RW_CCY =PWCCY
-     C                   EVAL      RW_ACOD=PWACOD
-     C                   EVAL      RW_ACSQ=PWACSQ
-     C                   EVAL      RW_BRCA=PWBRCA
-     C                   EVAL      RW_PSWD=PWPSWD
-     C                   WRITE     REAPWDD0
-     C                   ENDIF
+     C******IN80         IFEQ      '0'                                                        CSD101
+     C******IN81         OREQ      '1'                                                        CSD101
+     C**********         MOVEL     DBerrKey      DBKEY                                        CSD101
+     C**********         MOVEL     'REAPWDPD'    DBFILE                         ************  CSD101
+     C**********         MOVEL     '019'         DBASE                          * DBERR 019*  CSD101
+     C**********         EXSR      SRERR                                        ************  CSD101
+     C**********         ENDIF                                                                CSD101
+     C**********         CLEAR                   REAPWDD0                              CRE101 CSD101
+     C**********         EVAL      RW_CNUM=PWCNUM                                             CSD101
+     C**********         EVAL      RW_CCY =PWCCY                                              CSD101
+     C**********         EVAL      RW_ACOD=PWACOD                                             CSD101
+     C**********         EVAL      RW_ACSQ=PWACSQ                                             CSD101
+     C**********         EVAL      RW_BRCA=PWBRCA                                             CSD101
+     C**********         EVAL      RW_PSWD=PWPSWD                                             CSD101
+     C**********         WRITE     REAPWDD0                                                   CSD101
+     C**********         ENDIF                                                                CSD101
+     C                   IF        PWPSWD <> *BLANKS                                          CSD101
+     C                   EVAL      KCNUM2 = AMCNUM                                            CSD101
+     C                   EVAL      KCCY2  = AMCCY                                             CSD101
+     C                   MOVE      AMACOD        KACOD2                                       CSD101
+     C                   MOVE      AMACSQ        KACSQ2                                       CSD101
+     C                   EVAL      KBRCA2 = AMBRCA                                            CSD101
+     C                   EVAL      PLibrary = LIBR + 'DMLIB'                                  CSD101
+     C                   EVAL      PIDName = 'ACCOUNTPASSWORD_'   + CHKACC2                   CSD101
+                                                                                              CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       PReturnCode                                  CSD101
+     C                   PARM      'F'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM      *Blanks       PPass1                                       CSD101
+     C                   PARM      *Blanks       PDescr                                       CSD101
+                                                                                              CSD101
+     C                   IF        PReturnCode <> *Blanks                                     CSD101
+     C                   EVAL      PPass1 = PWPSWD                                            CSD101
+     C                   EVAL      PDescr = *BLANKS                                           CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       PReturnCode                                  CSD101
+     C                   PARM      'A'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM                    PPass1                                       CSD101
+     C                   PARM                    PDescr                                       CSD101
+     C                   ENDIF                                                                CSD101
+                                                                                              CSD101
+     C                   ENDIF                                                                CSD101
+     C                   ENDIF                                                                CSD101
                                                                                               CRE015
       ** Period and penalty details                                                           CRE015
                                                                                               CRE015
@@ -6104,22 +6159,95 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   IF        CRT101='Y' and CRT001='Y' and
      C                             AMATYP='R' and AMSTYP='S'
       *
-      ** Write Password to file REAPWDPD
+      ***Write*Password*to*file*REAPWDPD*******************************                       CSD101
       *
-     C     AccntKey      CHAIN     REAPWDL0                           8081
+     C*****AccntKey      CHAIN     REAPWDL0                           8081                    CSD101
       ** DATABASE ERROR
      C******IN80         IFEQ      '1'                                                      MD042832
-     C     *IN81         IFEQ      '1'                                                      MD042832
-     C                   MOVEL     DBerrKey      DBKEY
-     C                   MOVEL     'REAPWDPD'    DBFILE                         ************
-     C                   MOVEL     '069'         DBASE                          * DBERR 069*
-     C                   EXSR      SRERR                                        ************
-     C                   ENDIF
+     C******IN81         IFEQ      '1'                                               MD042832 CSD101
+     C**********         MOVEL     DBerrKey      DBKEY                                        CSD101
+     C**********         MOVEL     'REAPWDPD'    DBFILE                         ************  CSD101
+     C**********         MOVEL     '069'         DBASE                          * DBERR 069*  CSD101
+     C**********         EXSR      SRERR                                        ************  CSD101
+     C**********         ENDIF                                                                CSD101
      C******IN81         IFEQ      '0'                                                      MD042832
-     C     *IN80         IFEQ      '0'                                                      MD042832
-     C                   EVAL      RW_PSWD=PWPSWD
-     C                   UPDATE    REAPWDD0
-     C                   ENDIF
+     C******IN80         IFEQ      '0'                                               MD042832 CSD101
+     C**********         EVAL      RW_PSWD=PWPSWD                                             CSD101
+     C**********         UPDATE    REAPWDD0                                                   CSD101
+     C**********         ENDIF                                                                CSD101
+     C                   IF        PWPSWD <> *BLANKS                                          CSD101
+     C                   EVAL      KCNUM2 = AMCNUM                                            CSD101
+     C                   EVAL      KCCY2  = AMCCY                                             CSD101
+     C                   MOVE      AMACOD        KACOD2                                       CSD101
+     C                   MOVE      AMACSQ        KACSQ2                                       CSD101
+     C                   EVAL      KBRCA2 = AMBRCA                                            CSD101
+     C                   EVAL      PLibrary = LIBR + 'DMLIB'                                  CSD101
+     C                   EVAL      PIDName = 'ACCOUNTPASSWORD_'   + CHKACC2                   CSD101
+                                                                                              CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       PReturnCode                                  CSD101
+     C                   PARM      'F'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM      *Blanks       PPass1                                       CSD101
+     C                   PARM      *Blanks       PDescr                                       CSD101
+                                                                                              CSD101
+     C                   IF        PReturnCode = *BLANKS                                      CSD101
+     C                   EVAL      PPass1 = PWPSWD                                            CSD101
+     C                   EVAL      PDescr = *BLANKS                                           CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       PReturnCode                                  CSD101
+     C                   PARM      'M'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM                    PPass1                                       CSD101
+     C                   PARM                    PDescr                                       CSD101
+     C                   ELSE                                                                 CSD101
+     C                   EVAL      PPass1 = PWPSWD                                            CSD101
+     C                   EVAL      PDescr = *BLANKS                                           CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       PReturnCode                                  CSD101
+     C                   PARM      'A'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM                    PPass1                                       CSD101
+     C                   PARM                    PDescr                                       CSD101
+     C                   ENDIF                                                                CSD101
+     C                   ENDIF                                                                CSD101
+      * If Entered password is blank and a record is in Validation List, delete the           CSD101
+      * record                                                                                CSD101
+     C                   IF        PWPSWD  = *BLANKS                                          CSD101
+     C                   EVAL      KCNUM2 = AMCNUM                                            CSD101
+     C                   EVAL      KCCY2  = AMCCY                                             CSD101
+     C                   MOVE      AMACOD        KACOD2                                       CSD101
+     C                   MOVE      AMACSQ        KACSQ2                                       CSD101
+     C                   EVAL      KBRCA2 = AMBRCA                                            CSD101
+     C                   EVAL      PLibrary = LIBR + 'DMLIB'                                  CSD101
+     C                   EVAL      PIDName = 'ACCOUNTPASSWORD_'   + CHKACC2                   CSD101
+                                                                                              CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       PReturnCode                                  CSD101
+     C                   PARM      'F'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM      *Blanks       PPass1                                       CSD101
+     C                   PARM      *Blanks       PDescr                                       CSD101
+     C                   IF        PReturnCode = *BLANKS                                      CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       PReturnCode                                  CSD101
+     C                   PARM      'D'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM                    PPass1                                       CSD101
+     C                   PARM                    PDescr                                       CSD101
+     C                   ENDIF                                                                CSD101
+     C                   ENDIF                                                                CSD101
+                                                                                              CSD101
      C                   ENDIF
       *                                                                                       CTI005
      C     Rehiskey      CHAIN     GLACSHL0                           90                      CTI005
@@ -6281,9 +6409,9 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   PARM                    CMD4                                         CSD012
      C                   PARM                    CMDLEN                                       CSD012
       * Override REPWSHL0                                                                     CSD012
-     C                   CALL      'QCMDEXC'                                                  CSD012
-     C                   PARM                    CMD5                                         CSD012
-     C                   PARM                    CMDLEN                                       CSD012
+     C**********         CALL      'QCMDEXC'                                           CSD012 CSD101
+     C**********         PARM                    CMD5                                  CSD012 CSD101
+     C**********         PARM                    CMDLEN                                CSD012 CSD101
       *
       **  PROGRAM PARAMETERS
       *
@@ -7297,8 +7425,9 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
       *****************************************************************                       CSD015
       /EJECT                                                                                  CSD015
       *****************************************************************                       CSD015
+      * Removed ** CMD5 OVRDBF FILE(REPWSHL0) TOFILE(REPWSHL0) SHARE(*NO)                     CSD101
 **  CPY@
-(c) Finastra International Limited 2001            
+(c) Finastra International Limited 2001
 ** CMD1
 OVRDBF FILE(GLACSHL0) TOFILE(GLACSHL0) SHARE(*NO)
 ** CMD2
@@ -7307,8 +7436,6 @@ OVRDBF FILE(GLBXSHL0) TOFILE(GLBXSHL0) SHARE(*NO)
 OVRDBF FILE(REIASHL0) TOFILE(REIASHL0) SHARE(*NO)
 ** CMD4
 OVRDBF FILE(RECMSHL0) TOFILE(RECMSHL0) SHARE(*NO)
-** CMD5
-OVRDBF FILE(REPWSHL0) TOFILE(REPWSHL0) SHARE(*NO)
 **  ARRTAG                                                                                    CSD015
 <Account Name>                                                                                CSD015
 </Account Name>                                                                               CSD015

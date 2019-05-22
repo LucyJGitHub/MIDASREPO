@@ -38,8 +38,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD042713           Date 05Dec16               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD042713           Date 05Dec16               *
       *                 222427             Date 05Dec16               *
       *                 CRE101             Date 27Aug14               *
       *                 CGL165             Date 17Feb15               *
@@ -67,6 +69,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042713 - Display Default Statement commission.             *
       *  222427 - AMAN - 'Extra Daily Statement Commission' default   *
@@ -248,12 +252,14 @@
      D V_QQACC3      E                     EXTFLD(QQACOD)
      D ValidExCO1              1    286
      D ValidExCOEx           354    363
-      * Valid Extn. Account layout -> REAPWDPD
+      **Valid*Extn.*Account*layout*->*REAPWDPD*************************                       CSD101
      D ValidExPW     E DS                  EXTNAME(GLVAMPWPD)
      D                                     PREFIX(V_)
      D V_QQACC4      E                     EXTFLD(QQACOD)
-     D ValidExPW1              1     33
-     D ValidExPWEx           101    110
+     D***ValidExPW1              1     33                                                     CSD101
+     D***ValidExPWEx           101    110                                                     CSD101
+     D ValidExPW1              1    146                                                       CSD101
+     D ValidExPWEx           214    223                                                       CSD101
       * Valid Extn. Account layout -> REPRPNPD                                              MD027217
      D ValidPena     E DS                  EXTNAME(GLVAMPPPD)                               MD027217
      D                                     PREFIX(V_)                                       MD027217
@@ -270,13 +276,17 @@
      D                                     PREFIX(C_)
      D ExCOFilFmt1             1    286
      D ExCOFilFmtEx          287    296
-     D ExPWFilFmt    E DS                  EXTNAME(REAPWDPD)
-     D                                     PREFIX(D_)
+     D***ExPWFilFmt    E DS                  EXTNAME(REAPWDPD)                                CSD101
+     D***                                    PREFIX(D_)                                       CSD101
      D ExPPFilFmt    E DS                  EXTNAME(REPENAPD)                                MD027217
      D                                     PREFIX(F1)                                       MD027217
      D/COPY OFCPYSRCZ,CRE101_033                                                              CRE101
-     D ExPWFilFmt1             1     33
-     D ExPWFilFmtEx           34     43
+     D***ExPWFilFmt1             1     33                                                     CSD101
+     D***ExPWFilFmtEx           34     43                                                     CSD101
+     D ExPWFilFmt    E DS                  EXTNAME(GLVAMPWPD)                                 CSD101
+     D                                     PREFIX(D2_)                                        CSD101
+     D ExPWFilFmt1             1    146                                                       CSD101
+     D ExPWFilFmtEx          214    223                                                       CSD101
  
       * (Current) Account in Screen Format - Master Details
      D CurAcMast     E DS                  EXTNAME(GLAMADPD)
@@ -310,7 +320,8 @@
      D CACOFilFmt    E DS                  EXTNAME(RECOMD)
      D                                     PREFIX(CC_)
       * Current Account in File Format (Extension File)
-     D CAPWFilFmt    E DS                  EXTNAME(REAPWDPD)
+     D***CAPWFilFmt    E DS                  EXTNAME(REAPWDPD)                                CSD101
+     D CAPWFilFmt    E DS                  EXTNAME(GLVAMPWPD)                                 CSD101
      D                                     PREFIX(CD_)
      D CAPPFILFMT    E DS                  EXTNAME(GLVAMPPPD)                               MD027217
      D                                     PREFIX(PP_)                                      MD027217
@@ -676,6 +687,7 @@
      C                   PARM                    ExRIFilFmt
      C                   PARM                    ExCOFilFmt
      C                   PARM                    ExPWFilFmt
+     C                   PARM                    DDPSWD                                       CSD101
      C                   PARM                    ExPPFilFmt                                 MD027217
      C/COPY OFCPYSRCZ,CRE101_014                                                              CRE101
       *
@@ -2146,6 +2158,7 @@
      C                   PARM                    CARIFilFmt
      C                   PARM                    CACOFilFmt
      C                   PARM                    CAPWFilFmt
+     C                   PARM                    DDPSWD                                       CSD101
      C                   PARM                    CAPPFilFmt                                 MD027217
      C/COPY OFCPYSRCZ,CRE101_026                                                              CRE101
       * OK - Action code

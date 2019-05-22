@@ -34,8 +34,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD051247           Date 17Jul18               *      
-      *  Prev Amend No. MD044880           Date 15Jan18               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD051247           Date 17Jul18               *
+      *                 MD044880           Date 15Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044546           Date 20Mar17               *
       *                 MD043890           Date 06Feb17               *
@@ -135,6 +137,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD051247 - SP15_CUSD API issue                               *
       *           - Code improvement                                  *      
       *  MD044880 - BOE Switched On Testing and Fixing                *
@@ -474,12 +478,14 @@
      D V_QQACC3      E                     EXTFLD(QQACOD)                                     CGL029
      D ValidExCO1              1    286                                                      BUG2733
      D ValidExCOEx           354    363                                                      BUG2733
-      * Valid Extn. Account layout -> REAPWDPD
+      **Valid Extn. Account layout ->*REAPWDPD*************************                       CSD101
      D ValidExPW     E DS                  EXTNAME(GLVAMPWPD)
      D                                     PREFIX(V_)
      D V_QQACC4      E                     EXTFLD(QQACOD)                                     CGL029
-     D ValidExPW1              1     33                                                      BUG2733
-     D ValidExPWEx           101    110                                                      BUG2733
+     D*ValidExPW1              1     33                                               BUG2733 CSD101
+     D***ValidExPWEx           101    110                                             BUG2733 CSD101
+     D ValidExPW1              1    146                                                       CSD101
+     D ValidExPWEx           214    223                                                       CSD101
       * Valid Extn. Account layout -> REPRPNPD                                                CRE015
      D ValidPena     E DS                  EXTNAME(GLVAMPPPD)                                 CRE015
      D                                     PREFIX(V_)                                         CRE015
@@ -501,10 +507,14 @@
      D                                     PREFIX(C_)
      D ExCOFilFmt1             1    286                                                      BUG2733
      D ExCOFilFmtEx          287    296                                                      BUG2733
-     D ExPWFilFmt    E DS                  EXTNAME(REAPWDPD)
-     D                                     PREFIX(D_)
-     D ExPWFilFmt1             1     33                                                      BUG2733
-     D ExPWFilFmtEx           34     43                                                      BUG2733
+     D***ExPWFilFmt    E DS                  EXTNAME(REAPWDPD)                                CSD101
+     D***                                     PREFIX(D_)                                      CSD101
+     D***ExPWFilFmt1             1     33                                             BUG2733 CSD101
+     D***ExPWFilFmtEx           34     43                                             BUG2733 CSD101
+     D ExPWFilFmt    E DS                  EXTNAME(GLVAMPWPD)                                 CSD101
+     D                                     PREFIX(D2_)                                        CSD101
+     D ExPWFilFmt1             1    146                                                       CSD101
+     D ExPWFilFmtEx          214    223                                                       CSD101
      D ExPPFilFmt    E DS                  EXTNAME(REPENAPD)                                  CRE015
      D                                     PREFIX(E_)                                         CRE015
      D/COPY OFCPYSRCZ,CRE101_033                                                              CRE101
@@ -556,8 +566,8 @@
      D                                     PREFIX(CC_)                                        240312
      D V_QQACC7      E                     EXTFLD(QQACOD)                                     240312
       * Current Account in File Format (Extension File)                                       BUG553
-     D*******CAPWFilFmt    E DS                  EXTNAME(REAPWDPD)                     BUG553 240312
-     D**********                           PREFIX(CD_)                                 BUG553 240312
+     D***CAPWFilFmt    E DS                  EXTNAME(REAPWDPD)                         BUG553 240312
+     D***                                    PREFIX(CD_)                               BUG553 240312
      D CAPWFilFmt    E DS                  EXTNAME(GLVAMPWPD)                                 240312
      D                                     PREFIX(CD_)                                        240312
      D CAPPFilFmt    E DS                  EXTNAME(GLVAMPPPD)                                 CRE015
@@ -1207,6 +1217,7 @@
      C                   PARM                    ExRIFilFmt
      C                   PARM                    ExCOFilFmt
      C                   PARM                    ExPWFilFmt
+     C                   PARM                    DDPSWD                                       CSD101
      C                   PARM                    ExPPFilFmt                                   CRE015
      C/COPY OFCPYSRCZ,CRE101_014                                                              CRE101
       *
@@ -1763,7 +1774,7 @@
      C**********         MOVEL     ExCOFilFmt    ValidExCO                                   BUG2733
      C                   MOVEL     ExCOFilFmt1   ValidExCO1                                  BUG2733
      C                   MOVEL     ExCOFilFmtEx  ValidExCOEx                                 BUG2733
-     C**********         MOVEL     ExPWFilFmt    ValidExPW                                   BUG2733
+     C                   MOVEL     ExPWFilFmt    ValidExPW                            BUG2733 CSD101
      C                   MOVEL     ExPWFilFmt1   ValidExPW1                                  BUG2733
      C                   MOVEL     ExPWFilFmtEx  ValidExPWEx                                 BUG2733
      C                   IF        CRE015 = 'Y'                                               CRE015
@@ -3162,6 +3173,7 @@
      C                   PARM                    CARIFilFmt                                   BUG553
      C                   PARM                    CACOFilFmt                                   BUG553
      C                   PARM                    CAPWFilFmt                                   BUG553
+     C                   PARM                    DDPSWD                                       CSD101
      C                   PARM                    CAPPFilFmt                                   CRE015
      C/COPY OFCPYSRCZ,CRE101_026                                                              CRE101
       * OK - Action code                                                                      BUG553

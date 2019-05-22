@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 LLN022A            Date 03Jun15               *
       *                 CRE101             Date 27Aug14               *
       *                 CRE095             Date 25Apr14               *
       *                 CGL165             Date 23Feb15               *
@@ -56,6 +57,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
       *            /COPY members and add switchability.               *
@@ -286,7 +288,7 @@
      D ##OX2           S              1    DIM(50) CTDATA PERRCD(50)
      D ##OX3           S              1    DIM(50) CTDATA PERRCD(50)
      D ##OX4           S              1    DIM(50) CTDATA PERRCD(50)
-     D ##OX5           S              1    DIM(50) CTDATA PERRCD(50)
+     D***##OX5           S              1    DIM(50) CTDATA PERRCD(50)                        CSD101
      D ##OX6           S              1    DIM(50) CTDATA PERRCD(50)                          CRE015
  
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
@@ -1194,10 +1196,10 @@
      C                   CALL      'QCMDEXC'
      C                   PARM                    ##OX4
      C                   PARM                    MESLEN
-     C* Overrride REAPWDL0
-     C                   CALL      'QCMDEXC'
-     C                   PARM                    ##OX5
-     C                   PARM                    MESLEN
+     C**Overrride*REAPWDL0*********************************************                       CSD101
+     C**********         CALL      'QCMDEXC'                                                  CSD101
+     C**********         PARM                    ##OX5                                        CSD101
+     C**********         PARM                    MESLEN                                       CSD101
      C* Override REPRSHL0                                                                     CRE015
      C                   CALL      'QCMDEXC'                                                  CRE015
      C                   PARM                    ##OX6                                        CRE015
@@ -1257,6 +1259,7 @@
       ** subroutine, including a bound call to the DBERRCTL module.
      C/COPY ZACPYSRC,PSSR_ILE
       /EJECT
+      * Removed ##OX5  OVRDBF FILE(REAPWDL1) TOFILE(REAPWDL0) SHARE(*NO)                      CSD101
 **  CPY@
 (c) Finastra International Limited 2001
 ** ##OX1
@@ -1267,8 +1270,6 @@ OVRDBF FILE(ACCNTL1) TOFILE(ACCNTL0) SHARE(*NO)
 OVRDBF FILE(REIACXX) TOFILE(REIAC) SHARE(*NO)
 ** ##OX4
 OVRDBF FILE(RECOMXX) TOFILE(RECOM) SHARE(*NO)
-** ##OX5
-OVRDBF FILE(REAPWDL1) TOFILE(REAPWDL0) SHARE(*NO)
 ** CMD
 OVRDBF FILE(SDAULGL0) TOFILE(SDAULGL0) SHARE(*NO)
 ** ##OX6                                                                                      CRE015

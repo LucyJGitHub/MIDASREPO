@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034725           Date 27Jul16               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD034725           Date 27Jul16               *
       *                 CRE101             Date 27Aug14               *
       *                 CGL165             Date 23Feb15               *
       *                 CSF011A            Date 28Nov11               *
@@ -63,6 +64,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034725 - Single CCY + Branch available in BFM and TI Plus  *
       *  CRE101 - Interim Interest Statements on a Frequency          *
@@ -299,6 +301,24 @@
                                                                                               CRE015
      D ArrFilBuf       S                   DIM(26) LIKE(ArrFil)                               CRE015
  
+     D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSD101
+      ** SD data area                                                                         CSD101
+                                                                                              CSD101
+     D CHKACC2         DS            24                                                       CSD101
+     D KCNUM2                  1      6                                                       CSD101
+     D KCCY2                   7      9                                                       CSD101
+     D KACOD2                 10     19                                                       CSD101
+     D KACSQ2                 20     21                                                       CSD101
+     D KBRCA2                 22     24                                                       CSD101
+
+     D PReturnCode     S              7A                                                      CSD101
+     D PAction         S              1A                                                      CSD101
+     D PValidList      S             10A   INZ('SDINTFVL')                                    CSD101
+     D PLibrary        S             10A                                                      CSD101
+     D PIDName         S            100A                                                      CSD101
+     D PPass1          S            128A                                                      CSD101
+     D PDescr          S           1000A                                                      CSD101
+                                                                                              CSD101
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -1381,7 +1401,28 @@
       *
       * Savings Account Password
       *
-     C                   EVAL      DDPSWD=PWPSWD
+     C**********         EVAL      DDPSWD=PWPSWD                                              CSD101
+     C                   EVAL      KCNUM2 = AMCNUM                                            CSD101
+     C                   EVAL      KCCY2  = AMCCY                                             CSD101
+     C                   MOVE      AMACOD        KACOD2                                       CSD101
+     C                   MOVE      AMACSQ        KACSQ2                                       CSD101
+     C                   EVAL      KBRCA2 = AMBRCA                                            CSD101
+     C                   EVAL      PLibrary = LIBR + 'DMLIB'                                  CSD101
+     C                   EVAL      PIDName = 'ACCOUNTPASSWORD_'   + CHKACC2                   CSD101
+                                                                                              CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       PReturnCode                                  CSD101
+     C                   PARM      'F'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM      *Blanks       PPass1                                       CSD101
+     C                   PARM      *Blanks       PDescr                                       CSD101
+     C                   IF        PReturnCode =  *Blanks                                     CSD101
+     C                   EVAL      PWPSWD = PPass1                                            CSD101
+     C                   EVAL      DDPSWD = PPass1                                            CSD101
+     C                   ENDIF                                                                CSD101
+                                                                                              CSD101
                                                                                               CLE025
       ** Facility Customer                                                                    CLE025
                                                                                               CLE025
@@ -2369,6 +2410,7 @@
      C                   EXSR      *PSSR                                                    MD034725
      C                   ENDIF                                                              MD034725
       *
+     C                   IN        SDSTAT                                                     CSD101
      C                   ENDSR
       *****************************************************************
       /EJECT

@@ -31,8 +31,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
+      *                 LLN022A            Date 03Jun15               *
       *                 CRE095             Date 25Apr14               *
       *                 CGL165             Date 17Feb15               *
       *                 CRE090             Date 14Feb14               *
@@ -92,6 +94,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
       *            /COPY members and add switchability.               *
@@ -348,8 +352,10 @@
      D ValidExPW     E DS                  EXTNAME(GLVAMPWPD)
      D                                     PREFIX(V_)
      D V_GLPWACOD    E                     EXTFLD(QQACOD)                                     CGL029
-     D ValidExPW1              1     33                                                       CGL029
-     D ValidExPWEx           101    110                                                       CGL029
+     D***ValidExPW1              1     33                                              CGL029 CSD101
+     D***ValidExPWEx           101    110                                              CGL029 CSD101
+     D ValidExPW1              1    146                                                       CSD101
+     D ValidExPWEx           214    223                                                       CSD101
  
  
      D AccnFilFmt    E DS                  EXTNAME(ACCNTAB)
@@ -363,10 +369,14 @@
      D                                     PREFIX(C_)
      D ExCOFilFmt1             1    286                                                       CGL029
      D ExCOFilFmtEx          287    296                                                       CGL029
-     D ExPWFilFmt    E DS                  EXTNAME(REAPWDPD)
-     D                                     PREFIX(D_)
-     D ExPWFilFmt1             1     33                                                       CGL029
-     D ExPWFilFmtEx           34     43                                                       CGL029
+     D***ExPWFilFmt    E DS                  EXTNAME(REAPWDPD)                                CSD101
+     D***                                    PREFIX(D_)                                       CSD101
+     D*ExPWFilFmt1             1     33                                                CGL029 CSD101
+     D*ExPWFilFmtEx           34     43                                                CGL029 CSD101
+     D ExPWFilFmt    E DS                  EXTNAME(GLVAMPWPD)                                 CSD101
+     D                                     PREFIX(D2_)                                        CSD101
+     D ExPWFilFmt1             1    146                                                       CSD101
+     D ExPWFilFmtEx          214    223                                                       CSD101
  
  
       * (Current) Account in Screen Format - Master Details
@@ -544,7 +554,7 @@
      D ##OX2           S              1    DIM(70) CTDATA PERRCD(70)                        AR850512
      D ##OX3           S              1    DIM(50) CTDATA PERRCD(50)
      D ##OX4           S              1    DIM(50) CTDATA PERRCD(50)
-     D ##OX5           S              1    DIM(50) CTDATA PERRCD(50)
+     D***##OX5           S              1    DIM(50) CTDATA PERRCD(50)                        CSD101
  
       ** Flags to indicate whether substitution is required in
       ** each of the various parts the transaction
@@ -1269,6 +1279,7 @@
      C                   PARM                    ExRIFilFmt
      C                   PARM                    ExCOFilFmt
      C                   PARM                    ExPWFilFmt
+     C                   PARM                    DDPSWD                                       CSD101
       *
       * OK - Action code
      C                   PARM                    DDActnOK          1
@@ -1314,7 +1325,7 @@
      C**********         MOVEL     ExCOFilFmt    ValidExCO                                    CGL029
      C                   MOVEL     ExCOFilFmt1   ValidExCO1                                   CGL029
      C                   MOVEL     ExCOFilFmtEx  ValidExCOEx                                  CGL029
-     C**********         MOVEL     ExPWFilFmt    ValidExPW                                    CGL029
+     C                   MOVEL     ExPWFilFmt    ValidExPW                             CGL029 CSD101
      C                   MOVEL     ExPWFilFmt1   ValidExPW1                                   CGL029
      C                   MOVEL     ExPWFilFmtEx  ValidExPWEx                                  CGL029
  
@@ -2231,7 +2242,7 @@
      C**********         MOVEL     ExCOFilFmt    ValidExCO                                    CGL029
      C                   MOVEL     ExCOFilFmt1   ValidExCO1                                   CGL029
      C                   MOVEL     ExCOFilFmtEx  ValidExCOEx                                  CGL029
-     C**********         MOVEL     ExPWFilFmt    ValidExPW                                    CGL029
+     C                   MOVEL     ExPWFilFmt    ValidExPW                             CGL029 CSD101
      C                   MOVEL     ExPWFilFmt1   ValidExPW1                                   CGL029
      C                   MOVEL     ExPWFilFmtEx  ValidExPWEx                                  CGL029
  
@@ -2756,9 +2767,9 @@
      C                   PARM                    ##OX4
      C                   PARM                    MESLEN
      C* Overrride REAPWDL0
-     C                   CALL      'QCMDEXC'
-     C                   PARM                    ##OX5
-     C                   PARM                    MESLEN
+     C**********         CALL      'QCMDEXC'                                                  CSD101
+     C**********         PARM                    ##OX5                                        CSD101
+     C**********         PARM                    MESLEN                                       CSD101
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,GLAMADC019
       *                                                                                      LLN022A
@@ -2829,6 +2840,7 @@
       *                                                                                     AR850512
       ** Add OVRSCOPE(*CALLLVL) for ##OX2                                                   AR850512
       *                                                                                     AR850512
+      ** Remove ##OX5 OVRDBF FILE(REAPWDL1) TOFILE(REAPWDL0) SHARE(*NO)                       CSD101
 **  CPY@
 (c) Finastra International Limited 2001
 ** ##OX1
@@ -2839,7 +2851,5 @@ OVRDBF FILE(ACCNTL1) TOFILE(ACCNTL0) SHARE(*NO) OVRSCOPE(*CALLLVL)              
 OVRDBF FILE(REIACXX) TOFILE(REIAC) SHARE(*NO)
 ** ##OX4
 OVRDBF FILE(RECOMXX) TOFILE(RECOM) SHARE(*NO)
-** ##OX5
-OVRDBF FILE(REAPWDL1) TOFILE(REAPWDL0) SHARE(*NO)
 ** CMD
 OVRDBF FILE(SDAULGL0) TOFILE(SDAULGL0) SHARE(*NO)

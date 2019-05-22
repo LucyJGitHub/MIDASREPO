@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CGL165             Date 23Feb15               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE073             Date 06Dec10               *
       *                 CRE075             Date 06Dec10               *
@@ -37,6 +39,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165  - Dual Withholding Tax (Recompile)                   *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
@@ -386,15 +390,15 @@
      C                   ENDIF
      C                   ENDIF
       *
-      **  Display Savings A/c Password if RE Teller is installed,
-      **  Passwords SAR is installed and a/c is savings a/c.
-     C                   MOVE      *OFF          *IN17
-     C     CRT001        IFEQ      'Y'
-     C     CRT101        ANDEQ     'Y'
-     C     AMATYP        ANDEQ     'R'
-     C     AMSTYP        ANDEQ     'S'
-     C                   MOVE      *ON           *IN17
-     C                   ENDIF
+      ****Display*Savings*A/c*Password*if*RE*Teller*is*installed,******                       CSD101
+      ****Passwords*SAR*is*installed*and*a/c*is*savings*a/c.***********                       CSD101
+     C**********         MOVE      *OFF          *IN17                                        CSD101
+     C*****CRT001        IFEQ      'Y'                                                        CSD101
+     C*****CRT101        ANDEQ     'Y'                                                        CSD101
+     C*****AMATYP        ANDEQ     'R'                                                        CSD101
+     C*****AMSTYP        ANDEQ     'S'                                                        CSD101
+     C**********         MOVE      *ON           *IN17                                        CSD101
+     C**********         ENDIF
       *
       **  Display Passbook Used on Savings A/c if RE Teller is installed,
       **  or Retail Branch Access (CRT002) SAR is installed, and

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 222427             Date 05Dec16               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 222427             Date 05Dec16               *
       *                 LLN022A            Date 03Jun15               *
       *                 CRE095             Date 25Apr14               *
       *                 CGL165             Date 17Feb15               *
@@ -85,6 +86,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  222427 - AMAN - 'Extra Daily Statement Commission' default   *
       *           value is 0.00.  Data structure which includes       *
@@ -275,11 +277,15 @@
      D                                     PREFIX(CC_)
      D CACOFilFmt1             1    286                                                       CGL029
      D CACOFilFmtEx          287    296                                                       CGL029
-      * Current Account in File Format (Retail Password Extension File)
-     D CAPWFilFmt    E DS                  EXTNAME(REAPWDPD)
-     D                                     PREFIX(CD_)
-     D CAPWFilFmt1             1     33                                                       CGL029
-     D CAPWFilFmtEx           34     43                                                       CGL029
+      **Current*Account*in*File*Format*(Retail*Password*Extension*File)                       CSD101
+     D***CAPWFilFmt    E DS                  EXTNAME(REAPWDPD)                                CSD101
+     D***                                    PREFIX(CD_)                                      CSD101
+     D***CAPWFilFmt1             1     33                                              CGL029 CSD101
+     D***CAPWFilFmtEx           34     43                                              CGL029 CSD101
+     D CAPWFilFmt    E DS                  EXTNAME(GLVAMPWPD)                                 CSD101
+     D                                     PREFIX(CD_)                                        CSD101
+     D CAPWFilFmt1             1    146                                                       CSD101
+     D CAPWFilFmtEx          214    223                                                       CSD101
  
  
       * (Current) Account in Screen Format - Master Details
@@ -314,11 +320,13 @@
      D  GLCOACOD     E                     EXTFLD(QQACOD)                                     CGL029
      D NACOFilFmt1             1    286                                                       CGL029
      D NACOFilFmtEx          354    363                                                       CGL029
-      * New Extn. Account layout -> REAPWDPD
+      *** New Extn. Account layout -> REAPWDPD*************************                       CSD101
      D NAPWFilFmt    E DS                  EXTNAME(GLVAMPWPD)
-     D  GLPWACOD     E                     EXTFLD(QQACOD)                                     CGL029
-     D NAPWFilFmt1             1     33                                                       CGL029
-     D NAPWFilFmtEx          101    110                                                       CGL029
+     D  GLPWACOD     E                     EXTFLD(QQACOD)                              CGL029 CSD101
+     D***NAPWFilFmt1             1     33                                              CGL029 CSD101
+     D***NAPWFilFmtEx          101    110                                              CGL029 CSD101
+     D NAPWFilFmt1             1    146                                                       CSD101
+     D NAPWFilFmtEx          214    223                                                       CSD101
  
      D P1RIFilFmt    E DS                  EXTNAME(GLVAMRIPD)                                 CGL029
      D                                     PREFIX(P1)                                         CGL029
@@ -2767,7 +2775,7 @@
      C                   PARM                    CABXFilFmt
      C**********         PARM                    CARIFilFmt                                   CGL029
      C**********         PARM                    CACOFilFmt                                   CGL029
-     C**********         PARM                    CAPWFilFmt                                   CGL029
+     C                   PARM                    CAPWFilFmt                            CGL029 CSD101
      C                   PARM                    P1RIFilFmt                                   CGL029
      C                   PARM                    P1COFilFmt                                   CGL029
      C                   PARM                    P1PWFilFmt                                   CGL029

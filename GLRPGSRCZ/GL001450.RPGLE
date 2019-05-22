@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER030 - Multicash German Feature (Recompile)                *
@@ -446,8 +448,8 @@
      C                   EVAL      EDTSNM = *blank
       * FTP Server User ID
      C                   EVAL      EDSUID = *blank
-      * FTP Server Password
-     C                   EVAL      EDSRVP = *blank
+      **FTP*Server*Password                                                                   CSD101
+     C**********         EVAL      EDSRVP = *blank                                            CSD101
       * FTP Exit Program
      C                   EVAL      EDEXTP = *blank
       *

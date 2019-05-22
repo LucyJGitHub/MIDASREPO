@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD040875           Date 26Aug16               *
-      *  Prev Amend No. CGL177  *CREATE    Date 11Jan16               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD040875           Date 26Aug16               *
+      *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD040875 - Message Ref ID for another branch with different  *
       *             Country Code (Country of Domicile) is incorrect   *
       *  CGL177 - CRS Reporting Phase 2                               *

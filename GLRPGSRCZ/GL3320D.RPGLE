@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD029673           Date 17Jun15               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD029673           Date 17Jun15               *
       *                 MD031993           Date 07Aug15               *
       *                 CGL165             Date 17Feb15               *
       *                 MD020565           Date 21May13               *
@@ -48,6 +49,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  MD029673 - Multiple calls of UTCHOBJEX inside GLC3320.       *
       *             Initialization should be done on first call only. *
@@ -120,8 +122,8 @@
      F                                     COMMIT                                             CGL120
      F/COPY WNCPYSRC,GLH00736
      F*REAPWDPDUF*E****       K        DISK         KINFSR INFSR                       164290 CGP001
-     FREAPWDL0  UF   E           K DISK    INFSR(INFSR)                                       CGP001
-     F                                     COMMIT                                             CGL120
+     F***REAPWDL0  UF   E           K DISK    INFSR(INFSR)                             CGP001 CSD101
+     F**********                           COMMIT                                      CGL120 CSD101
      F/COPY WNCPYSRC,GLH00737
       * Midas RE retail account password.                                 164290
      F***RECIEUL1UF**E        K        DISK         KINFSR INFSR   142089 217910
@@ -200,6 +202,8 @@
      F*****************************************************************
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
      D/SPACE 2
+     D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSD101
+      ** SD data area                                                                         CSD101
      D***WKEY2**     DS                          1  18                                        CGL029
      D WKEY2           DS            24    OCCURS(1)                                          CGL029
      D*
@@ -231,6 +235,13 @@
      D  DBASE                181    183  0
       *                                                                                     MD031993
      D CGL145          S              1A                                                    MD031993
+     D PReturnCode     S              7A                                                      CSD101
+     D PAction         S              1A                                                      CSD101
+     D PValidList      S             10A   INZ('SDINTFVL')                                    CSD101
+     D PLibrary        S             10A                                                      CSD101
+     D PIDName         S            100A                                                      CSD101
+     D PPass1          S            128A                                                      CSD101
+     D PDescr          S           1000A                                                      CSD101
      I/COPY WNCPYSRC,GL3320DI01
      C/EJECT
      C*
@@ -816,20 +827,51 @@
       /EJECT                                                              CRE001
       *****************************************************************   164290
       *  SUBROUTINE: #BL                                                  164290
-      *  DROP RECORDS IN PF/REAPWDPD                                      164290
+      ***DROP*RECORDS*IN*PF/REAPWDPD***********************************                164290 CSD101
+      *  Drop records in Validation List                              *                       CSD101
       *****************************************************************   164290
      C     #BL           BEGSR                                                  **#BL BEGSR** 164290
-     C                   SETOFF                                       79                      164290
-     C** Find retail a/c number in PF/REAPWDPD                            164290
+     C**********         SETOFF                                       79               164290 CSD101
+     C***Find*retail*a/c*number*in*PF/REAPWDPD*************************   164290              CSD101
      C***********@KEY2     CHAINREAPWDPD             79                                164290 CGP001
-     C     @KEY2         CHAIN     REAPWDL0                           79                      CGP001
-     C** If record is found, delete it.                                   164290
-     C     *IN79         DOWEQ     '0'                                                        164290
+     C*****@KEY2         CHAIN     REAPWDL0                           79               CGP001 CSD101
+     C***If*record*is*found,*delete*it.********************************                164290 CSD101
+     C******IN79         DOWEQ     '0'                                                 164290 CSD101
      C***********          DELETREAPWDPD                                               164290 CGP001
      C***********@KEY2     READEREAPWDPD                 79                            164290 CGP001
-     C                   DELETE    REAPWDL0                                                   CGP001
-     C     @KEY2         READE     REAPWDL0                               79                  CGP001
-     C                   ENDDO                                                                164290
+     C**********         DELETE    REAPWDL0                                            CGP001 CSD101
+     C*****@KEY2         READE     REAPWDL0                               79           CGP001 CSD101
+     C**********         ENDDO                                                         164290 CSD101
+                                                                                              CSD101
+     C                   IN        SDSTAT                                                     CSD101
+                                                                                              CSD101
+     C                   MOVE      XACOD         WFACOD           10                          CSD101
+     C                   MOVE      XACSQ         WFACSQ            2                          CSD101
+     C                   EVAL      PLibrary = LIBR + 'DMLIB'                                  CSD101
+     C                   EVAL      PIDName = 'ACCOUNTPASSWORD_' +                             CSD101
+     C                                       XCNUM + XCCY + WFACOD +                          CSD101
+     C                                       WFACSQ + XBRCA                                   CSD101
+                                                                                              CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *BLANKS       PReturnCode                                  CSD101
+     C                   PARM      'F'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM      *BLANKS       PPass1                                       CSD101
+     C                   PARM      *BLANKS       PDescr                                       CSD101
+                                                                                              CSD101
+     C                   IF        PReturnCode = *BLANKS                                      CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *BLANKS       PReturnCode                                  CSD101
+     C                   PARM      'D'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM      *BLANKS       PPass1                                       CSD101
+     C                   PARM      *BLANKS       PDescr                                       CSD101
+     C                   ENDIF                                                                CSD101
+                                                                                              CSD101
      C                   ENDSR                                                                164290
       *****************************************************************   164290
       /EJECT                                                              142089

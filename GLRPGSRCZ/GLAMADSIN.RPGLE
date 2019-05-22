@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 222427             Date 05Dec16               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 222427             Date 05Dec16               *
       *                 LLN022A            Date 03Jun15               *
       *                 CRE101             Date 27Aug14               *
       *                 CGL165             Date 17Feb15               *
@@ -80,6 +81,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  222427 - AMAN - 'Extra Daily Statement Commission' default   *
       *           value is 0.00.  Data structure which includes       *
@@ -293,10 +295,13 @@
      D CACOFilFmt1             1    286                                                       CGL029
      D CACOFilFmtEx          287    296                                                       CGL029
       * Current Account in File Format (Extension File)
-     D CAPWFilFmt    E DS                  EXTNAME(REAPWDPD)
+     D***CAPWFilFmt    E DS                  EXTNAME(REAPWDPD)                                CSD101
+     D CAPWFilFmt    E DS                  EXTNAME(GLVAMPWPD)                                 CSD101
      D                                     PREFIX(CD_)
-     D CAPWFilFmt1             1     33                                                       CGL029
-     D CAPWFilFmtEx           34     43                                                       CGL029
+     D***CAPWFilFmt1             1     33                                              CGL029 CSD101
+     D***CAPWFilFmtEx           34     43                                              CGL029 CSD101
+     D CAPWFilFmt1             1    146                                                       CSD101
+     D CAPWFilFmtEx          214    223                                                       CSD101
  
       * Term/Notice Periods and Penalties                                                   MD021858
      D ExPPFilFmt    E DS                  EXTNAME(REPENAPD)                                MD021858
@@ -340,8 +345,10 @@
       * New Account in File Format (Extension File)
      D NAPWFilFmt    E DS                  EXTNAME(GLVAMPWPD)
      D                                     PREFIX(D_)
-     D NAPWFilFmt1             1     33                                                       CGL029
-     D NAPWFilFmtEx          101    110                                                       CGL029
+     D***NAPWFilFmt1             1     33                                             CGL029  CSD101
+     D***NAPWFilFmtEx          101    110                                             CGL029  CSD101
+     D NAPWFilFmt1             1    146                                                       CSD101
+     D NAPWFilFmtEx          214    223                                                       CSD101
  
      D P1RIFilFmt    E DS                  EXTNAME(GLVAMRIPD)                                 CGL029
      D                                     PREFIX(P1)                                         CGL029
@@ -3939,9 +3946,9 @@
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM                    CrAcFilFmt
      C                   PARM                    CABXFilFmt
-     C**********         PARM                    CARIFilFmt                                   CGL029
-     C**********         PARM                    CACOFilFmt                                   CGL029
-     C**********         PARM                    CAPWFilFmt                                   CGL029
+     C                   PARM                    CARIFilFmt                            CGL029 CSD101
+     C                   PARM                    CACOFilFmt                            CGL029 CSD101
+     C                   PARM                    CAPWFilFmt                            CGL029 CSD101
      C                   PARM                    P1RIFilFmt                                   CGL029
      C                   PARM                    P1COFilFmt                                   CGL029
      C                   PARM                    P1PWFilFmt                                   CGL029

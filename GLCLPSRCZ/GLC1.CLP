@@ -9,9 +9,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. CSD101             Date 07Dec18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. CRE015             Date 18Dec09              */
+/*                      CRE015             Date 18Dec09              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CSD101 - Password Encryption                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CRE015 - Retail Term and Notice Accounts                    */
 /*       CSD012 - Standing Data Authorisation                        */
@@ -64,7 +66,7 @@ RUN:
              OVRDBF     FILE(ACCNTL1) TOFILE(ACCNTL0) SHARE(*NO)
              OVRDBF     FILE(REIACXX) TOFILE(REIAC) SHARE(*NO)
              OVRDBF     FILE(RECOMXX) TOFILE(RECOM) SHARE(*NO)
-             OVRDBF     FILE(REAPWDL1) TOFILE(REAPWDL0) SHARE(*NO)
+/**********  OVRDBF     FILE(REAPWDL1) TOFILE(REAPWDL0) SHARE(*NO)    */                  /*CSD101*/
              OVRDBF     FILE(SDAULGL0) TOFILE(SDAULGL0) SHARE(*NO) +
                           /* CSD012 */
              OVRDBF     FILE(REPRPNPD) TOFILE(REPRPNPD) SHARE(*NO)                        /*CRE015*/

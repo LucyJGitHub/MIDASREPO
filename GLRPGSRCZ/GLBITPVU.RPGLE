@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD048370           Date 29Nov17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD048370           Date 29Nov17               *
       *                 MD043023           Date 25Jul17               *
       *                 MD027817           Date 06Apr17               *
       *                 MD042436           Date 07Nov16               *
@@ -93,6 +94,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD048370 - User encounters an error "batch is already        *
       *             accepted" when amending/inserting a BITP whose    *

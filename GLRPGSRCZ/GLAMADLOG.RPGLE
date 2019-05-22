@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CSF011A            Date 28Nov11               *
       *                 CER049             Date 06Dec10               *
       *                 CRE073             Date 06Dec10               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
@@ -121,7 +123,8 @@
      D                                     PREFIX(CO_)
       ** Midas RE Retail Int. and charges detail
  
-     D ExPWFilFmt    E DS                   EXTNAME(REAPWDPD)
+     D***ExPWFilFmt    E DS                   EXTNAME(REAPWDPD)                               CSD101
+     D ExPWFilFmt    E DS                  EXTNAME(GLVAMPWPD)                                 CSD101
      D                                     PREFIX(PW_)
       ** Midas RE Retail Int. and charges detail
  

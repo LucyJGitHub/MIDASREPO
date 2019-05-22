@@ -4,7 +4,7 @@
 /*XBIA*  OVRDBF FILE(ACCNTL1) TOFILE(ACCNTL0) SHARE(*NO)              *
 /*XBIB*  OVRDBF FILE(REIACXX) TOFILE(REIAC) SHARE(*NO)                *
 /*XBIC*  OVRDBF FILE(RECOMXX) TOFILE(RECOM) SHARE(*NO)                *
-/*XBID*  OVRDBF FILE(REAPWDL1) TOFILE(REAPWDL0) SHARE(*NO)            *
+/*X*ID***OVRDBF*FILE(REAPWDL1)*TOFILE(REAPWDL0)*SHARE(*NO)*************                       CSD101
 /*S*D****RPGBASEMOD****************************************************                       CRE101
 /*STD *  RPGSQLMOD                                                    *                       CRE101
 /*EXI *  TEXT('Midas GL Account retrieve and acct/ref validation')
@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051247           Date 16Jul18               *      
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD051247           Date 16Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD046635           Date 10Aug17               *
       *                 MD037025           Date 10Feb16               *
       *                 CRE101             Date 27Aug14               *
@@ -84,6 +85,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD051247 - SP15_CUSD API issue                               *
       *  MD046635 - User permissions are not verified on account      *
       *             input via AMAD API. Change the validation so that *
@@ -183,8 +185,8 @@
      F                                     PREFIX(C1)
      FRECOMXX   IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(D1)
-     FREAPWDL1  IF   E           K DISK    INFSR(*PSSR)
-     F                                     PREFIX(E1)
+     F***REAPWDL1  IF   E           K DISK    INFSR(*PSSR)                                    CSD101
+     F**********                              PREFIX(E1)                                      CSD101
       **********                                                                  AR801992 AR952677A
      F***CLOANLB   IF   E           K DISK    INFSR(*PSSR)                        AR801992 AR952677A
       **********                                                                  AR801992 AR952677A
@@ -276,6 +278,9 @@
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
 
+     D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSD101
+      ** SD data area                                                                         CSD101
+                                                                                              CSD101
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
 
@@ -322,8 +327,9 @@
      D                                     PREFIX(C1)
      D ExCOFilFmt    E DS                  EXTNAME(RECOMD)
      D                                     PREFIX(D1)
-     D ExPWFilFmt    E DS                  EXTNAME(REAPWDPD)
-     D                                     PREFIX(E1)
+     D***ExPWFilFmt    E DS                  EXTNAME(REAPWDPD)                                CSD101
+     D ExPWFilFmt    E DS                  EXTNAME(GLVAMPWPD)                                 CSD101
+     D                                       PREFIX(E1)
      D***CLOAL#        E DS                  EXTNAME(CLOANCL)                     AR801992 AR952677A
      D***LSCCY         E                     EXTFLD(SCCY)                         AR801992 AR952677A
      D***CLOAK#        E DS                  EXTNAME(CLOANCK)                     AR801992 AR952677A
@@ -393,6 +399,12 @@
      D @DDACOD                13     22                                                       CGL029
      D @DDACSQ                23     24                                                       CGL029
                                                                                               CSD012
+     D CHKACC2         DS            24                                                       CSD101
+     D KCNUM2                  1      6                                                       CSD101
+     D KCCY2                   7      9                                                       CSD101
+     D KACOD2                 10     19                                                       CSD101
+     D KACSQ2                 20     21                                                       CSD101
+     D KBRCA2                 22     24                                                       CSD101
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -438,6 +450,14 @@
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
                                                                                             MD000091
+     D PReturnCode     S              7A                                                      CSD101
+     D PAction         S              1A                                                      CSD101
+     D PValidList      S             10A   INZ('SDINTFVL')                                    CSD101
+     D PLibrary        S             10A                                                      CSD101
+     D PIDName         S            100A                                                      CSD101
+     D PPass1          S            128A                                                      CSD101
+     D PDescr          S           1000A                                                      CSD101
+                                                                                              CSD101
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -611,10 +631,49 @@
      C     *IN80         IFEQ      '1'
      C                   CLEAR                   ExRIFilFmt
      C                   ENDIF
-     C     CHKACC        CHAIN     REAPWDL1                           80
-     C     *IN80         IFEQ      '1'
-     C                   CLEAR                   ExPWFilFmt
-     C                   ENDIF
+     C*****CHKACC        CHAIN     REAPWDL1                           80                      CSD101
+     C******IN80         IFEQ      '1'                                                        CSD101
+     C**********         CLEAR                   ExPWFilFmt                                   CSD101
+     C**********         ENDIF                                                                CSD101
+                                                                                              CSD101
+     C                   IF        DDACTN = 'I' OR DDACTN = 'A'                               CSD101
+     C                   EVAL      E1PWPSWD = DDPSWD                                          CSD101
+     C                   EVAL      E1PWCNUM = KCNUM                                           CSD101
+     C                   EVAL      E1PWCCY  = KCCY                                            CSD101
+     C                   MOVE      KACOD         E1PWACOD                                     CSD101
+     C                   MOVE      KACSQ         E1PWACSQ                                     CSD101
+     C                   EVAL      E1PWBRCA = KBRCA                                           CSD101
+     C                   ELSE                                                                 CSD101
+     C                   EVAL      E1PWPSWD = DDPSWD                                          CSD101
+     C                   EVAL      E1PWCNUM = KCNUM                                           CSD101
+     C                   EVAL      E1PWCCY  = KCCY                                            CSD101
+     C                   MOVE      KACOD         E1PWACOD                                     CSD101
+     C                   MOVE      KACSQ         E1PWACSQ                                     CSD101
+     C                   EVAL      E1PWBRCA = KBRCA                                           CSD101
+                                                                                              CSD101
+     C                   EVAL      KCNUM2 = KCNUM                                             CSD101
+     C                   EVAL      KCCY2  = KCCY                                              CSD101
+     C                   MOVE      KACOD         KACOD2                                       CSD101
+     C                   MOVE      KACSQ         KACSQ2                                       CSD101
+     C                   EVAL      KBRCA2 = KBRCA                                             CSD101
+     C                   EVAL      PLibrary = LIBR + 'DMLIB'                                  CSD101
+     C                   EVAL      PIDName = 'ACCOUNTPASSWORD_'   + CHKACC2                   CSD101
+                                                                                              CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       PReturnCode                                  CSD101
+     C                   PARM      'F'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM      *Blanks       PPass1                                       CSD101
+     C                   PARM      *Blanks       PDescr                                       CSD101
+                                                                                              CSD101
+     C                   IF        PReturnCode =  *Blanks                                     CSD101
+     C                   EVAL      E1PWPSWD = PPass1                                          CSD101
+     C                   EVAL      DDPSWD = PPass1                                            CSD101
+     C                   ENDIF                                                                CSD101
+     C                   ENDIF                                                                CSD101
+                                                                                              CSD101
      C     CHKCOM        CHAIN     RECOMXX                            80
      C     *IN80         IFEQ      '1'
      C                   CLEAR                   ExCOFilFmt
@@ -1481,10 +1540,39 @@
      C     *IN56         IFEQ      '1'                                                        194431
      C                   CLEAR                   ExRIFilFmt                                   194431
      C                   ENDIF                                                                194431
-     C     CHKACC        CHAIN     REAPWDL1                           56                      194431
-     C     *IN56         IFEQ      '1'                                                        194431
-     C                   CLEAR                   ExPWFilFmt                                   194431
-     C                   ENDIF                                                                194431
+     C*****CHKACC        CHAIN     REAPWDL1                           56               194431 CSD101
+     C******IN56         IFEQ      '1'                                                 194431 CSD101
+     C**********         CLEAR                   ExPWFilFmt                            194431 CSD101
+     C**********         ENDIF                                                         194431 CSD101
+                                                                                              CSD101
+     C                   EVAL      E1PWPSWD = DDPSWD                                          CSD101
+     C                   EVAL      E1PWCNUM = KCNUM                                           CSD101
+     C                   EVAL      E1PWCCY  = KCCY                                            CSD101
+     C                   MOVE      KACOD         E1PWACOD                                     CSD101
+     C                   MOVE      KACSQ         E1PWACSQ                                     CSD101
+     C                   EVAL      E1PWBRCA = KBRCA                                           CSD101
+                                                                                              CSD101
+     C                   EVAL      KCNUM2 = KCNUM                                             CSD101
+     C                   EVAL      KCCY2  = KCCY                                              CSD101
+     C                   MOVE      KACOD         KACOD2                                       CSD101
+     C                   MOVE      KACSQ         KACSQ2                                       CSD101
+     C                   EVAL      KBRCA2 = KBRCA                                             CSD101
+     C                   EVAL      PLibrary = LIBR + 'DMLIB'                                  CSD101
+     C                   EVAL      PIDName = 'ACCOUNTPASSWORD_'   + CHKACC2                   CSD101
+                                                                                              CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       PReturnCode                                  CSD101
+     C                   PARM      'F'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM      *Blanks       PPass1                                       CSD101
+     C                   PARM      *Blanks       PDescr                                       CSD101
+                                                                                              CSD101
+     C                   IF        PReturnCode =  *Blanks                                     CSD101
+     C                   EVAL      E1PWPSWD = PPass1                                          CSD101
+     C                   ENDIF                                                                CSD101
+                                                                                              CSD101
      C     CHKCOM        CHAIN     RECOMXX                            56                      194431
      C     *IN56         IFEQ      '1'                                                        194431
      C     WDCCY         ORNE      A1CCY                                                      194431
@@ -2142,6 +2230,7 @@
      C                   PARM                    ExRIFilFmt
      C                   PARM                    ExCOFilFmt
      C                   PARM                    ExPWFilFmt
+     C                   PARM                    DDPSWD          128                          CSD101
      C                   PARM                    ExPPFilFmt                                   CRE015
      C/COPY OFCPYSRCZ,CRE101_014                                                              CRE101
       *
@@ -2177,6 +2266,8 @@
      C                   IN        RUNDAT
      C******DTAARA       DEFINE                  ZMUSER                                      BUG8550
      C**********         IN        ZMUSER                                                    BUG8550
+                                                                                              CSD101
+     C                   IN        SDSTAT                                                     CSD101
       *
       ** ACCESS BANK DETAILS
       *

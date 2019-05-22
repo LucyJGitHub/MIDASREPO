@@ -10,8 +10,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CGL165             Date 17Feb15              */
+/*       Last Amend No. CSD101             Date 07Dec18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CGL165             Date 17Feb15              */
 /*                      AR719317           Date 19Jul11              */
 /*                      BUG28073           Date 26Aug10              */
 /*                      BUG28066           Date 24Aug10              */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CSD101 - Password Encryption                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CGL165 - Dual Withholding Tax (Recompile)                   */
 /*       AR719317 - Include T_GZAMADEX in ATU processing             */
@@ -343,6 +345,42 @@
 /**********               (DLDHISPD) (DLEHISPD) (DLGHISPD)) + */                        /*BUG28073*/
 /**********               RCVRNG(*CURRENT) FROMENT(&LASTSEQ) + */                       /*BUG28073*/
 /**********               TOENT(&STARTSEQ) */                              /*BUG28033*/ /*BUG28073*/
+/**********  RMVJRNCHG  JRN(ICJRN) FILE((ACCNTAB) (ACCNTBXC) +        */                  /*CSD101*/
+/**********               (SDNOSTPD) (TABLETL) (APOSTPD) (APOSTRA) +  */                  /*CSD101*/
+/**********               (CLEARPD) (GLJEHPPD) (REHISPD) (REHISPS) +  */                  /*CSD101*/
+/**********               (REHISPM) (REHPOSPP) (REHPOSPM) +           */                  /*CSD101*/
+/**********               (REHPOSR1) (REHPOSR2) (REHPOSR3) (RECOMD) + */                  /*CSD101*/
+/**********               (REACRD) (REIACD) (AMACCD) (DEALSDB) +      */                  /*CSD101*/
+/**********               (FXDEALPP) (DEALSDC) (MMDELDPP) (DEALSDE) + */                  /*CSD101*/
+/**********               (MMDENSPP) (DEALSDD) (MMDENBPP) (DEALSDG) + */                  /*CSD101*/
+/**********               (DEAMSDI) (MMDEAMPP) (CLOANCL) (FCLTYFN) +  */                  /*CSD101*/
+/**********               (CUSEXCE) (HELDIHB) (STANDSB) (STOPCSD) +   */                  /*CSD101*/
+/**********               (REDEFD) (FUSIONPD) (RELINKP) (INPAYDD) +   */                  /*CSD101*/
+/**********               (OTPAYDD) (CQCOCDD) (CQCODDD) (CQPACDD) +   */                  /*CSD101*/
+/**********               (CQPADDD) (MEMOS) (CLOANCK) (FCLTYFM) +     */                  /*CSD101*/
+/**********               (ATPRPD) (BULKTD) (CNCTRD) (HSTTRD) +       */                  /*CSD101*/
+/**********               (TRADSD) (TRATXD) (POSETD) +                */                  /*CSD101*/
+/**********               (STDSED) (DPTMVD) (SEOCFSPD) (INTPSDD) +    */                  /*CSD101*/
+/**********               (LEFEEAD) (GLATULPD) (SDEXSTPD) +           */                  /*CSD101*/
+/**********               (GLACPHPD) (GLSLACPD) (GLACRFPD) +          */                  /*CSD101*/
+/**********               (LEFEED) (LESTALPD) (LOAMSDK) +             */                  /*CSD101*/
+/**********               (GLAUTFPD) (GLJESPPD) (GLVALPPD) +          */                  /*CSD101*/
+/**********               (RSACMTPD) (LEPARTPD) (GLHIBLPD) +          */                  /*CSD101*/
+/**********               (GESUPD) (GESUZZ) (SWACSSB) (SWPOSPD) +     */                  /*CSD101*/
+/**********               (SWPOSRA) (REAPWDPD) (RESWEPPD) +           */                  /*CSD101*/
+/**********               (REODHSPD) (MEMOSME) (CPOSTDD) (GLAVBLPD) + */                  /*CSD101*/
+/**********               (FACHISA) (GLCOLLPD) (GLCOLAPD) (RECAPM) +  */                  /*CSD101*/
+/**********               (FFACMVD) (GLACBTPD) (DLBHISPD) (DLCHISPD) + */                 /*CSD101*/
+/**********               (DLDHISPD) (DLEHISPD) (DLGHISPD) (GLARWAPD) + */                /*CSD101*/
+/**********               (GLFFAMPD) (GLGS94PD) (GLNETGPD) (GLNW94PD) + */                /*CSD101*/
+/**********               (GLNWACPD) (GLOTSTPD) (GLPOSTPD) (GLPSTTPD) + */                /*CSD101*/
+/**********               (GLRSACPD) (GLRWABPD) (LEFCENPD) (MXSGLACPD) + */               /*CSD101*/
+/**********               (MXSRECEPD) (RECMBRPD) (RECMHLPD) +         */                  /*CSD101*/
+/**********               (RECMLCHPD) (REGAHLPD) (REGAMXPD) +         */                  /*CSD101*/
+/**********               (REHMRGPD) (REHPOS) (RELGAMXPD) (RELZSMXPD) + */                /*CSD101*/
+/**********               (RERSTDPD) (REZSHLPD) (REZSMXPD) (REZSTDPD)) + */               /*CSD101*/
+/**********               RCVRNG(*CURRENT) FROMENT(&LASTSEQ) +        */                  /*CSD101*/
+/**********               TOENT(&STARTSEQ)                            */     /*BUG28073*/ /*CSD101*/
              RMVJRNCHG  JRN(ICJRN) FILE((ACCNTAB) (ACCNTBXC) +
                           (SDNOSTPD) (TABLETL) (APOSTPD) (APOSTRA) +
                           (CLEARPD) (GLJEHPPD) (REHISPD) (REHISPS) +
@@ -365,7 +403,7 @@
                           (GLAUTFPD) (GLJESPPD) (GLVALPPD) +
                           (RSACMTPD) (LEPARTPD) (GLHIBLPD) +
                           (GESUPD) (GESUZZ) (SWACSSB) (SWPOSPD) +
-                          (SWPOSRA) (REAPWDPD) (RESWEPPD) +
+                          (SWPOSRA) (RESWEPPD) +
                           (REODHSPD) (MEMOSME) (CPOSTDD) (GLAVBLPD) +
                           (FACHISA) (GLCOLLPD) (GLCOLAPD) (RECAPM) +
                           (FFACMVD) (GLACBTPD) (DLBHISPD) (DLCHISPD) +
@@ -378,7 +416,7 @@
                           (REHMRGPD) (REHPOS) (RELGAMXPD) (RELZSMXPD) +
                           (RERSTDPD) (REZSHLPD) (REZSMXPD) (REZSTDPD)) +
                           RCVRNG(*CURRENT) FROMENT(&LASTSEQ) +
-                          TOENT(&STARTSEQ)                                              /*BUG28073*/
+                          TOENT(&STARTSEQ)                                                /*CSD101*/
              MONMSG     MSGID(CPF0000 MCH0000)
  
              IF         COND(&CGL030 *EQ 'Y') THEN(DO)

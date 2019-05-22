@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD052732           Date 12Mar19               *
-      *  Prev Amend No. 249405             Date 09Mar18               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD052732           Date 12Mar19               *
+      *                 249405             Date 09Mar18               *
       *                 CGL148             Date 13Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD046060           Date 21Jun17               *
@@ -81,6 +82,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD052732 - 4-eyes principle for journal uploads not working  *
       *             Validate by Insert User if Amend User = blank     *
       *  249405 - Validate Batch In Use Flag field.                   *

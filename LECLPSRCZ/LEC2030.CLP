@@ -9,10 +9,11 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. CSD102             Date 08Jan19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. 256407A            Date 01Oct08              */
+/*                      256407A            Date 01Oct08              */
 /*                      256407             Date 04Sep08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CSD102 - Password Length Extension                          */
 /*       MD046248 - Finastra Rebranding                              */
 /*       256407A - Revert back APHEADPD to R4 length                 */
 /*       256407 - Applied fixes 235136, 232433, and 230463.          */
@@ -44,7 +46,8 @@
              DCL        VAR(&POUTP) TYPE(*CHAR) LEN(172)
              DCL        VAR(&TSTMP) TYPE(*CHAR) LEN(26)                                   /*CLE034*/
 /**********  DCL        VAR(&APHEAD) TYPE(*CHAR) LEN(218)           */            /*256407 256407A*/
-             DCL        VAR(&APHEAD) TYPE(*CHAR) LEN(200)                                /*256407A*/
+/**********  DCL        VAR(&APHEAD) TYPE(*CHAR) LEN(200)                         /*256407A CSD102*/
+             DCL        VAR(&APHEAD) TYPE(*CHAR) LEN(318)                                 /*CSD102*/
              DCL        VAR(&returncode) TYPE(*CHAR) LEN(10)                              /*256407*/
              DCL        VAR(&msgidarr) TYPE(*CHAR) LEN(525)                               /*256407*/
              DCL        VAR(&fldnoarr) TYPE(*CHAR) LEN(225)                               /*256407*/
@@ -156,11 +159,16 @@
 /**********  CHGVAR &APFOTRANID %SST(&APHEAD 156 20)                */            /*256407 256407A*/
 /**********  CHGVAR &APRESPMODE %SST(&APHEAD 154 1)                 */            /*256407 256407A*/
 /**********  CHGVAR &APRPYQUEUE %SST(&APHEAD 124 20)                */            /*256407 256407A*/
-             CHGVAR &APRPRLOCN %SST(&APHEAD 180 1)                                       /*256407A*/
-             CHGVAR &APCNFVALFO %SST(&APHEAD 179 1)                                      /*256407A*/
-             CHGVAR &APFOTRANID %SST(&APHEAD 139 20)                                     /*256407A*/
-             CHGVAR &APRESPMODE %SST(&APHEAD 137 1)                                      /*256407A*/
-             CHGVAR &APRPYQUEUE %SST(&APHEAD 117 20)                                     /*256407A*/
+/**********  CHGVAR &APRPRLOCN %SST(&APHEAD 180 1)                  */            /*256407A CSD102*/
+/**********  CHGVAR &APCNFVALFO %SST(&APHEAD 179 1)                 */            /*256407A CSD102*/
+/**********  CHGVAR &APFOTRANID %SST(&APHEAD 139 20)                */            /*256407A CSD102*/
+/**********  CHGVAR &APRESPMODE %SST(&APHEAD 137 1)                 */            /*256407A CSD102*/
+/**********  CHGVAR &APRPYQUEUE %SST(&APHEAD 117 20)                */            /*256407A CSD102*/
+             CHGVAR &APRPRLOCN %SST(&APHEAD 298 1)                                        /*CSD102*/
+             CHGVAR &APCNFVALFO %SST(&APHEAD 297 1)                                       /*CSD102*/
+             CHGVAR &APFOTRANID %SST(&APHEAD 257 20)                                      /*CSD102*/
+             CHGVAR &APRESPMODE %SST(&APHEAD 255 1)                                       /*CSD102*/
+             CHGVAR &APRPYQUEUE %SST(&APHEAD 235 20)                                      /*CSD102*/
                                                                                           /*256407*/
              CALL       PGM(ZAMSGHNDLE) PARM(&RETURNCODE &APRPRLOCN +
                           &APCNFVALFO &MSGIDARR &FLDNOARR &FLDNAMEARR +

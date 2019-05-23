@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD052589           Date 22Jan19               *
-      *  Prev Amend No. MD050007           Date 05Nov18               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD052589           Date 22Jan19               *
+      *                 MD050007           Date 05Nov18               *
       *                 MD051922           Date 15OCt18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD040789           Date 24Jan18               *
@@ -155,6 +156,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD052589 - Projections are shown with PDCLPAMPayAC set to N  *
       *  MD050007 - PDP Enhancement: Manual PDCL Generates Projected  *
       *             Accnt Movement for Payment Accnt (Retail/Nostro)  *

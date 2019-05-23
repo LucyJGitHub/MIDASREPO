@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD053143           Date 04Apr19               *      
-      *  Prev Amend No. MD052478           Date 15Jan19               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD053143           Date 04Apr19               *
+      *                 MD052478           Date 15Jan19               *
       *                 MD052134           Date 18Oct18               *
       *                 MD034521A          Date 14Sep15               *
       *                 MD039547           Date 20Sep16               *
@@ -136,12 +137,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD053143 - CLE141 Business Day Convention processing to be   *
       *             applied for loan start date rate fixing.          *
       *  MD052478 - Dump occur in LECLIPR due to parameter mismatch.  *
       *  MD052134 - Serious Midas Error Occurred when attempting to   *
       *             input a LE Particiapation Sold                    *
-      *           - Applied for MD052132.                             * 
+      *           - Applied for MD052132.                             *
       *  MD034521A - Error handling of Blocked account is not the     *
       *              same across the modules                          *
       *            - Block Accounts should not be dependent to CLE134 *
@@ -1972,7 +1974,7 @@
       ** Customer Loans Primary Details OK inds                                              BUG3721
      C                   PARM                    ClilFilFmt                                  BUG3721
      C                   PARM                    TranInPrim                                  BUG3721
-     C                   PARM                    OKClPrim                                                                                           MD053143
+     C                   PARM                    OKClPrim                                           
       ** Business Day Convention Screen Detail                                              MD053143
      C                   PARM                    TranInSeven                                MD053143
 

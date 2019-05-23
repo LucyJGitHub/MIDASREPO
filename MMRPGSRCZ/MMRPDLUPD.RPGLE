@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CRE073             Date 06Dec10               *
       *                 CSW210             Date 04May10               *
@@ -55,6 +56,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -92,41 +94,41 @@
       *  CSE006 - Repurchase Agreements.                              *
       *                                                               *
       *****************************************************************
- 
+
      FSEDMRPXX  UF   E             DISK    USROPN
      F                                     INFSR(*PSSR)
- 
+
      FSEDMRPX1  UF   E           K DISK
      F                                     INFSR(*PSSR)
- 
+
      FSEDMRPX2  UF   E           K DISK
      F                                     INFSR(*PSSR)
- 
+
      FDPTMVDL1  UF A E           K DISK    COMMIT PREFIX(D)
      F                                     INFSR(*PSSR)
      F                                     RENAME(DPTMVDF:DPMVL1)
- 
+
      FDPTMVDY1  UF A E           K DISK    COMMIT PREFIX(D)
      F                                     INFSR(*PSSR)
      F                                     RENAME(DPTMVDD1:DPMVY1)
- 
+
      FDPTMVDY2  UF A E           K DISK    COMMIT PREFIX(D)
      F                                     INFSR(*PSSR)
      F                                     RENAME(DPTMVDD2:DPMVY2)
- 
+
      FUDEPP     UF A E           K DISK    COMMIT
      F                                     INFSR(*PSSR)
- 
+
      FSECRTNL1  UF A E           K DISK    COMMIT PREFIX(D)
      F                                     INFSR(*PSSR)
- 
+
      FSECRTTL1  UF A E           K DISK    COMMIT PREFIX(D)
      F                                     INFSR(*PSSR)
- 
+
      FSECRTNTPPDIF   E           K DISK
      F                                     INFSR(*PSSR)
      F                                     RENAME(SECRTNF1:TEMPNF1)
- 
+
      FSECRTTTPPDIF   E           K DISK
      F                                     INFSR(*PSSR)
      F                                     RENAME(SECRTTF1:TEMPTF1)
@@ -149,36 +151,36 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D Trans_Ref       S              6A
      D Trans_Num       S              6S 0
      D ##DPNA          S             11S 0
@@ -193,15 +195,15 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D NwDlFilFmt    E DS                  EXTNAME(MMVLDNIPD)
      D**  New Deal in File Format
- 
+
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
      D**  External Data Structure for Securities ICD
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
@@ -248,7 +250,7 @@
      D  DRefNo                 1      6
      D  DumConst               1      1
      D  DumRef                 2      6
- 
+
      D FIXML           DS                                                                     204662
       **  Data structure for fixml                                                            204662
      D  WDPRNN                 1      6S 0                                                    204662
@@ -281,7 +283,7 @@
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
@@ -1056,9 +1058,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    ReturnCode
      C                   PARM                    NwDlFilFmt

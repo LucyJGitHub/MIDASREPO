@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD051013           Date 24May18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD051013           Date 24May18               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD051013 - File name is truncated and header is not printed. *
       *  MD046248 - Finastra Rebranding                               *
       *  244940 - Report should not be generated if there are no      *
@@ -69,6 +71,9 @@
      D  msstat2      E DS                  extname(MSSTAT2)
       ** Midas/SWIFT Direct Link status data area # 2 (new for CSW009)
       *
+     D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSD101
+      ** SD Data area                                                                         CSD101
+      *                                                                                       CSD101
      D  w@msg          DS         10240
      D  w@msgbuf               1  10240
      D                                     dim(10240)
@@ -82,11 +87,20 @@
       ** Sequence numbers for Alliance file name in FTP script
       *
      D                 DS
-     D  SIFTPO                 1    128
+     D**SIFTPO**               1    128                                                       CSD101
+     D  SIFTPO                 1    256                                                       CSD101
      D  w@in4                  1      4
      D  w@in5                  1      5
       ** Analyse FTP output
       *
+     D Password        S            128                                                       CSD101
+     D PReturnCode     S              7A                                                      CSD101
+     D PAction         S              1A                                                      CSD101
+     D PValidList      S             10A   INZ('SDINTFVL')                                    CSD101
+     D PLibrary        S             10A                                                      CSD101
+     D PIDName         S            100A                                                      CSD101
+     D PPass1          S            128A                                                      CSD101
+     D PDescr          S           1000A                                                      CSD101
       ** Control codes and fixed texts
       /COPY MSCPYSRC,SRERRD
      Imslistd0
@@ -104,6 +118,8 @@
       ** Output parameter: o@msgs = 'Y' if any messages found, else 'N'
      C     *entry        plist
      C                   parm                    o@msgs            1
+                                                                                              CSD101
+     C                   IN        SDSTAT                                                     CSD101
       *
       ** Initialise program
      C                   exsr      sr_init
@@ -157,7 +173,32 @@
      C                   movel     'Y'           o@msgs
       *
       ** Line 1: <User> <Password> (sign on to Alliance machine)
-     C     ENSUSR        cat(p)    ENSPWD:1      SIFTPI
+     C*****ENSUSR        cat(p)    ENSPWD:1      SIFTPI                                       CSD101
+      *                                                                                       CSD101
+      ** Check User ID if exists, then retrieve the password.                                 CSD101
+      *                                                                                       CSD101
+     C                   EVAL      Password = *Blanks                                         CSD101
+      *                                                                                       CSD101
+     C                   IF        ENSUSR <> *BLANKS                                          CSD101
+     C                   EVAL      PLibrary = LIBR + 'DMLIB'                                  CSD101
+     C                   EVAL      PIDName = 'SWIFTALLIANCE_' + ENSUSR                        CSD101
+                                                                                              CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       PReturnCode                                  CSD101
+     C                   PARM      'F'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM      *Blanks       PPass1                                       CSD101
+     C                   PARM      *Blanks       PDescr                                       CSD101
+                                                                                              CSD101
+     C                   IF        PReturnCode = *Blanks                                      CSD101
+     C                   EVAL      Password = PPass1                                          CSD101
+     C                   ENDIF                                                                CSD101
+     C                   ENDIF                                                                CSD101
+                                                                                              CSD101
+     C     ENSUSR        cat(p)    Password:1    SIFTPI                                       CSD101
+                                                                                              CSD101
      C                   write     MSFTPID0
       *
       ** Line 2: NAMEFMT 1 (for IFS file system)

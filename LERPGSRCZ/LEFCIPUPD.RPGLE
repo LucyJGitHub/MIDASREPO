@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD031337           Date 25Feb15               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD031337           Date 25Feb15               *
       *                 MD024398           Date 11May14               *
       *                 MD025467           Date 08May14               *
       *                 MD024342B          Date 08May14               *
@@ -57,6 +58,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD031337 - Component LEC06 10011 failed, FCLTY out of balance*
       *  MD024398 - API Performance Optimisation                      *

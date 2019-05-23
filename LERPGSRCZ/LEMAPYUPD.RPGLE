@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD047554           Date 11Oct17               *      
-      *  Prev Amend No. MD051892           Date 22Sep18               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD047554           Date 11Oct17               *
+      *                 MD051892           Date 22Sep18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD049571           Date 06Feb18               *
       *                 MD046248           Date 27Oct17               *
@@ -114,11 +115,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD047554 - Create shadow postings of INTEREST and MATURITY   *
       *             with recalculated amount based on newly inserted, *
       *             amended, or reversed MR. Call LE2041 and include  *
       *             current value of principal amount OPRAM as one of *
-      *             the parameters.                                   *      
+      *             the parameters.                                   *
       *  MD051892 - Proj settlement amnt calculated at defaulted rate *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD049571 - Value date of Manual Repayment in Projected       *
@@ -5351,7 +5353,7 @@
       ** Processing of manual repayment amound should be done                               MD047554
       ** in the AO program to correctly recalculate interest                                MD047554
       ** and principal amounts.                                                             MD047554
-      *                                                                                     MD047554     
+      *                                                                                     MD047554
                                                                                              BUG6223
      C**********         IF        PTYP = 66 or PTYP = 67 or                        BUG6223 MD047554
      C**********                   PTYP = 69 or PTYP = 72                           BUG6223 MD047554

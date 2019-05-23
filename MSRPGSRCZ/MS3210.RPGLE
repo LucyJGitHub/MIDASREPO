@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051817           Date 20Aug18               *
-      *  Prev Amend No. CSC053             Date 20Aug18               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD051817           Date 20Aug18               *
+      *                 CSC053             Date 20Aug18               *
       *                 AR1033033          Date 20Aug18               *
       *                 MD046248           Date 27Oct17               *
       *                 CPK030             Date 14Apr14               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD051817 - Unexpected return code is sent to MOPERQ by       *
       *             interface job MS_A2M_AFT                          *
       *  CSC053 - FTP Secure Connections for SWIFT and CM             *
@@ -81,7 +83,8 @@
       ** Return codes for procesing
       *
      D                 DS
-     D SIFTPO                  1    128
+     D*SIFTPO***               1    128                                                       CSD101
+     D SIFTPO                  1    256                                                       CSD101
      D w@code                  1      3
       ** Extract FTP return code from FTP output record
       *

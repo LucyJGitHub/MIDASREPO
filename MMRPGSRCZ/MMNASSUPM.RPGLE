@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 AR1044820          Date 17Jul13               *
@@ -74,6 +75,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -151,12 +153,12 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FMMDEAULL  UF A E           K DISK
      F                                     COMMIT
      F                                     INCLUDE(MMDENBP0: MMDENSP0)
@@ -181,19 +183,19 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------------CAP006 -------------
       ** The following /COPY line includes the definitions for error and        CAP006
       ** warning message arrays.                                                CAP006
@@ -204,21 +206,21 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR DEAL
      D MMVNAS        E DS                  EXTNAME(MMVNASSPD)
      D  @ILCTL                 1     23
@@ -231,7 +233,7 @@
      D  @ILREC               314    382
      D**@ILALREx            1055   1090                                                CGL029 NAD002
      D**@ILRECEx            1091   1108                                                CGL029 NAD002
- 
+
       **  DEALS FILE - NEGOTIABLE ASSETS SOLD
      D MMDENS        E DS                  EXTNAME(MMDENSPP)
      D QQDOR1        E                     EXTFLD(DORIQQ)                                     CGL029
@@ -245,14 +247,14 @@
      D**@HMALREx            1055   1090                                                CGL029 NAD002
      D**@HMRECEx            1091   1108                                                CGL029 NAD002
      D/COPY WNCPYSRC,MMNASSMD01
- 
+
       **  DEALS FILE - NEGOTIABLE ASSETS BOUGHT
      D MMDENB        E DS                  EXTNAME(MMDENBPP)
      D QQDOR2        E                     EXTFLD(DORIQQ)                                     CGL029
      D QQMOR2        E                     EXTFLD(MORIQQ)                                     CGL029
      D QQRON2        E                     EXTFLD(RONSQQ)                                     CGL029
      D QQPON2        E                     EXTFLD(PONSQQ)                                     CGL029
- 
+
      D ChkDealFmt    E DS                  EXTNAME(MMDENSPP)                    CAP006
       ** Rename fields for Timestamp checking                                   CAP006
      D                                     PREFIX(CH)                           CAP006
@@ -266,18 +268,18 @@
      D Z#ASTS        E DS                  EXTNAME(Z#AST)
      D Z#WSTS        E DS                  EXTNAME(Z#WST)
      D DLDLQD        E DS                  EXTNAME(DLSTMPPD)                                  CER049
- 
+
       * DATA STRUCTURES FOR USE WITH ACCESS PROGRAMS
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * DATA STRUCTURE FOR BANK DETAILS
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       * DATA STRUCTURE FOR DEAL DATA CODES
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       * DATA STRUCTURE FOR MODULE DETAILS
- 
+
       ** Switchable Features Description                                                      CSC011
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSC011
      D  SCLCD        E                     EXTFLD(LCD)                                        CSC011
@@ -305,7 +307,7 @@
                                                                                               CSD015
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CSD015
       * Long DS for Access Programs                                                           CSD015
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
       ** 24X7 status data area                                                                CSC011
                                                                                               CSC011
@@ -316,7 +318,7 @@
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSC011
                                                                                               CSC011
       * RUN DATE & MULTI-BRANCHING INDICATOR
- 
+
      D RUNDAT          DS
      D  @DLUP                  1      2  0
      D  @MLUP                  3      5
@@ -338,7 +340,7 @@
      D  PZYear                 5      6  0                                                    CSD015
                                                                                              BUG7461
      D ZMUSER        E DS                  EXTNAME(ZMUSER)                                   BUG7461
- 
+
       ** Dummy message ID and message file fields for use on the calls to       CAP006
       ** ZAMSGTOOPR                                                             CAP006
      D DummyMsgID      S                   LIKE(#MsgID)                         CAP006
@@ -366,12 +368,12 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** DEFINE FIELDS FOR ZDATE9
      D @DAYN           S              5P 0
      D @YMD            S              8S 0
      D @RETN           S              1A
- 
+
       ** DEFINE FIELDS FOR ZDATE10                                                            CAS009
      D                 DS                                                                     CAS009
      D  P@YYMD                 1      8S 0                                                    CAS009
@@ -676,7 +678,7 @@
      C                   CALLB     'ZAGENTMSTM'                                 CAP006
      C                   PARM                    TimeStamp                      CAP006
      C                   EVAL      HLTMST  = TimeStamp                          CAP006
- 
+
       **********************************************************************           CDL010 225817
       ***User*Authorisation*details*when*CDL010*is*ON***********************           CDL010 225817
      C**********         IF        CDL010 = 'Y'                                        CDL010 225817
@@ -751,7 +753,7 @@
      C                   IF        CDL010 = 'Y'                                               CDL010
      C                   EXSR      USRUPDS                                                    CDL010
      C                   ENDIF                                                                CDL010
- 
+
      C*  WRITE (OR UPDATE IF PRESENT) NEW NA SOLD
      C*
      C     *IN99         IFEQ      '0'
@@ -911,7 +913,7 @@
      C* STORE DETAILS OF RELATED NA BOUGHT
      C*
      C                   MOVEL     MMDENB        Z#WSTS
- 
+
      C                   ENDSR
      C*****************************************************************
       /EJECT
@@ -2773,13 +2775,13 @@
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
      C/COPY WNCPYSRC,MMNASSMC04
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

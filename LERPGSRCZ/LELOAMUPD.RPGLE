@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD050018           Date 05Nov18               *
-      *  Prev Amend No. MD047554           Date 11Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD050018           Date 05Nov18               *
+      *                 MD047554           Date 11Oct17               *
       *                 MD046248           Date 27Oct17               *
       *                 AR848765           Date 30Jun15               *
       *                 AR943686           Date 23Sep16               *
@@ -100,6 +101,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD050018 - PDP Enhancement: Generate Projected Accnt Movment *
       *             for Input Cycle Principal Increase Events to PDCL *
       *  MD047554 - Create shadow postings of INTEREST and MATURITY   *

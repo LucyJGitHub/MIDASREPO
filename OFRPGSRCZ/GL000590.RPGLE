@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD052296           Date 26Nov18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD052296           Date 26Nov18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD033895           Date 16Apr15               *
       *                 MD023674           Date 29Nov13               *
       *                 MD023747           Date 23Nov13               *
@@ -20,6 +21,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD052296 - Problems caused by use of special characters      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD033895 - MD033895 - Correct parameters for UT000033.       *
@@ -49,6 +51,8 @@
       *
       ** Local data Area
      D LDA           E DS                  EXTNAME(LDA) DTAARA
+      ** SD data area                                                                         CSD101
+     D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSD101
       *
       ** Web Config data area
      D BFWBCONF      E DS                  EXTNAME(BFWBCONF) DTAARA
@@ -120,8 +124,9 @@
      D***P@PWD2*       S            256A                                        Password 1  MD033895
      D***P@DESC*       S             50A                                        Description MD033895
      D P@USER          S            100A                                                    MD033895
-     D P@PWD1          S            600A                                                    MD033895
-     D P@PWD2          S            600A                                                    MD033895
+     D***P@PWD1          S            600A                                           MD033895 CSD101
+     D P@PWD1          S            128A                                                      CSD101
+     D***P@PWD2          S            600A                                           MD033895 CSD101
      D P@DESC          S           1000A                                                    MD033895
      D P@GELR          S                   LIKE(DsGELR)                         General Ledger ICD
       *
@@ -139,7 +144,8 @@
      D WkValLstLoc     S             10A                                        Valib List Library
      D WkZone          S             10A                                        WkZone
      D WkUserId        S             10A                                        User Id
-     D WkPassWord      S             10A                                        Password
+     D***WkPassWord      S             10A                                           Password CSD101
+     D WkPassWord      S            128A                                                      CSD101
      D WkTimeStamp     S               Z                                        TimeStamp
      D WkIdx           S             10I 0                                      Index
      D WkDate          S              6A                                        Date        MD023674
@@ -699,16 +705,31 @@
       *
       ** Retrieve password
       *
-     C                   CALL      'UT000033'
-     C                   PARM      *Blanks       P@RTCD
-     C                   PARM      'F'           P@ACTN                         Find
-     C                   PARM      'GPLDAPVL'    P@VLIS                         Valid List
-     C                   PARM      WkValLstLoc   P@VLIB                         Valid List Location
-     C                   PARM      WkUserId      P@USER                         User Id
-     C                   PARM      *Blanks       P@PWD1                         Password 1
-     C                   PARM      *Blanks       P@PWD2                         Password 2
-     C                   PARM      *Blanks       P@DESC                         Description
+     C**********         CALL      'UT000033'                                                 CSD101
+     C**********         PARM      *Blanks       P@RTCD                                       CSD101
+     C**********         PARM      'F'           P@ACTN                         Find          CSD101
+     C**********         PARM      'GPLDAPVL'    P@VLIS                         Valid List    CSD101
+     C**********         PARM      WkValLstLoc   P@VLIB                         Valid List LocCSD101
+     C**********         PARM      WkUserId      P@USER                         User Id       CSD101
+     C**********         PARM      *Blanks       P@PWD1                         Password 1    CSD101
+     C**********         PARM      *Blanks       P@PWD2                         Password 2    CSD101
+     C**********         PARM      *Blanks       P@DESC                         Description   CSD101
       *
+                                                                                              CSD101
+     C                   IN        SDSTAT                                                     CSD101
+                                                                                              CSD101
+     C                   EVAL      P@VLIB   = LIBR + 'DMLIB'                                  CSD101
+     C                   EVAL      P@USER   = 'BANKFUSION_' + WkUserId                        CSD101
+                                                                                              CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       P@RTCD                                       CSD101
+     C                   PARM      'F'           P@ACTN                                       CSD101
+     C                   PARM      'SDINTFVL'    P@VLIS                                       CSD101
+     C                   PARM                    P@VLIB                                       CSD101
+     C                   PARM                    P@USER                                       CSD101
+     C                   PARM      *Blanks       P@PWD1                                       CSD101
+     C                   PARM      *Blanks       P@DESC                                       CSD101
+                                                                                              CSD101
      C     P@RTCD        IFEQ      *Blanks
      C                   EVAL      WkPassWord  = P@PWD1                         Password
      C                   ENDIF

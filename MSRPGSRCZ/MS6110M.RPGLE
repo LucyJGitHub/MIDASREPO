@@ -29,8 +29,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD048231           Date 17Jan18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD048231           Date 17Jan18               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR214111           Date 26Jun15               *
       *                 250527             Date 19Aug14               *
       *                 251373             Date 30Jan08               *
@@ -79,6 +80,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD048231 - Removed/Changed fix 251373 in order to process    *
       *             PAPER network messages using MQ queue             *
       *  MD046248 - Finastra Rebranding                               *

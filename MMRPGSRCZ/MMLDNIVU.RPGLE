@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD039547           Date 20Sep16               *
-      *  Prev Amend No. MD049048           Date 20Dec17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD039547           Date 20Sep16               *
+      *                 MD049048           Date 20Dec17               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD024884A          Date 04Jul17               *
@@ -135,9 +136,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD039547 - Referred account is not properly validated.       *
       *  MD049048 - LDNI inserted through SOAP cannot be amended due  *
-      *             to Front Office ID being blank.                   *      
+      *             to Front Office ID being blank.                   *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  MD024884A - Incorrect Payment and Receipt accounts           *

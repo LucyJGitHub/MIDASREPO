@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD033895           Date 09Jun14               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD033895           Date 09Jun14               *
       *                 MD027428           Date 09Jun14               *
       *                 MD027243           Date 29May14               *
       *                 MD025783           Date 19May14               *
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  MD033895 - Correct parameters for UT000033.                  *
       *  MD027428 - Forecast update error. Actual amount of the Total *
@@ -89,6 +91,8 @@
       *
       ** Local data Area
      D LDA           E DS                  EXTNAME(LDA) DTAARA
+      ** SD data area                                                                         CSD101
+     D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSD101
       *
       * Front Office transaction ID
      D                 DS
@@ -205,7 +209,8 @@
      D WkMQMgr         S             48A                                        MQ Queue Mgr
      D WkValLstLoc     S             10A                                        Valib List Library
      D WkUserId        S             10A                                        User Id
-     D WkPassWord      S             10A                                        Password
+     D***WkPassWord      S             10A                                           Password CSD101
+     D WkPassWord      S            128A                                                      CSD101
      D WkTimeStamp     S               Z                                        TimeStamp
       *
       ** Validation List Parameter
@@ -218,8 +223,9 @@
      D***PPassword2*   S            256A                                                    MD033895
      D***PDescrptn**   S             50A                                                    MD033895
      D PUserName       S            100A                                                    MD033895
-     D PPassword1      S            600A                                                    MD033895
-     D PPassword2      S            600A                                                    MD033895
+     D***PPassword1      S            600A                                           MD033895 CSD101
+     D PPassword1      S            128A                                                      CSD101
+     D***PPassword2      S            600A                                           MD033895 CSD101
      D PDescrptn       S           1000A                                                    MD033895
      D WRETCD          S              7
       *
@@ -1580,20 +1586,34 @@
       *****************************************************************
      C     getPassWord   BEGSR
       *
-     C                   CALL      'UT000033'
-     C                   PARM      '*BLANKS'     PRtnCode
-     C                   PARM      'F'           PAction
-     C                   PARM      'GPLDAPVL'    PValidList
-     C                   PARM      '*LIBL'       PLibrary
-     C                   PARM      WkUserId      PUserName
-     C                   PARM      *BLANKS       PPassword1
-     C                   PARM      *BLANKS       PPassword2
-     C                   PARM      *BLANKS       PDescrptn
+     C**********         CALL      'UT000033'                                                 CSD101
+     C**********         PARM      '*BLANKS'     PRtnCode                                     CSD101
+     C**********         PARM      'F'           PAction                                      CSD101
+     C**********         PARM      'GPLDAPVL'    PValidList                                   CSD101
+     C**********         PARM      '*LIBL'       PLibrary                                     CSD101
+     C**********         PARM      WkUserId      PUserName                                    CSD101
+     C**********         PARM      *BLANKS       PPassword1                                   CSD101
+     C**********         PARM      *BLANKS       PPassword2                                   CSD101
+     C**********         PARM      *BLANKS       PDescrptn                                    CSD101
       *
+     C                   IN        SDSTAT                                                     CSD101
+     C                   EVAL      PLibrary = LIBR + 'DMLIB'                                  CSD101
+     C                   EVAL      PUserName = 'BANKFUSION_' + WkUserId                       CSD101
+      *                                                                                       CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       PRtnCode                                     CSD101
+     C                   PARM      'F'           PAction                                      CSD101
+     C                   PARM      'SDINTFVL'    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PUserName                                    CSD101
+     C                   PARM      *Blanks       PPassword1                                   CSD101
+     C                   PARM      *Blanks       PDescrptn                                    CSD101
+                                                                                              CSD101
      C                   IF        PRtnCode <> *BLANKS
      C                   EVAL      WRETCD = '*ERROR'
      C                   EVAL      DBKEY  = WkUserId
-     C                   EVAL      DBFILE = 'GPLDAPVL'
+     C**********         EVAL      DBFILE = 'GPLDAPVL'                                        CSD101
+     C                   EVAL      DBFILE = 'SDINTFVL'                                        CSD101
      C                   EVAL      DBASE = 030
      C                   EXSR      *PSSR
      C                   ENDIF

@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051956           Date 19Sep18               *
-      *  Prev Amend No. MD051817           Date 20Aug18               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD051956           Date 19Sep18               *
+      *                 MD051817           Date 20Aug18               *
       *                 CSC053             Date 20Aug18               *
       *                 AR1033033          Date 20Aug18               *
       *                 MD046248           Date 27Oct17               *
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD051956 - Alphanumeric Filename cannot process by job       *
       *             MS-A2M_AFT.                                       *
       *  MD051817 - Unexpected return code is sent to MOPERQ by       *
@@ -109,7 +111,8 @@
       ** Define Midas DOS-PCC input file for inclusion in FTP script
       *
      D                 DS
-     D  SIFTPO                 1    128
+     D**SIFTPO**               1    128                                                       CSD101
+     D  SIFTPO                 1    256                                                       CSD101
      D  w@in4                  1      4
      D  w@in5                  1      5
       ** Analyse FTP output
@@ -145,6 +148,15 @@
      D wTranslate      S                   LIKE(SIFTPO)                                     MD051956
      D Up              C                   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'                     MD051956
      D Lo              C                   'abcdefghijklmnopqrstuvwxyz'                     MD051956
+                                                                                              CSD101
+     D Password        S            128                                                       CSD101
+     D PReturnCode     S              7A                                                      CSD101
+     D PAction         S              1A                                                      CSD101
+     D PValidList      S             10A   INZ('SDINTFVL')                                    CSD101
+     D PLibrary        S             10A                                                      CSD101
+     D PIDName         S            100A                                                      CSD101
+     D PPass1          S            128A                                                      CSD101
+     D PDescr          S           1000A                                                      CSD101
       ** Other work Variables                                                                 CSC053
       *
       /COPY MSCPYSRC,SRERRD
@@ -201,7 +213,31 @@
      C                   movel     'sr_list'     @STK(Q)
       *
       ** Line 1: <User> <Password> (sign on to Alliance machine)
-     C     ENSUSR        cat(p)    ENSPWD:1      SIFTPI
+     C*****ENSUSR        cat(p)    ENSPWD:1      SIFTPI                                       CSD101
+      *                                                                                       CSD101
+      ** Check User ID if exists, then retrieve the password.                                 CSD101
+      *                                                                                       CSD101
+     C                   EVAL      Password = *Blanks                                         CSD101
+      *                                                                                       CSD101
+     C                   IF        ENSUSR <> *BLANKS                                          CSD101
+     C                   EVAL      PLibrary = LIBR + 'DMLIB'                                  CSD101
+     C                   EVAL      PIDName = 'SWIFTALLIANCE_' + ENSUSR                        CSD101
+                                                                                              CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       PReturnCode                                  CSD101
+     C                   PARM      'F'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM      *Blanks       PPass1                                       CSD101
+     C                   PARM      *Blanks       PDescr                                       CSD101
+                                                                                              CSD101
+     C                   IF        PReturnCode = *Blanks                                      CSD101
+     C                   EVAL      Password = PPass1                                          CSD101
+     C                   ENDIF                                                                CSD101
+     C                   ENDIF                                                                CSD101
+                                                                                              CSD101
+     C     ENSUSR        cat(p)    Password:1    SIFTPI                                       CSD101
      C                   write     msftpid0
       *
       ** Line 2: CD <path name> (change directory)
@@ -274,7 +310,32 @@
      C     w@in4         ifeq      wk4                                                        247997
       *
       ** Line 1: <User> <Password> (sign on to Alliance machine)
-     C     ENSUSR        cat(p)    ENSPWD:1      SIFTPI
+     C*****ENSUSR        cat(p)    ENSPWD:1      SIFTPI                                       CSD101
+      *                                                                                       CSD101
+      ** Check User ID if exists, then retrieve the password.                                 CSD101
+      *                                                                                       CSD101
+     C                   EVAL      Password = *Blanks                                         CSD101
+      *                                                                                       CSD101
+     C                   IF        ENSUSR <> *BLANKS                                          CSD101
+     C                   EVAL      PLibrary = LIBR + 'DMLIB'                                  CSD101
+     C                   EVAL      PIDName = 'SWIFTALLIANCE_' + ENSUSR                        CSD101
+                                                                                              CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       PReturnCode                                  CSD101
+     C                   PARM      'F'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM      *Blanks       PPass1                                       CSD101
+     C                   PARM      *Blanks       PDescr                                       CSD101
+                                                                                              CSD101
+     C                   IF        PReturnCode = *Blanks                                      CSD101
+     C                   EVAL      Password = PPass1                                          CSD101
+     C                   ENDIF                                                                CSD101
+     C                   ENDIF                                                                CSD101
+                                                                                              CSD101
+     C     ENSUSR        cat(p)    Password:1    SIFTPI                                       CSD101
+                                                                                              CSD101
      C                   write     msftpid0
       *
       ** Line 2: NAMEFMT 1 (for IFS file system)                                              CSW027

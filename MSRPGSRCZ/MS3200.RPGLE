@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051013           Date 24May18               *
-      *  Prev Amend No. CSW218             Date 19Mar18               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD051013           Date 24May18               *
+      *                 CSW218             Date 19Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 240269             Date 19Aug14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD051013 - File name is truncated and header is not printed. *
       *  CSW218 - SWIFT Changes 2018                                  *
       *  MD046248 - Finastra Rebranding                               *
@@ -98,6 +100,15 @@
      D*TAB1************S              5A   ctdata perrcd(1) dim(1)                     CDL008 CFT014
      D*TAB1************S              5A   ctdata perrcd(1) dim(2)                     CFT014 CSW218
      D TAB1            S              5A   ctdata perrcd(1) dim(3)                            CSW218
+                                                                                              CSD101
+     D Password        S            128                                                       CSD101
+     D PReturnCode     S              7A                                                      CSD101
+     D PAction         S              1A                                                      CSD101
+     D PValidList      S             10A   INZ('SDINTFVL')                                    CSD101
+     D PLibrary        S             10A                                                      CSD101
+     D PIDName         S            100A                                                      CSD101
+     D PPass1          S            128A                                                      CSD101
+     D PDescr          S           1000A                                                      CSD101
       ** Table containing valid Block 3 Codes                                                 CDL008
       *                                                                                       CDL008
      D dssdy         E DS                  extname(DSSDY)
@@ -560,7 +571,32 @@
      C/COPY WNCPYSRC,MS3200C015
       *
       ** Line 1: <User> <Password> (sign on to Alliance machine)
-     C     ENSUSR        cat(p)    ENSPWD:1      SIFTPI
+     C*****ENSUSR        cat(p)    ENSPWD:1      SIFTPI                                       CSD101
+      *                                                                                       CSD101
+      ** Check User ID if exists, then retrieve the password.                                 CSD101
+      *                                                                                       CSD101
+     C                   EVAL      Password = *Blanks                                         CSD101
+      *                                                                                       CSD101
+     C                   IF        ENSUSR <> *BLANKS                                          CSD101
+     C                   EVAL      PLibrary = LIBR + 'DMLIB'                                  CSD101
+     C                   EVAL      PIDName = 'SWIFTALLIANCE_' + ENSUSR                        CSD101
+                                                                                              CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       PReturnCode                                  CSD101
+     C                   PARM      'F'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM      *Blanks       PPass1                                       CSD101
+     C                   PARM      *Blanks       PDescr                                       CSD101
+                                                                                              CSD101
+     C                   IF        PReturnCode = *Blanks                                      CSD101
+     C                   EVAL      Password = PPass1                                          CSD101
+     C                   ENDIF                                                                CSD101
+     C                   ENDIF                                                                CSD101
+                                                                                              CSD101
+     C     ENSUSR        cat(p)    Password:1    SIFTPI                                       CSD101
+                                                                                              CSD101
      C                   write     MSFTPID0
       *
       ** Line 2: TYPE I (for 'image' i.e. transfer file in binary form)

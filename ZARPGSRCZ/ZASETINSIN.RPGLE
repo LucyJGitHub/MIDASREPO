@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD040178           Date 05Aug16               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD040178           Date 05Aug16               *
       *                 CSW216             Date 14Mar16               *
       *                 MD037023           Date 12Jan16               *
       *                 MD036631           Date 27Nov15               *
@@ -87,6 +88,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD040178 - Rollup key text is missing in Settlement Details  *
       *             screen. Adjust the position of Rollup key text.   *

@@ -14,15 +14,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD017  *CREATE    Date 08Nov02               *
+      *                 CSD017  *CREATE    Date 08Nov02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD017 - Midas Compliance Watch - Anti-Money Laundering      *
       *                                                               *
@@ -149,7 +151,16 @@
      D WCmd            S                   LIKE(FTPCMD)
      D WCtr            S              2P 0
      D WLen            S              2P 0
- 
+                                                                                              CSD101
+     D Password        S            128                                                       CSD101
+     D PReturnCode     S              7A                                                      CSD101
+     D PAction         S              1A                                                      CSD101
+     D PValidList      S             10A   INZ('SDINTFVL')                                    CSD101
+     D PLibrary        S             10A                                                      CSD101
+     D PIDName         S            100A                                                      CSD101
+     D PPass1          S            128A                                                      CSD101
+     D PDescr          S           1000A                                                      CSD101
+
       ** +--------------------------------------+
       ** ¦ Prototype Declarations               ¦
       ** ¦ ======================               ¦
@@ -314,8 +325,30 @@
       *
      C                   OPEN      SDFTPSPD
       *
+     C                   EVAL      Password = *Blanks                                         CSD101
+                                                                                              CSD101
+      ** Check if ID exists                                                                   CSD101
+                                                                                              CSD101
+     C                   IF        W1CAUS <> *BLANKS                                          CSD101
+     C                   EVAL      PLibrary = LIBR + 'DMLIB'                                  CSD101
+     C                   EVAL      PIDName = 'COMPLWATCH_' + W1CAUS                           CSD101
+                                                                                              CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       PReturnCode                                  CSD101
+     C                   PARM      'F'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM      *Blanks       PPass1                                       CSD101
+     C                   PARM      *Blanks       PDescr                                       CSD101
+                                                                                              CSD101
+     C                   IF        PReturnCode = *Blanks                                      CSD101
+     C                   EVAL      Password = PPass1                                          CSD101
+     C                   ENDIF                                                                CSD101
+     C                   ENDIF                                                                CSD101
      C                   EVAL      W5FTPS = %TRIM(W1CAUS) + SPACE +
-     C                                      %TRIM(W1CAPW)
+     C                                      %TRIM(Password)                                   CSD101
+     C**********                            %TRIM(W1CAPW)                                     CSD101
      C                   WRITE     SDFTPSD0
       *
       ** Set the FTP session in ASCII (Text) Mode.

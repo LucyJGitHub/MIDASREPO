@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. LLN022             Date 03Jun15               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 LLN022             Date 03Jun15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG27041           Date 01Mar10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022 - BOE Upgrade to Midasplus                            *
       *  BUG27041 - Incorrect mapping for MQ STCQ                     *

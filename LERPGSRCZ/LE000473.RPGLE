@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD052296           Date 26Nov18               *
-      *  Prev Amend No. MD048443           Date 08Dec17               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD052296           Date 26Nov18               *
+      *                 MD048443           Date 08Dec17               *
       *                 MD050228           Date 31May18               *
       *                 MD050026           Date 06Apr18               *
       *                 MD050296           Date 19Apr18               *
@@ -107,6 +108,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD052296 - Problems caused by use of special characters      *
       *  MD048443 - Past due loan generated without loan type subtype *
       *             and also without interest rate                    *
@@ -671,6 +673,9 @@
      D                                     PREFIX(R_)
 
      D LEPDCL        E DS                  EXTNAME(LEPDCL)
+                                                                                              CSD101
+      ** SD data area                                                                         CSD101
+     D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSD101
 
      D                 DS
      D PGlobal                 1      2
@@ -1003,7 +1008,8 @@
      DLoan             C                   CONST('1')
      DFeeLoan          C                   CONST('2')
      DFeeFacility      C                   CONST('3')
-     DValidList        C                   CONST('GPLDAPVL')
+     D***ValidList        C                   CONST('GPLDAPVL')                               CSD101
+     DValidList        C                   CONST('SDINTFVL')                                  CSD101
 
      DTXT01            C                   CONST('Original Loan Ref ')
      DTXT02            C                   CONST('Original Fee  Ref ')
@@ -1031,7 +1037,8 @@
      D*PPassword2      S            256A                                                    MD033895
      D*PDescrptn       S             50A                                                    MD033895
      D PUserName       S            100A                                                    MD033895
-     D PPassword1      S            600A                                                    MD033895
+     D***PPassword1      S            600A                                           MD033895 CSD101
+     D PPassword1      S            128A                                                      CSD101
      D PPassword2      S            600A                                                    MD033895
      D PDescrptn       S           1000A                                                    MD033895
 
@@ -3663,6 +3670,9 @@
      C                   EVAL      DBPROC = *BLANKS
      C                   EVAL      DBPGM = WIUSR
      C                   OUT       LDA
+                                                                                              CSD101
+     C                   IN        SDSTAT                                                     CSD101
+                                                                                              CSD101
       *
       ** Access Bank Details
       *
@@ -3738,7 +3748,9 @@
       * If not Run As Identity no need to supply username and password
      C                   IF        RunAsIdentity = 'N'
      C                   EVAL      PValidList = ValidList
-     C                   EVAL      PLibrary = SysPrefix + 'GMLIB'
+     C**********         EVAL      PLibrary = SysPrefix + 'GMLIB'                             CSD101
+     C                   EVAL      PLibrary = LIBR + 'DMLIB'                                  CSD101
+     C                   EVAL      PUserName = 'BANKFUSION_' + WkUser                         CSD101
      C                   EXSR      GetPassWord
      C                   ENDIF
       *
@@ -3943,20 +3955,29 @@
       *****************************************************************
      C     GetPassWord   BEGSR
       *
-     C                   CALL      'UT000033'
-     C                   PARM      '*BLANKS'     PRtnCode
-     C                   PARM      'F'           PAction
-     C                   PARM                    PValidList
-     C                   PARM                    PLibrary
-     C                   PARM      WkUser        PUserName
-     C                   PARM      *BLANKS       PPassword1
-     C                   PARM      *BLANKS       PPassword2
-     C                   PARM      *BLANKS       PDescrptn
+     C**********         CALL      'UT000033'                                                 CSD101
+     C**********         PARM      '*BLANKS'     PRtnCode                                     CSD101
+     C**********         PARM      'F'           PAction                                      CSD101
+     C**********         PARM                    PValidList                                   CSD101
+     C**********         PARM                    PLibrary                                     CSD101
+     C**********         PARM      WkUser        PUserName                                    CSD101
+     C**********         PARM      *BLANKS       PPassword1                                   CSD101
+     C**********         PARM      *BLANKS       PPassword2                                   CSD101
+     C**********         PARM      *BLANKS       PDescrptn                                    CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *BLANKS       PRtnCode                                     CSD101
+     C                   PARM      'F'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PUserName                                    CSD101
+     C                   PARM      *BLANKS       PPassword1                                   CSD101
+     C                   PARM      *BLANKS       PDescrptn                                    CSD101
       *
      C                   IF        PRtnCode <> *BLANKS
      C                   EVAL      WRETCD = '*ERROR'
      C                   EVAL      DBKEY  = WkUser
-     C                   EVAL      DBFILE = 'GPLDAPVL'
+     C**********         EVAL      DBFILE = 'GPLDAPVL'                                        CSD101
+     C                   EVAL      DBFILE = 'SDINTFVL'                                        CSD101
      C                   EVAL      DBASE = 018
      C                   EXSR      *PSSR
      C                   ENDIF

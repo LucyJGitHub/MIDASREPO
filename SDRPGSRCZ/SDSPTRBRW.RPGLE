@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER043 - German Features LF041-00 New Fields and Defaulting  *
@@ -41,7 +43,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDSPTRBDF CF   E             WORKSTN
      F                                     SFILE(SDSPTRS1:@@RRN)
      F                                     SFILE(SDSPTRS3:@@RRN)
@@ -51,10 +53,10 @@
       ** Transaction file - by Front Office Id.
      FSDCURRL8  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDCURRD0:FILEFOID)
- 
+
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*pssr)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -66,12 +68,12 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
@@ -84,7 +86,7 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -92,59 +94,59 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
      D/COPY ZACPYSRC,MSGHNDDCL
       **--------------------------------------------------------------------------------------------
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** EXTERNAL DS FOR BANK DETAILS
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -163,19 +165,19 @@
       ** Set up the transaction reference to be used by the message handler
      C                   EVAL      TranRef = DDTRNN
      C                   EVAL      ActionCode = DDACTN
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes processing for the error and
       ** warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP1
       **--------------------------------------------------------------------------------------------
- 
+
       ** Initialization
       *
      C                   EXSR      INIT
- 
+
       ** BUILD Sub-file
- 
+
      C     @BDSFL        IFEQ      'Y'
       *
       **  If First time in or subfile by Midas transaction number was previously
@@ -196,29 +198,29 @@
       *
      C                   MOVE      *BLANK        DDTRNN
       ** No position fields need to be initialized
- 
+
       ** Clear program message queue
      C                   CALL      'ZA0250'
- 
+
      C                   ENDIF
- 
+
      C     WTrnK         CASEQ     'B'           BLDSFL
      C     WTrnK         CASEQ     'F'           BLDSFL2
      C                   ENDCS
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
       ** READ Subfile Record
- 
+
      C     @RDSFL        IFEQ      'Y'
      C     WTrnK         ANDNE     *BLANK
      C                   EXSR      RDSFLR
      C                   END
- 
- 
+
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************
@@ -383,7 +385,7 @@
       ********************************************************************
       * BLDSFL2 - BUILD SUBFILE by FRONT OFFICE ID.
       ********************************************************************
- 
+
      C     BLDSFL2       BEGSR
       *
       ** Check for user Authority to Browse IF NOT MULTI-BRANCHING
@@ -561,14 +563,14 @@
       *
      C     *IN99         DOUEQ     '1'
      C     DDOPT         ORNE      *BLANK
- 
+
      C     WTrnK         IFEQ      'B'
      C                   READC     SDSPTRS1                               99
      C                   ENDIF
      C     WTrnK         IFEQ      'F'
      C                   READC     SDSPTRS3                               99
      C                   ENDIF
- 
+
      C                   END
       *
       **  Return the selected transaction reference and option
@@ -594,9 +596,9 @@
       * FMTTSPT- FORMAT TRANSACTION FOR OUTPUT
       ******************************************************************
      C     FMTSPRT       BEGSR
- 
+
       * Transaction reference
- 
+
      C                   MOVE      A6CYCD        DDTRNN
      C                   MOVE      A6CYCD        DDTRNN
      C                   MOVE      A6SRID        DDFOID
@@ -605,7 +607,7 @@
       ** Formating specific to euro rate
      C                   EXSR      FMEURT
      C                   ELSE
- 
+
      C     A6SPRT        IFEQ      *ZERO
      C                   MOVEL     *BLANK        DDSPRT
      C                   ELSE
@@ -618,9 +620,9 @@
      C                   MOVE      A6MDIN        DDMDIN
      C                   EVAL      %SUBST(DDDLSW:1) = A6DLCI
      C                   EVAL      %SUBST(DDDLSW:4) = A6SWCY
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       ******************************************************************
       /EJECT
@@ -709,11 +711,11 @@
       *                                                               *
       *****************************************************************
      C     ZEDIT         BEGSR
- 
+
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD           16
      C                   PARM                    ZADEC             1 0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -733,7 +735,7 @@
      C     *LIKE         DEFINE    #SPRA         #SPRA2
      C     *LIKE         DEFINE    DDDLSW        DLSW
      C     *LIKE         DEFINE    DDDLSW        DLSW2
- 
+
      C                   CALLB     'SDSPTRDEU'                          90
      C                   PARM                    RetCodeIn
      C                   PARM      A6CYCD        PICYCD
@@ -749,7 +751,7 @@
      C                   PARM                    #SPRA2
      C                   PARM                    DLSW2
      C                   PARM                    #SMDI2
- 
+
      C                   IF        RetCodeIn <> *BLANK OR *IN90
      C                   MOVEL     'SDSPTRDEU'   DBFILE
      C                   MOVEL     '001'         DBASE
@@ -818,7 +820,7 @@
      C                   MOVEL     @OPTN         DBKEY
      C                   EXSR      *PSSR
      C                   END
- 
+
       ** Check if switchable feature CEU002 is switched on.
       ** Euro rates
      C                   CALLB     'AOSARDR0'
@@ -846,7 +848,7 @@
       ** functions for the message handler, ZAMSGHNDLE.
      D/COPY SDCPYSRC,MSGHNDDATA
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDSR
       *****************************************************************
       *
@@ -855,7 +857,7 @@
       ** to process error and warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP2
       **--------------------------------------------------------------------------------------------
- 
+
       *****************************************************************
       ** Program, module and procedure names for database error processing.
       ** =================================================================

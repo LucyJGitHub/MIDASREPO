@@ -13,12 +13,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 234675             Date 04Jul05               *
       *                 233698             Date 25May05               *
       *                 232543             Date 14Mar05               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  234675 - Change control for processing type 4 and Dividend   *
@@ -60,9 +62,9 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSEPRCSDSDFCF   E             WORKSTN
- 
+
       ** Investment Type                                                                      CGL031
      FINVTP     IF   E           K DISK    INFSR(*PSSR)                                       CGL031
                                                                                               CGL031
@@ -74,7 +76,7 @@
                                                                                               CAS006
      FBKPHD     IF   E           K DISK    INFSR(*PSSR)                                       CAS006
       ** Midas SE Book Position Headers                                                       CAS006
- 
+
       *****************************************************************
       *                                                               *
       * ID F  C  H  L    FUNCTION OF INDICATORS                       *
@@ -106,25 +108,25 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -132,70 +134,70 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
      D/COPY ZACPYSRC,MSGHNDDCL
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @EI             S              1    DIM(60)
      D @Z0             S              1    DIM(60) CTDATA PERRCD(60)
      D @Z10            S              1    DIM(10) CTDATA PERRCD(10)
- 
+
       ** Securities Prices Transaction Details in screen format
      D TRNDETS       E DS                  EXTNAME(SEPRCSPD)
      D   DDTSDT                            OVERLAY(DDDFTS:3)
      D   DDTSTM                            OVERLAY(DDDFTS:9)
- 
+
       ** Securities Prices Transaction Details OK indicators
      D OKTRNDETS     E DS                  EXTNAME(SEEPRCSPD)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
                                                                                               CSD006
       ** External DS for switchable features                                                  CSD006
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSD006
- 
+
       ** Security Trading Detail
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
- 
+
       **  Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -233,7 +235,7 @@
                                                                                               CGL031
       ** Switchable features                                                                  CGL031
      D CGL031          S              1A                                                      CGL031
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -259,7 +261,7 @@
      C                   ELSE
      C                   MOVEL     'N'           CLRSCRN
      C                   ENDIF
- 
+
      C     @INKC         IFEQ      '1'
      C                   SETON                                        LR
      C                   END
@@ -289,17 +291,17 @@
      C                   ADD       1             C
      C                   ADD       1             E
      C                   END
- 
+
       ** Set up the customer reference to be used by the message handler
      C                   EVAL      TranRef = DDPSSN
      C                   EVAL      ActionCode = DDACTN
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes processing for the error and
       ** warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP1
       **--------------------------------------------------------------------------------------------
- 
+
       * Protect all fields
      C                   MOVE      *OFF          *IN70
       *
@@ -324,10 +326,10 @@
       * RECORD STATUS
       *
      C     DDSTS         COMP      *BLANK                             7979
- 
+
       * Enable Function Key - F10 Delete
      C     @EINKJ        COMP      'Y'                                    71
- 
+
       ** Taxation of Savings Income                                                           CGL031
                                                                                               CGL031
      C                   IF        CGL031 = 'Y'                                               CGL031
@@ -362,7 +364,7 @@
      C**********         ENDIF                                                         CGL031 232543
                                                                                               CGL031
       * Position cursor on first field if no errors
- 
+
      C     'N'           LOOKUP    @EI                                    73
                                                                                               CAS006
       ** If Hedge Accounting Phase B is installed, convert Current                            CAS006
@@ -471,20 +473,20 @@
      C                   ELSE                                                                 CAS006
      C                   EVAL      *IN72 = *OFF                                               CAS006
      C                   ENDIF                                                                CAS006
- 
+
       * Write message subfile, Securities Details and footer screen
      C                   TIME                    DDTIME
- 
+
      C                   IF        CLRSCRN = 'Y'
      C                   WRITE     CLSCREEN
      C                   ENDIF
- 
+
      C                   IF        DSPDTL= 'N'
      C                   WRITE     SEPRCSS0
      C                   WRITE     SEPRCSF1
      C                   EXFMT     SEPRCSK1
      C                   ENDIF
- 
+
      C                   IF        DSPDTL= 'Y'
      C                   WRITE     SEPRCSK1
      C                   WRITE     SEPRCSS0
@@ -495,10 +497,10 @@
      C                   EXFMT     SEPRCSD1
      C                   ENDIF                                                                CSD010
      C                   ENDIF
- 
+
       * Set screen error indicators off
      C                   MOVEA     @Z0           *IN(10)
- 
+
       * Set return keys
      C                   MOVE      *INKC         @INKC
      C                   MOVE      *INKG         @INKG
@@ -508,7 +510,7 @@
      C                   MOVE      *INKP         @INKP
       *
      C                   ENDSR
- 
+
       ********************************************************************                    CGL031
       /EJECT                                                                                  CGL031
       *****************************************************************                       CGL031
@@ -565,7 +567,7 @@
       ** to process error and warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP2
       **--------------------------------------------------------------------------------------------
- 
+
       ********************************************************************
       /EJECT
       *****************************************************************
@@ -578,13 +580,13 @@
      C     *ENTRY        PLIST
       *
       * INPUT PARAMETERS :
- 
+
       * Return code
      C                   PARM                    RetCodeIn
- 
+
       ** Transaction Details in screen format
      C                   PARM                    TRNDETS
- 
+
       ** Transaction Details OK indicators
      C                   PARM                    OKTRNDETS
       * Errors
@@ -619,9 +621,9 @@
       ** Taxation on Savings Income                                                           CGL031
                                                                                               CGL031
      C                   PARM                    CGL031                                       CGL031
- 
+
       * OUTPUT PARAMETERS :
- 
+
       * Function Keys
      C                   PARM                    @INKC             1
      C                   PARM                    @INKG             1
@@ -725,15 +727,15 @@
      C                   ELSE                                                                 CAS006
      C                   EVAL      CAS006 = 'N'                                               CAS006
      C                   ENDIF                                                                CAS006
- 
+
       *
       * Check if EXTEL indicator is on, BVEXOP
- 
+
      C                   CALL      'AOSTRDR0'
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDSTRD        PARM      SDSTRD        DSSDY
- 
+
      C                   IF        BVEXOP = 'Y'
      C                   EVAL      *IN91 = '0'
      C                   ELSE
@@ -756,7 +758,7 @@
       **--------------------------------------------------------------------------------------------
      C                   EVAL      MsgFArray(4) = 'SEUSRMSG'                                  CAS006
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 BUG22153           Date 14Jan09               *
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  BUG22153 - Missing authorization field in repository.        *
@@ -69,61 +71,61 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
      FSECTY     IF   E           K DISK    INFSR(*PSSR)
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SEPRCSC001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structure.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes definitions for thefields
       ** #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member.
      D/COPY ZACPYSRC,PROCPARMS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API *CTL modules.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -132,110 +134,110 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** String for error messages to the operator
      D ProcErr         C                   CONST('Error in module')
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D WCmtJobArr      S             10A   DIM(10)
       ** Array for commitment job names
- 
+
       ** Incoming Header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
- 
+
       ** Incoming Price Record
      D TranInPRCS    E DS                  EXTNAME(SEPRCSPD)
- 
+
       * (Current) Transaction in Screen Format - Main Details
      D CurTrPRCS     E DS                  EXTNAME(SEPRCSPD)
      D                                     PREFIX(@)
- 
+
       ** (Current) Price record in File Format
      D PRCSFilFmt    E DS                  EXTNAME(PRICE)
- 
+
       ** Valid Price layout
      D ValidPRCS     E DS                  EXTNAME(SEVPRCSPD)
      D                                     PREFIX(V_)
- 
+
       ** Valid Extra Data Price validation details layout
      D ValidPRXT     E DS                  EXTNAME(SEVPRXTPD)
- 
+
       ** New Extel Details in file format
      D ValidEXTEL    E DS                  EXTNAME(SEVEXVLPD)
- 
+
       ** Flags to indicate whether Price fields are valid
      D OKFlagsDS     E DS                  EXTNAME(SEEPRCSPD)
- 
+
       * Prices Extra Data - File (D/B) format
      D ExtData       E DS                  EXTNAME(SEPREXPD)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * First DS for Access programs - short data structure
- 
+
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
      D** Security Trading Detail
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** Midas Modules details accessed via access program
- 
+
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
       ** External DS for API ICD
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * Second DS for Access programs - long data structure
- 
- 
+
+
       ** 24x7 Status Data Area
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
- 
+
       ** SD Data Area
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
- 
+
      D SCCMTJOB      E DS           256    DTAARA(SCCMTJOB)
      D  ComitJob               4    103
       ** Midas SC Jobs handling commitment control data area
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Field (500A) to receive the incoming Prices record
      D Trans500        S            500A
- 
+
       ** Field (500A) to receive the incoming Extra Data
      D ExtData500      S            500A
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0 INZ(0)
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0 INZ(0)
- 
+
       ** Index for arrays of error message ids etc in Amend validation
      D AmIdx           S              3P 0 INZ(0)
- 
+
       ** Module ID, to be passed to the Message Handler
      D ModuleID        S              2A   INZ('SE')
- 
+
       ** Flags to indicate whether substitution is required in
       ** each of the various parts the transaction
      D REPPRCS         S              1A   inz('N')
- 
+
      D HPPRC           S                   LIKE(PPRC)
      D FCR997          S                   LIKE(@CR997)
- 
+
       ** Switchable Features
      D CAC005          S              1A
      D CAP060          S              1A
@@ -252,79 +254,79 @@
      D ZOUT21          S             21A                                                      CGL031
                                                                                               CGL031
      D WINTP           S             15P 8                                                    CGL031
- 
+
      D HBDPR           S                   LIKE(PRBDPR)
      D HOFPR           S                   LIKE(PROFPR)
      D HCLPR           S                   LIKE(PRCLPR)
- 
+
      D @RDNB           S              1A
      D @SCRN           S              1A
      D PRtCd           S              7A                                                      CGL031
      D POptn           S              7A                                                      CGL031
      D PSard           S              6A                                                      CGL031
- 
+
      D                 DS
      D  WDDFTS                 1     14A
      D  DDTSDT                 3      8A
      D  DDTSTM                 9     14A
- 
+
      D  WDMKPN                       16A   INZ(*BLANKS)
- 
+
      D CSC022          S              1A
- 
+
      D WCommitSkip     S              1A
       ** Commitment Skip Field
                                                                                              BUG9475
      D  ZFIELD         S             16A                                                     BUG9475
      D  ZADEC          S              1  0                                                   BUG9475
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SEPRCSC002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   MOVEL     Trans500      TranInPRCS
      C                   MOVEL     Extdata500    Extdata
- 
+
       ** Reset variables gradually updated
      C                   EXSR      ResetCycle
- 
+
       ** Validate Action Code
      C                   EXSR      ValidateAc
- 
+
       ** If error in validation of action code, fail this input
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       ** Call defaulting sub-routine
      C                   IF        CAP060 = 'Y'
      C                   EXSR      SRDFT
      C                   ENDIF
- 
+
       ** If error in validation of action code, fail this input
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       * Default in values for EXTEL fields if they have been omitted from the incoming
       * message, CAP060 is on and the price type and extel fields are set accordingly
      C                   IF        CAP060 = 'Y'
@@ -332,55 +334,55 @@
      C                             DDPSRC = *BLANKS
      C                   MOVEL     @DDPSRC       DDPSRC
      C                   ENDIF
- 
+
      C                   IF        @DDAPND<> *BLANKS AND
      C                             DDAPND = *BLANKS
      C                   MOVEL     @DDAPND       DDAPND
      C                   ENDIF
- 
+
      C                   IF        @DDLPRI<> *BLANKS AND
      C                             DDLPRI = *BLANKS
      C                   MOVEL     @DDLPRI       DDLPRI
      C                   ENDIF
- 
+
      C                   IF        @DDUPRI<> *BLANKS AND
      C                             DDUPRI = *BLANKS
      C                   MOVEL     @DDUPRI       DDUPRI
      C                   ENDIF
- 
+
      C                   IF        @DDPCEN<> *BLANKS AND
      C                             DDPCEN = *BLANKS
      C                   MOVEL     @DDPCEN       DDPCEN
      C                   ENDIF
      C                   ENDIF
- 
- 
+
+
       ** Validate the main details of the transaction
- 
+
       **  Processing depends upon Action Code
- 
+
      C                   SELECT
- 
+
       **  Processing for Inserts
      C                   WHEN      DDACTN = 'I'
      C                   EXSR      ValidateTr
- 
+
       **  Processing for Amends or Changes
      C                   WHEN      DDACTN = 'A' OR
      C                             DDACTN = 'D'
      C                   EXSR      SetupAmd
      C                   EXSR      ValidateTr
- 
+
      C                   ENDSL
- 
+
      C     INVALID       TAG
- 
+
       * Write to database
      C     UpdateYN      IFEQ      'Y'
      C     Idx           ANDEQ     0
      C                   EXSR      UpdateDB
      C                   ENDIF
- 
+
       ** Set output fields
      C                   MOVEL     DDDFTS        WDDFTS
      C                   IF        DDPSSN <> *BLANKS
@@ -398,17 +400,17 @@
                                                                                              BUG9475
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Setup buffer
      C****************   EVAL      Buffer = TranInPRCS + WDMKPN + DDTSDT                     BUG4258
      C                   EVAL      Buffer = TranInPRCS                                       BUG4258
      C                                      + @TimeStamp
      C                                      + WDMKPN + DDTSDT                                BUG4258
      C                                      + DDTSTM
- 
+
      C                   MOVE      *ON           *INLR
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -417,59 +419,59 @@
       *              price type is 'V' and BVEXOP = 'Y'               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDFT         BEGSR
- 
+
      C                   CALLB     'SEPRCSDFT'
- 
+
       ** Inputs
       ** Return Code
      C                   PARM                    RetCodeIn
- 
+
       ** Action Code
      C                   PARM                    DDACTN            1
- 
+
       ** Security Shortname
      C                   PARM                    DDPSSN           10
- 
+
       ** Price Type
      C                   PARM                    DDPPRT            2
- 
+
       ** Price in file format
      C                   PARM                    PRCSFilFmt
- 
+
       ** ICD
      C                   PARM                    BVEXOP
- 
+
       ** Output
       ** Screen Output
- 
+
       ** Price Source
      C                   PARM                    @DDPSRC
- 
+
       ** Auto-Price Indicator
      C                   PARM                    @DDAPND
- 
+
       ** Lower Price Boundary
      C                   PARM                    @DDLPRI
- 
+
       ** Upper Price Boundary
      C                   PARM                    @DDUPRI
- 
+
       ** Percentage
      C                   PARM                    @DDPCEN
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    IDX
- 
+
       ** Security shortname OK flag
      C                   PARM      *BLANK        DDSSNOK
- 
+
      C                   ENDSR
       *****************************************************************
       *                                                               *
@@ -478,33 +480,33 @@
       *              Implied action code is always 'I', therefore,    *
       *              simply validate that security exists.            *
       *****************************************************************
- 
+
      C     ValidateAc    BEGSR
- 
+
       ** Validate action code versus security short name supplied.
       ** The Prices record in file format from the SE database is
       ** retrieved as well.
- 
+
      C                   RESET                   ReturnCode
      C
      C                   CALLB     'SEPRCSRTV'
- 
+
       ** Inputs
       ** Return code
      C                   PARM      *BLANK        ReturnCode
- 
+
       ** Mode of operation
      C                   PARM      *BLANKS       MODEOFOP          6
- 
+
       ** Response mode
      C                   PARM      'S'           APRESPMODE
- 
+
       ** Front Office Transaction ID
      C                   PARM                    APFOTRANID
- 
+
       ** Action Code
      C     @DDACTN       PARM                    DDACTN            1
- 
+
       ** Key fields
      C     @DDPSSN       PARM                    DDPSSN           10
      C     @DDPCNM       PARM                    DDPCNM           10
@@ -514,28 +516,28 @@
      C     @DDPRFC       PARM                    DDPRFC            4
      C     @DDPPRT       PARM                    DDPPRT            2
      C     @DDPTFR       PARM                    DDPTFR            4
- 
+
       ** ICD
       ** Extel Indicator
      C                   PARM                    BVEXOP
- 
+
       ** Output
       ** (Current) deal in file format
      C                   PARM                    PRCSFilFmt
- 
+
       ** If CAC005 is on, this is the book code the user entered on the screen (file format)
      C                   PARM                    PBCD              2
- 
+
       ** If CAC005 is on, this is the pseudo book ( the book stored on file on PRICED )
       ** If CAC005 is off, this is the book the user entered on the screen (file format)
      C                   PARM                    PBOK              2
- 
+
       ** Profit centre, in file format
      C                   PARM                    PRFC              4
- 
+
       ** Customer number in file format
      C                   PARM                    PCNM
- 
+
       ** Current Price retrieved, depending on price type
      C                   PARM                    DDCURP           16
       *
@@ -549,22 +551,22 @@
      C                   PARM                    DDPRFCOK
      C                   PARM                    DDPRTOK
      C                   PARM                    DDPTFROK
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Warnings
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
      C                   PARM                    WIdx
      C                   PARM      FCR997        @CR997            4
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -573,46 +575,46 @@
       * ValidateTr - Routine to validate the main Prices details      *
       *                                                               *
       *****************************************************************
- 
+
      C     ValidateTr    BEGSR
- 
+
       ** Set up valid fields
      C                   EXSR      SRMVVL
- 
+
      C                   CALLB     'SEPRCSVAL'
- 
+
       **  Response mode (1A), from source system common header
      C                   PARM      'S'           APRespMode
- 
+
       ** Transaction information (DS) from source system
      C                   PARM                    TranInPRCS
      C                   PARM                    ExtData
- 
+
       ** Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       ** Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       ** Valid Prices layout (DS) from/to caller
      C                   PARM                    ValidPRCS
      C                   PARM                    ValidEXTEL
      C                   PARM                    ValidPRXT
      C                   PARM                    HPPRC
- 
+
       ** CAC005 switchable feature on (Y / N)
      C                   PARM                    CAC005
                                                                                               CGL031
@@ -640,7 +642,7 @@
      C                   MOVE      ZOUT21        DDINTP                                       CGL031
                                                                                               CGL031
      C                   ENDIF                                                                CGL031
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -651,32 +653,32 @@
       *                                                               *
       *****************************************************************
      C     RESETCYCLE    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIDArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIdx
- 
+
      C                   RESET                   AmFldNamAr
      C                   RESET                   AmMsgIDArr
      C                   RESET                   AmMsgDtaAr
      C                   RESET                   AmIdx
- 
+
      C                   RESET                   FldNoArr
- 
+
      C                   MOVE      *ALL'Y'       OKFlagsDS
- 
+
      C                   CLEAR                   ValidPRCS
      C                   CLEAR                   ValidPRXT
- 
+
      C                   CLEAR                   ValidEXTEL
      C                   CLEAR                   CurTrPRCS
- 
+
       * Output only fields
      C                   EVAL      DDCURP = *BLANKS
      C                   EVAL      DDPSRC = *BLANKS
@@ -688,11 +690,11 @@
       * UpdateDB - Update database                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     UpdateDB      BEGSR
- 
+
      C                   EVAL      V_PRCHTP = DDACTN
- 
+
       * Restore Timestamp from the original record                                           BUG4258
      C                   IF        DDACTN <> 'I'                                             BUG4258
      C                             AND @TimeStamp <> *BLANKS                                 BUG4728
@@ -752,19 +754,19 @@
       *                                                               *
       *****************************************************************
      C     SetupAmd      BEGSR
- 
+
       ** Call program to fill screen fields with data
- 
+
      C                   CALLB     'SEPRCSCVT'
- 
+
       ** Inputs
       ** Return Code
      C                   PARM                    DDSTS
      C                   PARM      *BLANK        ReturnCode
- 
+
       ** Deal in file format
      C                   PARM                    PRCSFilFmt
- 
+
       ** If CAC005 is on, this is the pseudo book ( the book stored on file on PRICED )
       ** If CAC005 is off, this is the book the user entered on the screen (file format)
      C                   PARM                    PBOK
@@ -772,20 +774,20 @@
       ** Taxation on Savings Income                                                           CGL031
                                                                                               CGL031
      C                   PARM                    CGL031                                       CGL031
- 
+
       ** Outputs
       ** Deal in screen format
      C                   PARM                    CurTrPRCS
      C                   PARM                    HPPRC
- 
+
       ** Switchable feature CSD010 parameters
      C                   PARM                    HBDPR
      C                   PARM                    HOFPR
      C                   PARM                    HCLPR
      C                   PARM                    CSD010
- 
+
      C                   EVAL      DDCURP = @DDCURP
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -795,7 +797,7 @@
       *                                                               *
       *****************************************************************
      C     SRMVVL        BEGSR
- 
+
      C                   MOVE      RECI          V_PRRECI
      C                   MOVEL(P)  PSSN          V_PRPSSN
      C                   MOVEL(P)  PPRT          V_PRPPRT
@@ -827,22 +829,22 @@
      C                   MOVEL     PBCD          V_PRPBCD
      C                   MOVEL(P)  PSSN          EXVSESN
      C                   MOVEL     'D'           EXVRECI
- 
+
       ** If Hedge Accounting Phase B is installed. move Credit Risk
       ** Spread and Liquidity Premium fields to Price Valid File.
- 
+
      C                   IF        CAS006 = 'Y' AND (PPRT = 'V'
      C                             OR PPRT = 'DT' OR PPRT = 'DV')
      C                   EVAL      V_PRCRSK = PRCRSK
      C                   EVAL      V_PRLQPR = PRLQPR
      C                   ENDIF
- 
+
      C                   IF        CSD010 = 'Y'
      C                   Z-ADD     PRBDPR        V_PRBDPR
      C                   Z-ADD     PROFPR        V_PROFPR
      C                   Z-ADD     PRCLPR        V_PRCLPR
      C                   ENDIF
- 
+
      C     ENWDL         ENDSR
       *****************************************************************
       /EJECT
@@ -852,7 +854,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       ** Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -871,78 +873,78 @@
      C                   PARM                    APIRetc           1
      C                   PARM                    @TimeStamp       26                         BUG4258
      C                   PARM                    AAuth             1                        BUG22153
- 
+
       ** Key list for SEVPRCSL1
- 
+
      C     PRCSK1        KLIST
      C                   KFLD                    V_PRPSSN
      C                   KFLD                    V_PRPPRT
      C                   KFLD                    V_PRPVDT
- 
+
       ** Set up the name of the MSGF from which the message handler will
       **  get the messages
      C                   EVAL      MsgFArray(1) = 'SEUSRMSG'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
      C                   EVAL      MsgFArray(3) = 'MEMSG'
      C/COPY WNCPYSRC,SEH00128
- 
+
       ** Set up the name of the module Id used to make the transaction
       ** number unique.
- 
+
      C                   EVAL      ModuleId = 'SE'
- 
+
       ** Access Bank details via access program
       ** (database error handling done in access program)
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Access API ICD via access program
- 
+
      C                   CALLB     'AOAPIR0'
      C                   PARM      '*DBERR '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDAPI         PARM      SDAPI         DSFDY
- 
+
       ** Access SAR details file to determine if CAP060
       ** is switched on
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CAP060'      @SARD             6
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFEQ      *BLANK
      C                   MOVEL     'Y'           CAP060            1
      C                   ELSE
      C                   MOVEL     'N'           CAP060
      C                   END
- 
+
       ** Check if CAC005 is on
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CAC005'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CAC005
      C                   ELSE
      C                   MOVE      'N'           CAC005
      C                   ENDIF
- 
+
       ** Check if 24x7 Midas Availability is installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *Blanks       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CSC011'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   EVAL      CSC011 = 'Y'
      C                   IN        SC24X7
@@ -950,9 +952,9 @@
      C                   ELSE
      C                   EVAL      CSC011 = 'N'
      C                   ENDIF
- 
+
       ** Access switchable features file - Collateralised Lending (CSD010)
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
@@ -964,44 +966,44 @@
      C                   ELSE
      C                   EVAL      CSD010 = 'N'
      C                   ENDIF
- 
+
       ** Access switchable features file - Hedge Accounting Phase B (CAS006)
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CAS006'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   EVAL      CAS006 = 'Y'
      C                   ELSE
      C                   EVAL      CAS006 = 'N'
      C                   ENDIF
- 
+
       ** Access Module Details
- 
+
      C                   CALL      'AOMMODR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
       ** Database error
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'SDMMODPD'    DBFILE                         ************
      C                   MOVEL     '001'         DBASE                          * DBERR 001*
      C                   MOVEL     @OPTN         DBKEY                          ************
      C                   EXSR      *PSSR
      C                   END
- 
+
       ** Check if EXTEL indicator is on, BVEXOP
- 
+
      C                   CALL      'AOSTRDR0'
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDSTRD        PARM      SDSTRD        DSSDY
- 
+
       *
       ** Access Switchable Feature File, for CSC022
       *
@@ -1064,7 +1066,7 @@
      C                   ENDIF                                                                CGL031
                                                                                               CGL031
      C                   ENDIF                                                                CGL031
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

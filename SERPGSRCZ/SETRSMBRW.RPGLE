@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR689705           Date 03Jan11               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR689705           Date 03Jan11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 BG13275            Date 12Feb07               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR689705 - Nominal and value settled were missing after      *
       *             enter. Applied fix AR656294 (Child: AR689706)     *
@@ -206,19 +208,19 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Customer file
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** External DS for Securities Clients File                                              CSE010
      D SDSECS        E DS                  EXTNAME(SDSECSPD)                                  CSE010
                                                                                               CSE010
       ** Short DS for access program
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       *
       ** Indicator Array
      D Indicators      DS                  BASED(IndicatorP)
@@ -318,9 +320,9 @@
       *
       ** Validate key entry.
      C                   Exsr      SrVKeyIn
- 
+
      C                   Exsr      SrBldSfl
- 
+
      C                   EndIf
       *
       ** Read subfile record.
@@ -344,14 +346,14 @@
      C                   Eval      KWMVDT = *Blanks
       *
      C                   If        SWMVDT <> *BLANKS
- 
+
      C                   If        SWMVDT = *ALL'9'
      C                   Z-Add     99999         KMVDT
      C                   Move      '999999'      KWMVDT
      C                   Else
- 
+
      C                   TESTN                   SWMVDT               90
- 
+
      C                   If        NumericI1 = False
      C                   Eval      PErrorFlag = 'Y'
      C                   Else
@@ -378,7 +380,7 @@
       ** warning messages.
       *
       /COPY ZACPYSRC,MSGHNDDSP1
- 
+
      C                   EndIf
      C                   EndIf
       *
@@ -450,88 +452,88 @@
      C                   When      SWTRAD <> *Blanks And SWSECS <> *Blanks
      C                             And SWCLNT <> *Blanks And SWMVDT <> *Blanks
      C                   Eval      WOrderOf = 'TSCD'
- 
+
      C                   When      SWTRAD <> *Blanks And SWSECS = *Blanks
      C                             And SWCLNT = *Blanks And SWMVDT = *Blanks
      C                   Eval      WOrderOf = 'TSCD'
      C                   Eval      KSECS = *LOVAL
      C                   Eval      KCLNT = *LOVAL
      C                   Eval      KMVDT = *LOVAL
- 
+
      C                   When      SWTRAD <> *Blanks And SWSECS <> *Blanks
      C                             And SWCLNT = *Blanks And SWMVDT = *Blanks
      C                   Eval      WOrderOf = 'TSCD'
      C                   Eval      KCLNT = *LOVAL
      C                   Eval      KMVDT = *LOVAL
- 
+
      C                   When      SWTRAD <> *Blanks And SWSECS <> *Blanks
      C                             And SWCLNT <> *Blanks And SWMVDT = *Blanks
      C                   Eval      WOrderOf = 'TSCD'
      C                   Eval      KMVDT = *LOVAL
- 
+
      C                   When      SWTRAD <> *Blanks And SWSECS = *Blanks
      C                             And SWCLNT <> *Blanks And SWMVDT <> *Blanks
      C                   Eval      WOrderOf = 'TCDS'
      C                   Eval      KSECS = *LOVAL
- 
+
      C                   When      SWTRAD <> *Blanks And SWSECS = *Blanks
      C                             And SWCLNT <> *Blanks And SWMVDT = *Blanks
      C                   Eval      WOrderOf = 'TCSD'
      C                   Eval      KSECS = *LOVAL
      C                   Eval      KMVDT = *LOVAL
- 
+
      C                   When      SWTRAD <> *Blanks And SWSECS = *Blanks
      C                             And SWCLNT = *Blanks And SWMVDT <> *Blanks
      C                   Eval      WOrderOf = 'TDSC'
      C                   Eval      KSECS = *LOVAL
      C                   Eval      KCLNT = *LOVAL
- 
+
      C                   When      SWTRAD = *Blanks And SWSECS <> *Blanks
      C                             And SWCLNT <> *Blanks And SWMVDT <> *Blanks
      C                   Eval      WOrderOf = 'SCDT'
      C                   Eval      KTRAD = *LOVAL
- 
+
      C                   When      SWTRAD = *Blanks And SWSECS <> *Blanks
      C                             And SWCLNT <> *Blanks And SWMVDT = *Blanks
      C                   Eval      WOrderOf = 'SCTD'
      C                   Eval      KTRAD = *LOVAL
      C                   Eval      KMVDT = *LOVAL
- 
+
      C                   When      SWTRAD = *Blanks And SWSECS <> *Blanks
      C                             And SWCLNT = *Blanks And SWMVDT <> *Blanks
      C                   Eval      WOrderOf = 'SDTC'
      C                   Eval      KTRAD = *LOVAL
      C                   Eval      KCLNT = *LOVAL
- 
+
      C                   When      SWTRAD = *Blanks And SWSECS = *Blanks
      C                             And SWCLNT <> *Blanks And SWMVDT <> *Blanks
      C                   Eval      WOrderOf = 'CDTS'
      C                   Eval      KTRAD = *LOVAL
      C                   Eval      KSECS = *LOVAL
- 
+
      C                   When      SWTRAD = *Blanks And SWSECS <> *Blanks
      C                             And SWCLNT = *Blanks And SWMVDT = *Blanks
      C                   Eval      WOrderOf = 'STCD'
      C                   Eval      KTRAD = *LOVAL
      C                   Eval      KCLNT = *LOVAL
      C                   Eval      KMVDT = *LOVAL
- 
+
      C                   When      SWTRAD = *Blanks And SWSECS = *Blanks
      C                             And SWCLNT <> *Blanks And SWMVDT = *Blanks
      C                   Eval      WOrderOf = 'CTSD'
      C                   Eval      KTRAD = *LOVAL
      C                   Eval      KSECS = *LOVAL
      C                   Eval      KMVDT = *LOVAL
- 
+
      C                   When      SWTRAD = *Blanks And SWSECS = *Blanks
      C                             And SWCLNT = *Blanks And SWMVDT <> *Blanks
      C                   Eval      WOrderOf = 'DTSC'
      C                   Eval      KTRAD = *LOVAL
      C                   Eval      KSECS = *LOVAL
      C                   Eval      KCLNT = *LOVAL
- 
+
      C                   EndSl
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -548,36 +550,36 @@
       ** Stay in loop while toggle key (F11) is used.
       *
      C                   If        WPrvOrd <> 'F'
- 
+
      C                   DOU       *INKK = *OFF
- 
+
      C                   Exsr      SrBldSfl1
       *
       ** If F11, switch to subfile by front office id.
      C                   If        *INKK = *ON
      C                   Exsr      SrBldSfl2
      C                   EndIf
- 
+
      C                   EndDo
- 
+
      C                   Else
       *
       ** If the subfile by front office identifier was previously
       ** being run, then build subfile keyed on front office id.
       ** Stay in loop while toggle key (F11) is used.
      C                   DOU       *INKK = *OFF
- 
+
      C                   Exsr      SRBldSfl2
       *
       ** If F11, switch to subfile by security short name.
      C                   If        *INKK = *ON
      C                   Exsr      SRBldSfl1
      C                   EndIf
- 
+
      C                   EndDo
- 
+
      C                   EndIf
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -652,9 +654,9 @@
       ** selection made.'.
      C                   Eval      PErrMs = 'USR2052'
      C                   EndIf
- 
+
      C                   RETURN
- 
+
      C                   EndIf
       *
       ** Set on ROLLUP indicator to drive initial loop.
@@ -734,7 +736,7 @@
      C                   CLEAR                   MsgIdArr
      C                   CLEAR                   FldNameArr
      C                   Eval      *IN61 = *OFF
- 
+
      C                   Eval      KeyFrmBRW = 'Y'
       *
       ** Validate entry
@@ -764,7 +766,7 @@
      C                   When      WOrderOf = 'DTSC'
      C     KeyDTSC       Setll     SETLEL11
      C                   ENDSL
- 
+
      C                   Exsr      SrRdSetled
       *
       ** The key/selection fields refer to a record, set pointer and rebuild
@@ -775,9 +777,9 @@
      C                   Eval      *IN97 = *ON
      C                   WRITE     SETRSMBRC0
      C                   Eval      *IN97 = *OFF
- 
+
      C                   Else
- 
+
      C                   Eval      MsgIdArr(1) = 'USR2052'
      C                   Eval      FldNameArr(1) = '*ANY'
       *
@@ -791,13 +793,13 @@
       ** Write message sub-file for error messages.
       *
      C                   WRITE     SETRSMBRC2
- 
+
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   EndDo
- 
+
      C     ESrBldSfl1    ENDSR
       *
       *****************************************************************
@@ -874,9 +876,9 @@
       ** made.'.
      C                   Eval      PErrMs = 'USR2052'
      C                   EndIf
- 
+
      C                   RETURN
- 
+
      C                   EndIf
       *
       ** Set on ROLLUP indicator to drive initial loop.
@@ -938,7 +940,7 @@
      C                   Eval      *IN61 = *OFF
      C                   RETURN
      C                   EndIf
- 
+
      C                   Exsr      SrChkOption
       *
       ** Set record pointer if applicable.
@@ -952,12 +954,12 @@
      C                   CLEAR                   MsgIdArr
      C                   CLEAR                   FldNameArr
      C                   Eval      *IN61 = *OFF
- 
+
      C                   Eval      KeyFrmBRW = 'Y'
       *
       ** Validate entry.
      C                   EXSR      SrVKeyIn
- 
+
      C                   Select
      C                   When      SWFRNT <> *BLANKS
      C     SWFRNT        Setll     SETSFL1
@@ -988,15 +990,15 @@
      C                   EndSl
       *
      C                   Exsr      SrRdSetled
- 
+
      C                   If        EndOfFile = False
      C                   Z-Add     0             W_Rrn
      C                   Eval      *IN97 = *ON
      C                   WRITE     SETRSMBRC1
      C                   Eval      *IN97 = *OFF
- 
+
      C                   Else
- 
+
      C                   Eval      MsgIdArr(1) = 'USR2051'
      C                   Eval      FldNameArr(1) = '*ANY'
       *
@@ -1006,13 +1008,13 @@
       /COPY ZACPYSRC,MSGHNDDSP1
       *
      C                   EndIf
- 
+
      C                   Write     SETRSMBRC2
- 
+
      C                   EndIf
- 
+
      C                   EndDo
- 
+
      C     ESrBldSfl2    ENDSR
       *
       *****************************************************************
@@ -1029,21 +1031,21 @@
       *
      C                   DOU       *IN99 = *ON OR
      C                             SSELC <> *BLANK
- 
+
      C                   If        WPrvOrd <> 'F'
      C                   READC     SETRSMBRS0                             99
      C                   Else
      C                   READC     SETRSMBRS1                             99
      C                   EndIf
- 
+
      C                   EndDo
       *
       ** Return the selected record.
      C                   If        *IN99 <> *ON And
      C                             SSELC <> *BLANK
- 
+
      C                   Eval      POpSel = 'E'
- 
+
      C                   Eval      PTRADSel = STRAD
      C                   Eval      PMVDTSel = SMVDT
      C                   Eval      PFSETSel = SFSET
@@ -1051,7 +1053,7 @@
      C                   Move      SSEQN         PSEQNSel
       *
      C                   EndIf
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1066,20 +1068,20 @@
       ** Read subfile if an option has been selected.
       *
      C                   DOU       *IN99 = *ON Or SSELC <> *BLANK
- 
+
      C                   If        WPrvOrd = 'B'
      C                   READC     SETRSMBRS0                             99
      C                   Else
      C                   READC     SETRSMBRS1                             99
      C                   EndIf
- 
+
      C                   EndDo
       *
       ** Activate SFLNXTCHG for the record to be read in the
       ** get-next-changed operation.
       *
      C                   If        *IN99 = *OFF
- 
+
      C                   Eval      *IN93 = *ON
      C                   If        WPrvOrd = 'B'
      C                   UPDATE    SETRSMBRS0
@@ -1087,26 +1089,26 @@
      C                   UPDATE    SETRSMBRS1
      C                   EndIf
      C                   Eval      *IN93 = *OFF
- 
+
      C                   If        WPrvOrd = 'B'
      C                   WRITE     SETRSMBRC0
      C                   Else
      C                   WRITE     SETRSMBRC1
      C                   EndIf
- 
+
      C                   CLEAR                   SWFRNT
      C                   CLEAR                   KeyLists
- 
+
      C                   Eval      OptSelected = 'Y'
- 
+
      C                   Else
- 
+
      C                   Eval      OptSelected = 'N'
- 
+
      C                   EndIf
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1115,7 +1117,7 @@
       *                                                               *
       *****************************************************************
      C     SrChkAut      BEGSR
- 
+
      C                   Call      'ZVACTU'
      C                   Parm      'E'           PActn
      C                   Parm      *ZERO         PError
@@ -1125,7 +1127,7 @@
      C                   Eval      PErrMs = 'FXM0292'
      C                   RETURN
      C                   EndIf
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1147,7 +1149,7 @@
       ** Read the file by back office or front office key.
       *
      C                   If        WPrvOrd = 'B'
- 
+
      C                   Select
      C                   When      WOrderOf = 'TSCD'
      C******             Read      SETLEL1                                                   BG13275
@@ -1186,9 +1188,9 @@
      C******             Read      SETLEL12                                                  BG13275
      C                   Read      SETLEL12                               96                 BG13275
      C                   Endsl
- 
+
      C                   Else
- 
+
      C                   Select
      C                   When      SWFRNT <> *BLANKS
      C                   Read      SETSFL1                                96
@@ -1217,9 +1219,9 @@
      C                   Other
      C                   Read      SETSFL1                                96
      C                   EndSl
- 
+
      C                   EndIf
- 
+
      C                   If        EndOfFile = False
       *
       ** If a record was read, check whether user can see it.
@@ -1229,11 +1231,11 @@
      C                   Parm                    PDBRN
      C                   Parm      *ZERO         PError
      C                   EndIf
- 
+
      C                   EndIf
       *
      C                   EndDo
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1295,13 +1297,13 @@
       *                                                               *
       *****************************************************************
      C     SrZDate1      BEGSR
- 
+
      C                   CallB     'ZDATE1'
      C                   Parm                    PDateAIn
      C                   Parm      *ZERO         PDaynoOut
      C                   Parm                    BJDFIN
      C                   Parm      *Blanks       PErrorFlag
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1312,13 +1314,13 @@
       *                                                               *
       *****************************************************************
      C     SrZDate2      BEGSR
- 
+
      C                   CallB     'ZDATE2'
      C                   Parm                    PDateNIn
      C                   Parm                    BJDFIN
      C                   Parm      *ZERO         PDateOut
      C                   Parm      *Blanks       PADateOut
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1341,7 +1343,7 @@
      C                   Eval      PFSETSel = *BLANKS
      C                   Eval      PREVESel = *BLANKS
      C                   Z-Add     *Zeros        PSEQNSel
- 
+
      C                   Eval      OptSelected = 'N'
      C                   Eval      KeyFrmBRW = 'N'
       *
@@ -1354,7 +1356,7 @@
      C                   CLEAR                   MsgIdArr
      C                   CLEAR                   FldNameArr
      C                   Write     SETRSMBRC2
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1375,7 +1377,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -1431,7 +1433,7 @@
       ** KL = Command key 12 = Cancel
      C                   PARM                    PINKC
      C                   PARM                    PINKL
- 
+
      C                   Eval      SUSER = PsUser
      C                   Eval      SWSID = PsJobName
       *
@@ -1460,73 +1462,73 @@
      C                   KFLD                    KSECS
      C                   KFLD                    KCLNT
      C                   KFLD                    KMVDT
- 
+
      C     KeyTCDS       KLIST
      C                   KFLD                    KTRAD
      C                   KFLD                    KCLNT
      C                   KFLD                    KMVDT
      C                   KFLD                    KSECS
- 
+
      C     KeyTCSD       KLIST
      C                   KFLD                    KTRAD
      C                   KFLD                    KCLNT
      C                   KFLD                    KSECS
      C                   KFLD                    KMVDT
- 
+
      C     KeyTDSC       KLIST
      C                   KFLD                    KTRAD
      C                   KFLD                    KMVDT
      C                   KFLD                    KSECS
      C                   KFLD                    KCLNT
- 
+
      C     KeySCDT       KLIST
      C                   KFLD                    KSECS
      C                   KFLD                    KCLNT
      C                   KFLD                    KMVDT
      C                   KFLD                    KTRAD
- 
+
      C     KeySCTD       KLIST
      C                   KFLD                    KSECS
      C                   KFLD                    KCLNT
      C                   KFLD                    KTRAD
      C                   KFLD                    KMVDT
- 
+
      C     KeySDTC       KLIST
      C                   KFLD                    KSECS
      C                   KFLD                    KMVDT
      C                   KFLD                    KTRAD
      C                   KFLD                    KCLNT
- 
+
      C     KeyCDTS       KLIST
      C                   KFLD                    KCLNT
      C                   KFLD                    KMVDT
      C                   KFLD                    KTRAD
      C                   KFLD                    KSECS
- 
+
      C     KeySTCD       KLIST
      C                   KFLD                    KSECS
      C                   KFLD                    KTRAD
      C                   KFLD                    KCLNT
      C                   KFLD                    KMVDT
- 
+
      C     KeyCTSD       KLIST
      C                   KFLD                    KCLNT
      C                   KFLD                    KTRAD
      C                   KFLD                    KSECS
      C                   KFLD                    KMVDT
- 
+
      C     KeyDTSC       KLIST
      C                   KFLD                    KMVDT
      C                   KFLD                    KTRAD
      C                   KFLD                    KSECS
      C                   KFLD                    KCLNT
- 
+
       *
       ** Program, module and procedure names for database error processing
       ** =================================================================
       ** The following /COPY sets these values.
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *
       *****************************************************************

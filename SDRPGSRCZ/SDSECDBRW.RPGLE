@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR694139           Date 07Jan11               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR694139           Date 07Jan11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR694139 - Filtering and amending customer number not        *
       *             working properly (Child: AR694140)                *
@@ -69,17 +71,17 @@
       * Securities Clients Details File - by Customer Number
      FSDSECSL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(@BFREDP:SECFMAT)
- 
+
       * Customer file - by Customer Number
      FSDCUSTL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(@BBREBG:CUSTNUM)
- 
+
      **  Valid Booking Branches by User.                                                      CSD018
      FMBRBS     IF   E           K DISK    INFSR(*PSSR)                                       CSD018
                                                                                               CSD018
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*pssr)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -91,12 +93,12 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
@@ -109,7 +111,7 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -117,58 +119,58 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
      D/COPY ZACPYSRC,MSGHNDDCL
       **--------------------------------------------------------------------------------------------
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D WWVBRX          S              3    DIM(900) ASCEND                                    CSD018
                                                                                               CSD018
       ** EXTERNAL DS FOR BANK DETAILS
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for SAR Details                                                          CSD018
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSD018
                                                                                               CSD018
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       **  Third DS for access programs, very long data structure                              CSD018
      D DSLDY         E DS                  EXTNAME(DSLDY)                                     CSD018
                                                                                               CSD018
@@ -176,7 +178,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Parameters for calling AOSVALR0 (Midas System Value Access Object)                   CSD027
      D PRetCode        S              7A                                                      CSD027
      D PSysValK1       S             20A                                                      CSD027
@@ -216,7 +218,7 @@
                                                                                             BUG11828
       ** Switchable Features                                                                BUG11828
      D CSD031          S              1A                                                    BUG11828
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -235,21 +237,21 @@
       ** Set up the customer reference to be used by the message handler
      C                   EVAL      TranRef = DDCUSN
      C                   EVAL      ActionCode = DDACTN
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes processing for the error and
       ** warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP1
       **--------------------------------------------------------------------------------------------
- 
+
       ** Initialization
       *
      C                   EXSR      INIT
- 
+
       ** BUILD Sub-file
- 
+
      C     @BDSFL        IFEQ      'Y'
- 
+
       ** On F5, initialize position/select fields
       *
      C     *INKE         DOUEQ     '0'
@@ -261,28 +263,28 @@
      C                   MOVE      *BLANK        SBCSSN
      C                   MOVE      *BLANK        SBCRNM
      C                   MOVE      *BLANK        SBCRTN
- 
+
       ** Clear program message queue
      C                   CALL      'ZA0250'
- 
+
      C                   ENDIF
- 
+
      C                   EXSR      BLDSFL
- 
+
      C                   ENDDO
- 
+
      C                   ENDIF
- 
- 
+
+
       ** READ Subfile Record
- 
+
      C     @RDSFL        IFEQ      'Y'
      C                   EXSR      RDSFLR
      C                   END
- 
- 
+
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************
@@ -455,9 +457,9 @@
       *
      C     *IN99         DOUEQ     '1'
      C     DDOPT         ORNE      *BLANK
- 
+
      C                   READC     SDSECDBS1                              99
- 
+
      C                   END
       *
       **  Return the selected customer reference and option
@@ -483,9 +485,9 @@
       * FMTCUS - FORMAT CUSTOMER FOR OUTPUT
       ******************************************************************
      C     FMTCUS        BEGSR
- 
+
       * Customer reference
- 
+
      C                   MOVE      BFCUST        DDCUS
      C     *in95         IFEQ      '0'
      C                   MOVE      BBCSSN        DDCSSN
@@ -496,7 +498,7 @@
      C                   MOVEL     *ALL' '       DDCRNM
      C                   MOVEL     *ALL' '       DDCRTN
      C                   ENDIF
- 
+
      C                   ENDSR
       ******************************************************************
       /EJECT
@@ -879,7 +881,7 @@
      C                   MOVEL     'N'           CSD018                                       CSD018
      C                   ENDIF                                                                CSD018
       *                                                                                       CSD018
- 
+
       * Retrieve System Value 'CustAlphaAllow' & 'CustAlphaSupNumeric'                        CSD027
      C                   Eval      PRetCode = *BLANKS                                         CSD027
      C                   Eval      PSysValK1 = 'CustAlphaAllow'                               CSD027
@@ -905,13 +907,13 @@
       *                                                                                       CSD027
      C                   Eval      WCusAlphaAllow  = PSysVal1                                 CSD027
      C                   Eval      WCusAlphaSupNum = PSysVal2                                 CSD027
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line sets up the fixed data for SD *DSP
       ** functions for the message handler, ZAMSGHNDLE.
      D/COPY SDCPYSRC,MSGHNDDATA
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDSR
       *****************************************************************
       *
@@ -920,7 +922,7 @@
       ** to process error and warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP2
       **--------------------------------------------------------------------------------------------
- 
+
       *****************************************************************
       ** Program, module and procedure names for database error processing.
       ** =================================================================

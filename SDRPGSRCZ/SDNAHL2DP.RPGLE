@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD051432           Date 30Jun18               *
-      *  Prev Amend No. MD050383           Date 18Apr18               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD051432           Date 30Jun18               *
+      *                 MD050383           Date 18Apr18               *
       *                 CGL157             Date 17Aug15               *
       *                 MD046248           Date 27Oct17               *
       *                 MD028364           Date 11Jul14               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD051432 - Remove TIN2 to TIN5 (Recompile)                   *
       *  MD050383 - Phone Number Country highlights an error even the *
       *             fields are not mandatory for input in NAHO        *

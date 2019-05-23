@@ -18,14 +18,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
-      *  Prev Amend No. 189751             Date 27Feb01               *
+      *                 189751             Date 27Feb01               *
       * Midas DBA 3.03 -----------------------------------------------*
       *                 CSE019             Date 05Apr00               *
       * Midas DBA 3.01 -----------------------------------------------*
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  189751 - MUI Trade Order details maintenance should display  *
       *           allowable action codes.                             *
@@ -44,9 +46,9 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSETRADDDF CF   E             WORKSTN
- 
+
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*pssr)
       *****************************************************************
@@ -69,31 +71,31 @@
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **------------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **------------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structure.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **------------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **------------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -101,52 +103,52 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **------------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,APICTLARR
       **------------------------------------------------------------------------
- 
+
      D FldNoArray      S              5P 0 DIM(ArrayMax)
- 
+
       **------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
      D/COPY ZACPYSRC,MSGHNDDCL
       **------------------------------------------------------------------------
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for access programs, short data structure
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -380,15 +382,15 @@
       *
      C                   MOVE      '1'           *IN97
      C                   MOVEL     '*'           DDPGMQ
- 
+
       **------------------------------------------------------------------------
       ** The following /COPY line sets up the fixed data for SE *DSP
       ** functions for the message handler, ZAMSGHNDLE.
      D/COPY SECPYSRC,MSGHNDDATA
       **------------------------------------------------------------------------
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

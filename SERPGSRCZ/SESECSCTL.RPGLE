@@ -35,8 +35,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 LLN022A            Date 03Jun15               *
       *                 AR996842           Date 11Feb13               *
       *                 CRE073             Date 10Dec06               *
       *                 CER059             Date 19Jul10               *
@@ -80,6 +81,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
       *            /COPY members and add switchability.               *
@@ -408,7 +410,7 @@
                                                                                               CSC011
       ** SD Data Area                                                                         CSC011
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSC011
- 
+
      D SCCMTJOB      E DS           256    DTAARA(SCCMTJOB)                                   CSC022
      D  ComitJob               4    103                                                       CSC022
       ** Midas SC Jobs handling commitment control data area                                  CSC022
@@ -796,21 +798,21 @@
       ** character from the original transaction.
       *
      C                   IF        GHSUBS <> *BLANK
- 
+
      C     GHSUBS        SCAN      NwSE1ScnFmt                            99
      C                   IF        *IN99
      C                   MOVE      'Y'           WSubSE1
      C                   ELSE
      C                   MOVE      'N'           WSubSE1
      C                   ENDIF
- 
+
      C     GHSUBS        SCAN      NwSE2ScnFmt                            99
      C                   IF        *IN99
      C                   MOVE      'Y'           WSubSE2
      C                   ELSE
      C                   MOVE      'N'           WSubSE2
      C                   ENDIF
- 
+
      C     GHSUBS        SCAN      NwSE3ScnFmt                            99
      C                   IF        *IN99
      C                   MOVE      'Y'           WSubSE3
@@ -845,7 +847,7 @@
      C                             WSubSE3 = 'Y'
      C                   EXSR      SRDtaSubs
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       /COPY WNCPYSRC,SESECSC011
@@ -934,24 +936,24 @@
       /COPY WNCPYSRC,SESECSC014
       *
      C                   IF        ARErrMod <> *BLANK
- 
+
      C                   EVAL      PMQErrLong = *BLANK
      C                   MOVEL     WProcErr      WMQError
      C                   MOVE      ARErrMod      WMQError
      C                   MOVEL     WMQError      PMQErrLong
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    PMQReturn
      C                   PARM                    PMQErrLong
      C                   PARM                    PDummyMsgId
      C                   PARM                    PDummyMsgF
- 
+
      C                   MOVEL     ARErrMod      APRetCode
      C     *LOCK         IN        APDUMP
      C                   EVAL      ARErrMod = *BLANK
      C                   OUT       APDUMP
      C                   RETURN
- 
+
      C                   ELSE
       *
       ** Processing for error checking/write to database.
@@ -1126,9 +1128,9 @@
      C                   ENDIF                                                                CER001
       *                                                                                       CER001
      C                   ENDIF                                                                CER001
- 
+
      C                   EXSR      SRCheckWrite
- 
+
       /COPY WNCPYSRC,SESECSC016
       *
       ** If valid, send data queue entry to prompt DB update program.
@@ -1148,7 +1150,7 @@
      C                   PARM                    PWaitTime
      C                   PARM                    PDlcObj
      C                   PARM      *BLANK        PReturn
- 
+
      C                   IF        PReturn = *BLANK
       *
       ** Check if any messages are already on the data queue.
@@ -1159,13 +1161,13 @@
       ** message to the data queue if there are not.
       *
       /COPY ZACPYSRC,DTAQCHK
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -1192,12 +1194,12 @@
       ** Run delay program if record found.
       *
      C     APFOTRANID    CHAIN     SEVSECSL0                          01
- 
+
      C                   IF        RecNotFnd = False
       *
       ** Run delay program, then repeat chain.
      C                   CALLB     'ZACDELAY'
- 
+
      C     APFOTRANID    CHAIN     SEVSECSL0                          01
       *
       ** Error if front office Id is still present.
@@ -1206,9 +1208,9 @@
      C                   EVAL      FldNameArr(IDx) = 'DDSESN'
      C                   EVAL      MsgIDArr(IDx)   = 'APM0900'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1227,12 +1229,12 @@
       ** Run delay program if record found.
       *
      C     DDSESN        CHAIN     SEVSECSL1                          01
- 
+
      C                   IF        RecNotFnd = False
       *
       ** Run delay program, then repeat chain.
      C                   CALLB     'ZACDELAY'
- 
+
      C     DDSESN        CHAIN     SEVSECSL1                          01
       *
       ** Error if midas back office reference is still present.
@@ -1241,9 +1243,9 @@
      C                   EVAL      FldNameArr(IDx) = 'DDSESN'
      C                   EVAL      MsgIDArr(IDx) = 'APM0900'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1266,15 +1268,15 @@
      C                   IF        DDACTN = 'I'
      C                   EVAL      PMode = '*FRONT'
      C                   ELSE
- 
+
      C                   IF        DDSESN = *BLANK
      C                   EVAL      PMode = '*FRONT'
      C                   ELSE
      C                   EVAL      PMode = *BLANKS
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   CALLB     'SESECSRTV'
       *                             =========
       ** INPUT
@@ -1344,7 +1346,7 @@
       ** transaction as coming from an external system.
       *
      C                   MOVEL     '*FRONT'      PMode
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1430,7 +1432,7 @@
       ** Validate screen 3 details.
       *
      C                   EXSR      SRVScrn3
- 
+
      C     EValDetails   ENDSR
       *
       *****************************************************************
@@ -1441,7 +1443,7 @@
       *                                                               *
       *****************************************************************
      C     SRDefault1    BEGSR
- 
+
      C                   CALLB     'SESECS1DT'
       *
       ** Securities retrieved from file - file format
@@ -1458,7 +1460,7 @@
       *
       ** Securities screen 1 details retrieved from file - screen format
      C                   PARM                    NwSE1ScnFmt
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1469,7 +1471,7 @@
       *                                                               *
       *****************************************************************
      C     SRVScrn1      BEGSR
- 
+
      C                   CALLB     'SESECS1VL'
       *
       ** INPUT
@@ -1571,7 +1573,7 @@
       *
       ** Redisplay screen indicator
      C                   PARM      *BLANK        PReDsp
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1582,7 +1584,7 @@
       *                                                               *
       *****************************************************************
      C     SRDefault2    BEGSR
- 
+
      C                   CALLB     'SESECS2DT'
       *
       ** Security screen 1 details retrieved from file - screen format
@@ -1620,7 +1622,7 @@
       *
       ** Fields for display only
      C                   PARM                    POutFlds
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1631,7 +1633,7 @@
       *                                                               *
       *****************************************************************
      C     SRVScrn2      BEGSR
- 
+
      C                   CALLB     'SESECS2VL'
       *                             =========
       ** INPUT
@@ -1775,7 +1777,7 @@
       *
       ** Market Name
      C                   PARM                    PMKTN
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1786,7 +1788,7 @@
       *                                                               *
       *****************************************************************
      C     SRVScrn3      BEGSR
- 
+
      C                   CALLB     'SESECS3VL'
       *                             =========
       ** INPUT
@@ -1877,7 +1879,7 @@
       *
       ** Redisplay screen indicator
      C                   PARM      *BLANK        PReDsp
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2113,7 +2115,7 @@
       *                                                               *
       *****************************************************************
      C     SRCvtSecD     BEGSR
- 
+
      C                   CALLB     'SESECSCVT'
       *                             =========
       ** INPUT
@@ -2225,7 +2227,7 @@
       ** Linked Maintenance Flag                                                              CSC011
                                                                                               CSC011
      C                   PARM                    PParmLink                                    CSC011
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2243,7 +2245,7 @@
      C                   IF        WSUBSE1 = 'Y'
      C                   CLEAR                   PIncData
      C                   CLEAR                   PCurData
- 
+
      C                   CALLB     'APDTASUBS'
       *                             =========
       ** Return code
@@ -2257,14 +2259,14 @@
       *
       ** Current data
      C                   PARM      CrSE1ScnFmt   PCurData
- 
+
      C                   MOVEL     PIncData      NwSE1ScnFmt
      C                   ENDIF
- 
+
      C                   IF        WSUBSE2 = 'Y'
      C                   CLEAR                   PIncData
      C                   CLEAR                   PCurData
- 
+
      C                   CALLB     'APDTASUBS'
       *                             =========
       ** Return code
@@ -2278,14 +2280,14 @@
       *
       ** Current data
      C                   PARM      CrSE2ScnFmt   PCurData
- 
+
      C                   MOVEL     PIncData      NwSE2ScnFmt
      C                   ENDIF
- 
+
      C                   IF        WSUBSE3 = 'Y'
      C                   CLEAR                   PIncData
      C                   CLEAR                   PCurData
- 
+
      C                   CALLB     'APDTASUBS'
       *                             =========
       ** Return code
@@ -2299,10 +2301,10 @@
       *
       ** Current data
      C                   PARM      CrSE3ScnFmt   PCurData
- 
+
      C                   MOVEL     PIncData      NwSE3ScnFmt
      C                   ENDIF
- 
+
      C                   IF        WSUBSE4 = 'Y'                                              CAS006
      C                   CLEAR                   PIncData                                     CAS006
      C                   CLEAR                   PCurData                                     CAS006
@@ -2391,7 +2393,7 @@
       *                                                               *
       *****************************************************************
      C     SRValAmend    BEGSR
- 
+
      C                   CALLB     'SESECS1MD'
       *                             =========
       ** INPUT
@@ -2454,7 +2456,7 @@
       *
       ** OK Amendments field
      C                   PARM                    PAmendOK
- 
+
       *                                                                                       192054
       ** Private Banking                                                                      192054
       *                                                                                       192054
@@ -2582,7 +2584,7 @@
                                                                                               CAS006
       ** Amend OK Flag                                                                        CAS006
      C                   PARM                    PAmendOK                                     CAS006
- 
+
      C                   CALLB     'SESECS3MD'
       *
       ** INPUT
@@ -2634,7 +2636,7 @@
       *
       ** OK Amendments field
      C                   PARM                    PAmendOK
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2714,7 +2716,7 @@
                                                                                              LLN022A
      C                   EXSR      SRMsgHdl
      C                   ENDIF
- 
+
      C     IDx           IFGT      0
      C                   EXSR      SRSetInvalid
       *
@@ -2771,15 +2773,15 @@
      C                   EXSR      *PSSR                                                      CSC011
      C                   ENDIF                                                                CSC011
      C                   ENDIF                                                                CSC011
- 
+
      C                   EXSR      SRMsgHdl
      C                   ENDIF
- 
+
      C                   If        (CSC022 <> 'Y')                                            CSC022
      C                             or (CSC022 = 'Y' and WCommitSkip <> 'Y')                   CSC022
      C                   COMMIT
      C                   EndIf                                                                CSC022
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -2897,7 +2899,7 @@
      C                   IF        S1ISSD = *ZEROS
      C                   Z-ADD     S1ITLD        S1ISSD
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Action is insert/amend.
@@ -3006,9 +3008,9 @@
       ** fields with errors.
       *
      C                   Z-ADD     1             W1
- 
+
      C                   DO        ArrayMax
- 
+
      C                   IF        FldNameArr(W1) <> *BLANKS
      C                   Z-ADD     1             W2
      C     FldNameArr(W1)LOOKUP    FieldArr(W2)                           02
@@ -3016,13 +3018,13 @@
      C                   ELSE
      C                   LEAVE
      C                   ENDIF
- 
+
      C                   ADD       1             W1
- 
+
      C                   ENDDO
- 
+
      C                   MOVEL     DDSESN        PTranID
- 
+
      C                   CALLB     'ZAMSGHNDLE'
       *
       ** Return code (10A, returned to this procedure)
@@ -3090,7 +3092,7 @@
       *
       ** Whether or not clear the program message queue (1A)
      C                   PARM                    PClrPgmMsgQ
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -3101,32 +3103,32 @@
       *                                                               *
       *****************************************************************
      C     SRResetFld    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIdArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   IDx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIdArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIDx
- 
+
      C                   RESET                   AMFldNamAr
      C                   RESET                   AMMsgIdArr
      C                   RESET                   AMMsgDtaAr
      C                   RESET                   AMIDx
- 
+
      C                   RESET                   FldNoArr
- 
+
      C                   MOVE      *ALL'Y'       SEESEC1
      C                   MOVE      *ALL'Y'       SEESEC2
      C                   MOVE      *ALL'Y'       SEESEC3
- 
+
      C                   CLEAR                   CrSE1ScnFmt
      C                   CLEAR                   CrSE2ScnFmt
      C                   CLEAR                   CrSE3ScnFmt
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -3246,7 +3248,7 @@
      C                   Z-ADD     4             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CEU017 = 'Y'
      C                   ELSE
@@ -3272,7 +3274,7 @@
      C                   Z-ADD     5             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CEU018 = 'Y'
      C                   ELSE
@@ -3298,7 +3300,7 @@
      C                   Z-ADD     6             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CSE007 = 'Y'
      C                   ELSE
@@ -3324,7 +3326,7 @@
      C                   Z-ADD     7             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CSE011 = 'Y'
      C                   ELSE
@@ -3350,7 +3352,7 @@
      C                   Z-ADD     8             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      S01401 = 'Y'
      C                   ELSE
@@ -3376,7 +3378,7 @@
      C                   Z-ADD     9             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      S01511 = 'Y'
      C                   ELSE
@@ -3402,7 +3404,7 @@
      C                   Z-ADD     10            DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CSE005 = 'Y'
      C                   ELSE

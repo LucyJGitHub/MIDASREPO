@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR325346           Date 21May10               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR325346           Date 21May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR325346 - DVP/RVP should not appear                         *
       *  CSE039 - Automatic Settlement of Trades                      *
@@ -35,22 +37,22 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSEMVTSBDF CF   E             WORKSTN INFSR(*PSSR)
      F                                     SFILE(SEMVTSBS0:@@RRN)
       ** Midas SE Movements Status - Browse Display File
- 
+
      FSEMVTSL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SEMVTSD0:SEMVTSD1)
       ** Midas SE Movements Status - Main Key
- 
+
      FSEMVTSL2  IF   E           K DISK    INFSR(*PSSR) PREFIX(P_)
      F                                     RENAME(SEMVTSD0:SEMVTSD2)
       ** Movements Status - Omit Midas-Generated Records
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
       ** Table of field numbers and names (dummy use)
- 
+
       *****************************************************************
       *                                                               *
       * ID F  C  H  L    FUNCTION OF INDICATORS                       *
@@ -78,32 +80,32 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,APICTLARR
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
      D/COPY ZACPYSRC,MSGHNDDCL
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
@@ -115,65 +117,65 @@
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SEMVTS        E DS                  EXTNAME(SEMVTSPD)
       ** Movement Status record layout
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D SdSCOD        E DS                  EXTNAME(SDSCODPD)
       ** SWIFT Status and Reason Codes
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                AR325346
       ** External DS for switchable features                                                AR325346
                                                                                             AR325346
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** Short DS for access programs
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Long DS for access programs
- 
+
       ** Current screen selection criteria
      D CurrSel         DS
      D   C0TRRF
      D   C0WIOR
      D   C0NTDT
- 
+
       ** Saved screen selection criteria
      D SavSel          DS
      D   SavTRRF                           LIKE(C0TRRF)
      D   SavWIOR                           LIKE(C0WIOR)
      D   SavNTDT                           LIKE(C0NTDT)
- 
+
       ** Split up of the Movement Reference
      D DDMvtRef        DS
      D  DDTRRF                        6A
      D  DDTRTY                        1A
      D  DDNTDT                        6A
      D  DDSQNR                        3S 0
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Alternate arrays of Midas-generated Status Codes and Narratives
       ** and their related index
      D MidasGCod       S              4A   DIM(12) CTDATA PERRCD(1)
      D MidasGNar       S             60A   DIM(12) ALT(MidasGCod)
      D MGi             S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -192,14 +194,14 @@
       ** Initialization
       *
      C                   EXSR      INIT
- 
+
       ** Build Sub-file and write/read the screen
       *
      C                   IF        @BDSFL = 'Y'
      C                   EXSR      BLDSFL
      C                   EVAL      @BDSFL = *Blank
      C                   ENDIF
- 
+
       ** Process the last user input and/or
       ** Read and validate the next modified Subfile Record
       *
@@ -207,7 +209,7 @@
      C                   EVAL      TimeToGo = 'N'
      C                   EXSR      RDSFLR
      C                   ENDIF
- 
+
       ** Return to the caller at the right moment
       *
      C                   IF        TimeToGo = 'Y'

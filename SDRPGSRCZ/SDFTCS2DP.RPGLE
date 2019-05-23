@@ -14,11 +14,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL132  *CREATE    Date 01May13               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL132  *CREATE    Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL132 - Foreign Account Tax Compliance Act                  *
       *                                                               *
@@ -27,12 +29,12 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDFTCS2DDFCF   E             WORKSTN
- 
+
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       *                                                               *
       * ID F  C  H  L    FUNCTION OF INDICATORS                       *
@@ -64,47 +66,47 @@
       ** +--------------------------------------+
       **
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
      D/COPY ZACPYSRC,STDDECLARE
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
      D/COPY ZACPYSRC,FVAL_ARRAY
- 
+
      D/COPY ZACPYSRC,APICTLARR
- 
+
      D/COPY ZACPYSRC,MSGHNDDCL
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @Z0             S              1    DIM(95) CTDATA PERRCD(95)
- 
+
      D @EI             S              1    DIM(95)
- 
+
      D QRYFLD          S              1A
      D P@Mode          S              7A
      D PRtcd           S              7A
@@ -129,28 +131,28 @@
      D PDDCDD3         S              2A
      D PDDCDD4         S              2A
      D PDDCDD5         S              2A
- 
+
      D CrFaScnFmt    E DS                  EXTNAME(SDFTCRPD)
      D CrCuScnFmt    E DS                  EXTNAME(SDCUPRPD)
      D OKFATCAdet    E DS                  EXTNAME(SDEFTCSPD)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for SAR Details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       **  Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -164,36 +166,36 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Main processing
- 
+
      C                   EXSR      MAIN
- 
+
       ** Return
- 
+
      C     @INKC         IFEQ      '1'
      C                   SETON                                        LR
      C                   END
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * MAIN - MAIN processing
       *****************************************************************
- 
+
      C     MAIN          BEGSR
- 
+
       ** Move 'OK' flags into array (for checking)
- 
+
      C                   MOVEA     OKFATCAdet    @EI
- 
+
       ** Set screen error indicators according to status of 'OK' flags
- 
+
      C                   Z-ADD     1             C                 2 0
      C                   Z-ADD     -17           E                 2 0
- 
+
      C     C             DOUGT     94
      C     @EI(C)        IFEQ      'N'
      C     @EI(C)        OREQ      'W'
@@ -204,7 +206,7 @@
      C                   ADD       1             C
      C                   ADD       1             E
      C                   ENDDO
- 
+
      C                   EVAL      *IN86 = '0'
      C                   EVAL      *IN87 = '0'
      C                   IF        CSD093 = 'N'
@@ -214,7 +216,7 @@
      C                   EVAL      *IN86 = '1'
      C                   EVAL      *IN87 = '1'
      C                   ENDIF
- 
+
      C                   IF        CGL133 = 'N'
      C                   IF        DDACTI = 'I'
      C                   EVAL      *IN87 = '1'
@@ -222,13 +224,13 @@
      C                   ELSE
      C                   EVAL      *IN87 = '1'
      C                   ENDIF
- 
+
      D/COPY ZACPYSRC,MSGHNDDSP1
- 
+
       ** Position cursor on first field if no errors
- 
+
      C     'N'           LOOKUP    @EI                                    01
- 
+
      C                   IF        CGL133 = 'N'
      C                   MOVE      *OFF          *IN86
      C     DDACTI        IFEQ      'E'
@@ -238,7 +240,7 @@
      C                   ELSE
      C                   MOVE      *ON           *IN86
      C                   ENDIF
- 
+
      C                   EVAL      PDDCID1 = DDCID1
      C                   EVAL      PDDCID2 = DDCID2
      C                   EVAL      PDDCID3 = DDCID3
@@ -254,38 +256,38 @@
      C                   EVAL      PDDCDD3 = DDCDD3
      C                   EVAL      PDDCDD4 = DDCDD4
      C                   EVAL      PDDCDD5 = DDCDD5
- 
+
      C                   MOVE      *OFF          *IN95
      C     DDACTN        IFEQ      'E'
      C                   MOVE      *ON           *IN95
      C                   ENDIF
- 
+
      C     @EINKX        COMP      'Y'                                    96
- 
+
       ** Write Message subfile, FATCA details and footer screen
- 
+
      C                   TIME                    #0TIME
      C                   WRITE     SDFTCSSS0
      C                   WRITE     SDFTCSSD1
      C                   WRITE     SDFTCSSF1
- 
+
       ** Read Details Screen, If not write only
- 
+
      C     WriteOnly     IFNE      'Y'
      C                   READ      SDFTCSSD1                              99
      C                   ENDIF
- 
+
       ** If Exit/Previous screen not selected
       ** process user request for data tables with query '?'
- 
+
      C     *INKC         IFEQ      *OFF
      C     *INKL         ANDEQ     *OFF
      C     *INKQ         ANDEQ     *OFF
      C     *INKS         ANDEQ     *OFF
      C     *INKT         ANDEQ     *OFF
- 
+
      C                   IF        CSD093 = 'Y'
- 
+
      C                   IF        PDDCID1 <> DDCID1
      C                   EVAL      DDCIS1 = *BLANKS
      C                   ENDIF
@@ -331,9 +333,9 @@
      C                   IF        PDDCDD5 <> DDCDD5
      C                   EVAL      DDCDS5 = *BLANKS
      C                   ENDIF
- 
+
       ** Override active document
- 
+
      C                   MOVEL     DDCID1        QRYFLD
      C     QRYFLD        IFEQ      '?'
      C                   CALL      'SD000711S'
@@ -342,11 +344,11 @@
      C                   PARM      'C'           PTYPE
      C                   PARM      *BLANKS       PCODE
      C                   PARM      *ZERO         PSEQN
- 
+
      C                   EVAL      DDCID1 = PCODE
      C                   MOVE      PSEQN         DDCIS1
      C                   ENDIF
- 
+
      C                   MOVEL     DDCID2        QRYFLD
      C     QRYFLD        IFEQ      '?'
      C                   CALL      'SD000711S'
@@ -355,11 +357,11 @@
      C                   PARM      'C'           PTYPE
      C                   PARM      *BLANKS       PCODE
      C                   PARM      *ZERO         PSEQN
- 
+
      C                   EVAL      DDCID2 = PCODE
      C                   MOVE      PSEQN         DDCIS2
      C                   ENDIF
- 
+
      C                   MOVEL     DDCID3        QRYFLD
      C     QRYFLD        IFEQ      '?'
      C                   CALL      'SD000711S'
@@ -368,11 +370,11 @@
      C                   PARM      'C'           PTYPE
      C                   PARM      *BLANKS       PCODE
      C                   PARM      *ZERO         PSEQN
- 
+
      C                   EVAL      DDCID3 = PCODE
      C                   MOVE      PSEQN         DDCIS3
      C                   ENDIF
- 
+
      C                   MOVEL     DDCID4        QRYFLD
      C     QRYFLD        IFEQ      '?'
      C                   CALL      'SD000711S'
@@ -381,11 +383,11 @@
      C                   PARM      'C'           PTYPE
      C                   PARM      *BLANKS       PCODE
      C                   PARM      *ZERO         PSEQN
- 
+
      C                   EVAL      DDCID4 = PCODE
      C                   MOVE      PSEQN         DDCIS4
      C                   ENDIF
- 
+
      C                   MOVEL     DDCID5        QRYFLD
      C     QRYFLD        IFEQ      '?'
      C                   CALL      'SD000711S'
@@ -394,11 +396,11 @@
      C                   PARM      'C'           PTYPE
      C                   PARM      *BLANKS       PCODE
      C                   PARM      *ZERO         PSEQN
- 
+
      C                   EVAL      DDCID5 = PCODE
      C                   MOVE      PSEQN         DDCIS5
      C                   ENDIF
- 
+
      C                   MOVEL     DDCBD1        QRYFLD
      C     QRYFLD        IFEQ      '?'
      C                   CALL      'SD000711S'
@@ -407,11 +409,11 @@
      C                   PARM      'C'           PTYPE
      C                   PARM      *BLANKS       PCODE
      C                   PARM      *ZERO         PSEQN
- 
+
      C                   EVAL      DDCBD1 = PCODE
      C                   MOVE      PSEQN         DDCBS1
      C                   ENDIF
- 
+
      C                   MOVEL     DDCBD2        QRYFLD
      C     QRYFLD        IFEQ      '?'
      C                   CALL      'SD000711S'
@@ -420,11 +422,11 @@
      C                   PARM      'C'           PTYPE
      C                   PARM      *BLANKS       PCODE
      C                   PARM      *ZERO         PSEQN
- 
+
      C                   EVAL      DDCBD2 = PCODE
      C                   MOVE      PSEQN         DDCBS2
      C                   ENDIF
- 
+
      C                   MOVEL     DDCBD3        QRYFLD
      C     QRYFLD        IFEQ      '?'
      C                   CALL      'SD000711S'
@@ -433,11 +435,11 @@
      C                   PARM      'C'           PTYPE
      C                   PARM      *BLANKS       PCODE
      C                   PARM      *ZERO         PSEQN
- 
+
      C                   EVAL      DDCBD3 = PCODE
      C                   MOVE      PSEQN         DDCBS3
      C                   ENDIF
- 
+
      C                   MOVEL     DDCBD4        QRYFLD
      C     QRYFLD        IFEQ      '?'
      C                   CALL      'SD000711S'
@@ -446,11 +448,11 @@
      C                   PARM      'C'           PTYPE
      C                   PARM      *BLANKS       PCODE
      C                   PARM      *ZERO         PSEQN
- 
+
      C                   EVAL      DDCBD4 = PCODE
      C                   MOVE      PSEQN         DDCBS4
      C                   ENDIF
- 
+
      C                   MOVEL     DDCBD5        QRYFLD
      C     QRYFLD        IFEQ      '?'
      C                   CALL      'SD000711S'
@@ -459,11 +461,11 @@
      C                   PARM      'C'           PTYPE
      C                   PARM      *BLANKS       PCODE
      C                   PARM      *ZERO         PSEQN
- 
+
      C                   EVAL      DDCBD5 = PCODE
      C                   MOVE      PSEQN         DDCBS5
      C                   ENDIF
- 
+
      C                   MOVEL     DDCDD1        QRYFLD
      C     QRYFLD        IFEQ      '?'
      C                   CALL      'SD000711S'
@@ -472,11 +474,11 @@
      C                   PARM      'C'           PTYPE
      C                   PARM      *BLANKS       PCODE
      C                   PARM      *ZERO         PSEQN
- 
+
      C                   EVAL      DDCDD1 = PCODE
      C                   MOVE      PSEQN         DDCDS1
      C                   ENDIF
- 
+
      C                   MOVEL     DDCDD2        QRYFLD
      C     QRYFLD        IFEQ      '?'
      C                   CALL      'SD000711S'
@@ -485,11 +487,11 @@
      C                   PARM      'C'           PTYPE
      C                   PARM      *BLANKS       PCODE
      C                   PARM      *ZERO         PSEQN
- 
+
      C                   EVAL      DDCDD2 = PCODE
      C                   MOVE      PSEQN         DDCDS2
      C                   ENDIF
- 
+
      C                   MOVEL     DDCDD3        QRYFLD
      C     QRYFLD        IFEQ      '?'
      C                   CALL      'SD000711S'
@@ -498,11 +500,11 @@
      C                   PARM      'C'           PTYPE
      C                   PARM      *BLANKS       PCODE
      C                   PARM      *ZERO         PSEQN
- 
+
      C                   EVAL      DDCDD3 = PCODE
      C                   MOVE      PSEQN         DDCDS3
      C                   ENDIF
- 
+
      C                   MOVEL     DDCDD4        QRYFLD
      C     QRYFLD        IFEQ      '?'
      C                   CALL      'SD000711S'
@@ -511,11 +513,11 @@
      C                   PARM      'C'           PTYPE
      C                   PARM      *BLANKS       PCODE
      C                   PARM      *ZERO         PSEQN
- 
+
      C                   EVAL      DDCDD4 = PCODE
      C                   MOVE      PSEQN         DDCDS4
      C                   ENDIF
- 
+
      C                   MOVEL     DDCDD5        QRYFLD
      C     QRYFLD        IFEQ      '?'
      C                   CALL      'SD000711S'
@@ -524,116 +526,116 @@
      C                   PARM      'C'           PTYPE
      C                   PARM      *BLANKS       PCODE
      C                   PARM      *ZERO         PSEQN
- 
+
      C                   EVAL      DDCDD5 = PCODE
      C                   MOVE      PSEQN         DDCDS5
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Clear message subfile
       ** Set screen error indicators off
- 
+
      C                   MOVEA     @Z0           *IN(02)
- 
+
       ** Set return keys
- 
+
      C                   MOVE      *INKC         @INKC
      C                   MOVE      *INKL         @INKL
      C                   MOVE      *INKQ         @INKQ
      C                   MOVE      *INKS         @INKS
      C                   MOVE      *INKT         @INKT
- 
+
      C                   ENDSR
- 
+
      D/COPY ZACPYSRC,MSGHNDDSP2
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * *INZSR - INITIAL PROCESSING
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Parameters
- 
+
      C     *ENTRY        PLIST
- 
+
       * INPUT PARAMETERS :
       * Return code
- 
+
      C                   PARM                    RetCodeIn
- 
+
       ** FATCA Details
      C                   PARM                    CrFaScnFmt
      C                   PARM                    CrCuScnFmt
- 
+
       ** Fields in error
      C                   PARM                    OKFATCAdet
- 
+
       ** Errors
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Warnings
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
      C                   PARM                    @EINKX            1
- 
+
       ** OUTPUT PARAMETERS :
       ** Function Keys
- 
+
      C                   PARM                    @INKC             1
      C                   PARM                    @INKL             1
      C                   PARM                    @INKQ             1
      C                   PARM                    @INKS             1
      C                   PARM                    @INKT             1
- 
+
       ** Write screen with no read indicator
      C                   PARM                    WriteOnly         1
- 
+
       ** Initialize program name
- 
+
      C                   MOVEL     'SDFTCS2DP'   DBPGM
- 
+
       ** Move user and workstation ID to screen fields.
- 
+
      C                   MOVEL     PsUser        DDUSER
      C                   MOVEL     PsJobName     DDWID
- 
+
      C                   MOVE      '1'           *IN97
      C                   MOVEL     '*'           DDPGMQ
- 
+
       ** Access bank details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'SDBANKPD'    DBFILE
      C                   MOVEL     '001'         DBASE
      C                   MOVEL     @OPTN         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check if switchable feature CGL132 is switched on.
- 
+
      C                   EVAL      CSD093 = 'N'
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CSD093'      @SARD
- 
+
       ** Database error
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     @RTCD         ANDNE     '*NRF   '
      C                   MOVEL     'CSD093'      DBKEY
@@ -641,23 +643,23 @@
      C                   MOVEL     '002'         DBASE
      C                   EXSR      SRERR
      C                   END
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   EVAL      CSD093 = 'Y'
      C                   MOVE      *ON           *IN87
      C                   ENDIF
- 
+
       ** Check if switchable feature CGL133 is switched on.
- 
+
      C                   EVAL      CGL133 = 'N'
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CGL133'      @SARD
- 
+
       ** Database error
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     @RTCD         ANDNE     '*NRF   '
      C                   MOVEL     'CGL133'      DBKEY
@@ -665,17 +667,17 @@
      C                   MOVEL     '003'         DBASE
      C                   EXSR      SRERR
      C                   END
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   EVAL      CGL133 = 'Y'
      C                   MOVE      *ON           *IN86
      C                   MOVE      *ON           *IN87
      C                   ENDIF
- 
+
      D/COPY SDCPYSRC,MSGHNDDATA
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -683,19 +685,19 @@
       * SRERR - EXCEPTION ERRORS                                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SRERR         BEGSR
- 
+
      C                   MOVEL     'SDFTCSSDSP'  DBPGM
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
      C                   MOVE      '1'           *INLR
      C                   DUMP
- 
+
       **  Terminte the program
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

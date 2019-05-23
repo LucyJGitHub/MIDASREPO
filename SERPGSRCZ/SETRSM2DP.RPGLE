@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR689705           Date 03Jan11               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR689705           Date 03Jan11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR689705 - Nominal and value settled were missing after      *
       *             enter. Applied fix AR656294 (Child: AR689706)     *
@@ -73,7 +75,7 @@
       *
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -237,13 +239,13 @@
       *
      C                   Z-Add     1             Cx
      C                   Z-Add     1             Ex
- 
+
      C                   DOU       Cx > 40
- 
+
      C                   If        WEI(Cx) = 'N' OR WEI(Cx) = 'W'
      C                   Eval      *IN(Ex) = *ON
      C                   EndIF
- 
+
      C                   Eval      Cx = Cx + 1
      C                   Eval      Ex = Ex + 1
      C                   EndDo
@@ -342,7 +344,7 @@
      C                   Eval      PINKH = *INKH
      C                   Eval      PINKL = *INKL
      C                   Eval      PINKP = *INKP
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -363,7 +365,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -440,7 +442,7 @@
      C                   PARM                    PINKL
      C                   PARM                    PINKP
       *
- 
+
      C                   Eval      SUSER = PsUser
      C                   Eval      SWID = PsJobName
       *
@@ -467,7 +469,7 @@
       ** =================================================================
       ** The following /COPY sets these values.
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *
       *****************************************************************

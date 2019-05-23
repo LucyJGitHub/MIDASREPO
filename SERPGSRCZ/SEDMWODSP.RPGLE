@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSW210             Date 04May10               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -51,6 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -91,15 +93,15 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSEDPMVWODFCF   E             WORKSTN
- 
+
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*pssr)
                                                                                               CSE039
      FSEMVTSL2  IF   E           K DISK    INFSR(*PSSR)                                       CSE039
      F/COPY WNCPYSRC,SEDMWOXF01
- 
+
       *****************************************************************
       *                                                               *
       * ID F  C  H  L    FUNCTION OF INDICATORS                       *
@@ -139,31 +141,31 @@
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structure.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -171,54 +173,54 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
      D/COPY ZACPYSRC,MSGHNDDCL
       **--------------------------------------------------------------------------------------------
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @Z0             S              1    DIM(60) CTDATA PERRCD(60)
      D @NAR            S             40    DIM(2) CTDATA PERRCD(1)
      D @EI             S              1    DIM(60)
- 
+
       ** External DS for Bank Details
       ** External DS for General Ledger Details
       ** External DS for Midas Module Details
       ** External DS For Switchable Feature Details
       ** Securities Trading Data
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
@@ -226,28 +228,28 @@
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
      D SDSCOD        E DS                  EXTNAME(SDSCODPD)                                  CSE039
       ** EXTERNAL DS FOR MESSAGE STATUS CODE DETAILS                                          CSE039
- 
+
       ** DS for AccessProgramsS, Short DS
       ** DS for AccessProgramsS, Long DS
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)                       S01117
- 
+
       ** Transaction Details DS
       ** ----------------------
- 
+
      D SEDMScrF      E DS                  EXTNAME(SEDMWOPD)
      D SEErFldF      E DS                  EXTNAME(SEEDMWOPD)
- 
+
      D                 DS
      D  DDFOTX                 1     40
      D  DDSIDN                10     15
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D CGL031          S              1A                                                      CGL031
                                                                                               CGL031
       ** +--------------------------------------+
@@ -283,7 +285,7 @@
      C                   EVAL      *IN76 = '0'                                  211116
      C                   EVAL      *IN79 = '0'                                  178695
      C                   ENDIF                                                  CPB001
- 
+
      C****               IF        PortCusInd = 'N'
      C****                         AND DDCWDI = *BLANKS                         187544
      C****                         AND DDPTFR = *BLANKS                         187544
@@ -313,7 +315,7 @@
      C                   EVAL      *IN79 = '1'                                  178695
      C                   ENDIF                                                  178695
      C                   END
- 
+
      C                   EXSR      SRMAIN
       *
       ** Return
@@ -344,14 +346,14 @@
       *
      C                   Z-ADD     1             C                 2 0
      C                   Z-ADD     10            E                 2 0
- 
+
      C     C             DOUGT     60
- 
+
      C     @EI(C)        IFEQ      'N'
      C     @EI(C)        OREQ      'W'
      C                   MOVEL     '1'           *IN(E)
      C                   END
- 
+
      C                   ADD       1             C
      C                   ADD       1             E
      C                   END
@@ -368,18 +370,18 @@
      C                             DDOPINOK = 'W'                                             237063
      C                   EVAL      *IN46 = *ON                                                237063
      C                   ENDIF                                                                237063
- 
+
       ** Set up the transaction reference to be used by the message handler
      C                   EVAL      TranRef = DDDPRN
      C                   EVAL      ActionCode = DDACTN
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes processing for the error and
       ** warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP1
       **--------------------------------------------------------------------------------------------
- 
- 
+
+
       ** Position cursor on Action Code if it is blank
       *
      C     DDACTN        COMP      *BLANK                                 68
@@ -494,15 +496,15 @@
      C                   MOVE      *INKN         @INKN
      C                   MOVE      *INKP         @INKP
      C                   MOVE      *INKW         @INKW                                        CSE039
- 
+
      C                   ENDSR
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the ProcMsgs subroutine
       ** to process error and warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP2
       **--------------------------------------------------------------------------------------------
- 
+
      C********************************************************************
       /EJECT
       *****************************************************************
@@ -514,7 +516,7 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
       *
       ** Parameters
@@ -527,10 +529,10 @@
      C                   PARM                    DPMVSety         10                          CSE039
       ** Transaction Number                                                                   CSE039
      C                   PARM                    DPMVTrno          6                          CSE039
- 
+
      ** Received parameters
      ** -------------------
- 
+
      ** Transaction Details
       * Transaction Status
       * Security Status
@@ -625,7 +627,7 @@
      C                   MOVEL     @OPTN         DBKEY
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   MOVE      BJMRDT        RunDate
       *
       ** ACCESS GENERAL LEDGER DETAILS
@@ -670,7 +672,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'S01445'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     @RTCD         ANDNE     '*NRF   '
      C                   MOVEL     'SCSARDPD'    DBFILE
@@ -678,7 +680,7 @@
      C                   MOVEL     'S01445'      DBKEY
      C                   EXSR      *PSSR
      C                   END
- 
+
      C     @RTCD         IFEQ      *BLANK
      C                   MOVEL     'Y'           S01445            1
      C                   ELSE
@@ -691,7 +693,7 @@
      C                   PARM      '*DBERR '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDSTRD        PARM      SDSTRD        DSSDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'SDSTRDPD'    DBFILE
      C                   MOVEL     '905'         DBASE
@@ -753,7 +755,7 @@
       ** Automatic charges and S01445 is installed
       *
      C                   MOVE      '1'           *IN84
- 
+
      C     S01445        IFEQ      'Y'
      C     BVACOP        ANDEQ     'Y'
      C                   MOVE      '0'           *IN84
@@ -848,18 +850,18 @@
      C**********         MOVE      '1'           *IN78                                 216805 237063
      C                   MOVE      '1'           *IN91                                        237063
      C                   ENDIF                                                                216805
- 
+
      C     KMVTS         KLIST                                                                CSE039
      C                   KFLD                    KTDRF             6                          CSE039
      C                   KFLD                    KTRTY             1                          CSE039
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line sets up the fixed data for SE *DSP
       ** functions for the message handler, ZAMSGHNDLE.
      D/COPY SECPYSRC,MSGHNDDATA
       **--------------------------------------------------------------------------------------------
- 
- 
+
+
      C                   ENDSR
       *****************************************************************
       /EJECT

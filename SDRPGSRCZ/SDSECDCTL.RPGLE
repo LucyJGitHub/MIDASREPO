@@ -26,10 +26,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 243070             Date 10Jul06               *
+      *                 243070             Date 10Jul06               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSE070             Date 15Feb05               *
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  243070 - Recompile over changed PF/SDVSECDPD                 *
       *  CSE070 - Repo Coupon Claims Report                           *
@@ -72,7 +74,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       * Valid Seccurity Customers Clients
      FSDVSECDPD UF A E             DISK    INFSR(*pssr)
      F                                     PREFIX(V_)
@@ -80,9 +82,9 @@
       * Invalid Security Customer Clients
      FSDISECDPD UF A E             DISK    INFSR(*pssr)
      F                                     COMMIT
- 
+
      FSDVSECDL1 IF   E           K DISK    RENAME(SDVSECDD0:SDVSECDCHK)
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
                                                                                               CSE022
       * Midas SD Valid Customer Depository Reference File                                     CSE022
@@ -94,10 +96,10 @@
      FSDICSDRPD UF A E             DISK    INFSR(*pssr)                                       CSE022
      F                                     PREFIX(EI_)                                        CSE022
      F                                     COMMIT                                             CSE022
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SDSECDC001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -116,100 +118,100 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API *CTL modules.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** used in checking whether there are messages on the data queue.
      D/COPY ZACPYSRC,DTAQCHKDCL
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** String for error messages to the operator
      D ProcErr         C                   CONST('Error in module')
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Incoming Header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
- 
+
       * Incoming Transaction
      D TranInSecd    E DS                  EXTNAME(SDSECDPD)
- 
+
       * Valid Customer Securities Details layout
      D ValidSecd     E DS                  EXTNAME(SDVSECDPD)
      D                                     PREFIX(V_)
- 
- 
+
+
       * (Current) Customer record in file Format
      D SecdFilFmt    E DS                  EXTNAME(SDSECSPD)
      D QQACC1        E                     EXTFLD(QQACCD)                                     CGL029
- 
- 
+
+
       * (Current) Customer in Screen Format - Main Details
      D CurCuSecd     E DS                  EXTNAME(SDSECDPD)
      D                                     PREFIX(@)
- 
- 
+
+
       * Error indicators
      D OKCuSecd      E DS                  EXTNAME(SDESECDPD)
- 
+
       * Error indicators                                                                      CSE039
      D OKCuSecd2     E DS                  EXTNAME(SDESECD2PD)                                CSE039
- 
+
      D DepotSn         S             10    DIM(10)
       ** Depot shortnames array
- 
+
      D DepotNo         S              6    DIM(10)
       ** Depot customer numbers array
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
@@ -217,7 +219,7 @@
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D ExtData       E DS                  EXTNAME(SDSEEXPD)
       * SD Customer Security details Extra Data - File (D/B) format
      D DSFDY         E DS                  EXTNAME(DSFDY)
@@ -239,7 +241,7 @@
      D DepData         DS                                                                     CSE022
      D  PDepCtr                1      3  0                                                    CSE022
      D  PDepDet                4   4755                                                       CSE022
- 
+
       ** 24X7 status data area                                                                CSC011
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
                                                                                               CSC011
@@ -250,38 +252,38 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Error message field(s)
      D     Msg1        S                   LIKE(#MsgID)
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Fields (500A) to receive the incoming transaction
      D Trans5001       S            500A
- 
+
       ** Field (500A) to receive the incoming Extra Data
      D ExtData500      S            500A
- 
+
       ** Indicies for arrays used to set up corresponding sequence numbers
       **  for the fields that are in error
      D Ix              S              3P 0
      D Iy              S              3P 0
- 
- 
- 
+
+
+
       ** Overall Transaction status, to be passed to the Message Handler
      D TranStatus      S              1A
- 
+
       ** Module ID, to be passed to the Message Handler
      D ModuleID        S              2A
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
      D Object          S             10A   INZ('SDSECDUPC')
      D Lib             S             10A   INZ('*LIBL')
      D ObjType         S              7A
@@ -290,19 +292,19 @@
      D WaitTime        S              6A   INZ('0     ')
      D Dlcobj          S              1A   INZ('Y')
      D Return          S              7A
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
       ** Whether or not to clear the program message queue (this is not
       ** actually used, but is required by the message handler's parameter
       ** list.
      D ClrPgmMsgQ      S              1A   INZ('Y')
       ** Override Database Table
      D ##OX1           S              1    DIM(50) CTDATA PERRCD(50)
- 
+
       ** Flags to indicate whether substitution is required in
       ** each of the various parts the transaction
      D RepSecd         S              1A   inz('N')
@@ -342,14 +344,14 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SDSECDC002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -359,29 +361,29 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       /COPY WNCPYSRC,SDSECDC003
- 
+
       * Incoming transaction is broken into 500A fields, so that a common CL
       * can be used between this module and the one that read the MQ queue.
       * This module needs to break these 500A fields by loading them into
       * the appropriate (externally described) data structure.
      C                   MOVEL     Trans5001     TranInSecd
      C                   MOVEL     Extdata500    Extdata
- 
+
       ** Generate a timestamp for this transaction
- 
+
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
       * Reset variables gradually updated
- 
+
      C                   EXSR      RESETCYCLE
- 
+
       /COPY WNCPYSRC,SDSECDC004
- 
+
       *  Check if valid Security Customer details exists
- 
+
      C                   EXSR      ChkValSecd
       *
       *  If valid Sec.det. does exist (even after delay), fail this input
@@ -399,36 +401,36 @@
      C     Idx           IFNE      0                                            CAP013
      C                   GOTO      INVALID                                      CAP013
      C                   END                                                    CAP013
- 
+
       * Reset variables again in case the details have been corrupted
       * by previous chain to valid Customer details file.
- 
+
      C                   EXSR      RESETCYCLE
- 
+
       /COPY WNCPYSRC,SDSECDC005
- 
+
       *  Validate Action Code
- 
+
      C                   EXSR      ValidateAc
       *
       /COPY WNCPYSRC,SDSECDC006
- 
+
       *  If error in validation of action code, fail this input
       *
      C     Idx           IFNE      0
      C                   GOTO      INVALID
      C                   END
- 
+
       *  Processing depends upon Action Code
- 
+
      C                   SELECT
- 
+
      C                   WHEN         DDACTN = 'I'
       *  Processing for Inserts
       /COPY WNCPYSRC,SDSECDC007
      C                   EXSR      ValidateTr
       /COPY WNCPYSRC,SDSECDC008
- 
+
      C                   WHEN         DDACTN = 'A'
      C                             OR DDACTN = 'D'
       *  Processing for Amends or Changes
@@ -438,62 +440,62 @@
       * the replacement character must be replaced with the corresponding
       * character from the original transaction.
      C                   if        DDACTN = 'A' AND GHSUBS <> *blank
- 
+
      C     GHSUBS        scan      TranInSecd                             99
      C                   if        *in99
      C                   eval      RepSecd = 'Y'
      C                   endif
- 
+
       ** If any of the flags set above is true, do the data
       ** substution subroutine.
      C                   if        RepSecd = 'Y'
      C                   EXSR      DtaSubs
      C                   endif
- 
+
      C                   endif
       **                 (End of "if DDACTN = 'A' and GHSUBS <> *blank")
- 
+
      C                   EXSR      SetupAmd
       /COPY WNCPYSRC,SDSECDC010
      C                   EXSR      ValidateTr
       /COPY WNCPYSRC,SDSECDC011
- 
+
      C                   ENDSL
       *
      C     INVALID       TAG
- 
+
       *  Check for exception error from any program lower in the stack
       *  If error detected, send message to system operator and
       *  return to calling program without updating database or
       *  prompting the database update program
      C                   IN        APDUMP
       /COPY WNCPYSRC,SDSECDC012
- 
+
      C     ARERRMOD      IFNE      *BLANK
      C                   EVAL      MQErrlong  = *blank
      C                   MOVEL     ProcErr       MQError
      C                   MOVE      ARERRMOD      MQError          28
      C                   MOVEL     MQError       MQErrlong
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    MQReturn         10
      C                   PARM                    MQErrlong       132
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
- 
+
      C                   MOVEL     ARERRMOD      APRETCODE
      C     *LOCK         IN        APDUMP
      C                   EVAL      ARERRMOD = *BLANK
      C                   OUT       APDUMP
      C                   RETURN
- 
+
      C                   ELSE
- 
+
       *  Processing for Error checking/write to database
       /COPY WNCPYSRC,SDSECDC013
      C                   EXSR      CheckWrite
       /COPY WNCPYSRC,SDSECDC014
- 
+
       *  If valid, send data queue entry to prompt DB update program
      C     Idx           IFEQ      0
      C                   EVAL      ObjType = '*DTAARA'
@@ -508,25 +510,25 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM      *BLANK        Return
- 
+
      C     Return        IFEQ      *BLANK
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes a check for whether there
       ** are messages on the server/updater data queue, and sends a 'GO'.
       ** message to the data queue if there are not.
      D/COPY ZACPYSRC,DTAQCHK
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SDSECDC015
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -535,19 +537,19 @@
       *                                                               *
       *****************************************************************
      C     ChkValSecd    BEGSR
- 
+
       * Check for Security Customer on Valid file
      C                   MOVEL     DDCUSN        SECUST
      C     SECUST        CHAIN     SDVSECDL1                          99
- 
+
       * If record found...
      C     *IN99         IFEQ      '0'
- 
+
       * ..delay, then repeat check
      C                   CALLB     'ZACDELAY'
- 
+
      C     SECUST        CHAIN     SDVSECDL1                          99
- 
+
       * Error if still present
      C     *IN99         IFEQ      '0'
      C                   ADD       1             Idx
@@ -555,7 +557,7 @@
      C                   EVAL      MsgIDArr(Idx) = 'APM0900'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                    CAP013
@@ -626,11 +628,11 @@
      C                   MOVEL     '      '      ModeofOp                       CAP013
      C                   ENDIF                                                  CAP013
      C                   ENDIF                                                  CAP013
- 
+
       * Validate action code versus transaction IDs supplied
       * The Customer in file format from the SD database is retrieved
       * as well.
- 
+
      C                   RESET                   ReturnCode
      C                   CALLB     'SDSECDRTV'
       *
@@ -673,16 +675,16 @@
       *
       ** Customer Shortname
      C                   PARM                    DDCSSN           10
- 
+
       ** Customer Report Name
      C                   PARM                    DDCRNM           20
- 
+
       ** Customer Report Town
      C                   PARM                    DDCRTN           10
- 
+
       ** Depot Shortnames Array
      C                   PARM                    DepotSn
- 
+
       *
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
@@ -691,7 +693,7 @@
       *
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -702,14 +704,14 @@
       *                                                               *
       *****************************************************************
      C     SetupAmd      BEGSR
- 
+
       * For Amends, put the complete (pre-existing) Customer into the Valid
       *  file record - fields in this will be updated during processing
- 
+
      C                   MOVE      SecdFilFmt    ValidSecd
- 
+
       * For Amends, convert the Securities Customer to screen format
- 
+
      C                   CALLB     'SDSECDCVT'
       * INPUTS
       *
@@ -723,8 +725,8 @@
       *
       * Security Customer Details - screen formats
      C                   PARM                    CurCuSecd
- 
- 
+
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -734,9 +736,9 @@
       *                                                                *
       ******************************************************************
      C     ValidateTr    BEGSR
- 
+
       * Validate Security Customer Client details
- 
+
      C                   EXSR      ValdCuSecd
       *
       *  If error in validation, fail this input
@@ -744,7 +746,7 @@
      C     Idx           IFNE      0
      C                   GOTO      EValidTr
      C                   END
- 
+
       * Validate Security Customer Client details 2                                           CSE039
                                                                                               CSE039
      C                   EXSR      ValdCuSecd2                                                CSE039
@@ -754,7 +756,7 @@
      C     Idx           IFNE      0                                                          CSE039
      C                   GOTO      EValidTr                                                   CSE039
      C                   END                                                                  CSE039
- 
+
       ** If CSE022 is installed                                                               CSE022
                                                                                               CSE022
      C                   IF        CSE022 = 'Y'                                               CSE022
@@ -842,7 +844,7 @@
      C                   ENDDO                                                                CSE022
                                                                                               CSE022
      C                   ENDIF                                                                CSE022
- 
+
      C     EValidTr      ENDSR
       *****************************************************************
       /EJECT
@@ -852,36 +854,36 @@
       *                                                               *
       *****************************************************************
      C     ValdCuSecd    BEGSR
- 
+
      C                   CALLB     'SDSECDVAL'
- 
+
       * INPUTS
- 
+
       * Response mode
      C                   PARM                    RespMode          1
- 
+
       ** Security Customer Client Details
      C                   PARM                    TranInSecd
                                                                                               222373
       ** Automatic Settlement of Trades                                                       222373
      C                   PARM                    CSE039            1                          222373
- 
+
       * OUTPUTS
- 
+
       *
       ** Security Details OK inds
      C                   PARM                    OKCuSecd
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Valid Security Customer Client (DS) from/to caller
      C                   PARM                    ValidSecd
- 
+
      C                   ENDSR
       *****************************************************************
       *****************************************************************                       CSE039
@@ -935,9 +937,9 @@
       *    sending of messages/writing to the database                *
       *                                                               *
       *****************************************************************
- 
+
      C     CheckWrite    BEGSR
- 
+
       *  If no errors were found:
       *     - set up additional data
       *     - write a record to the Valid file
@@ -979,10 +981,10 @@
       ** | or not).  It is shown in the above form for clarity.       |
       ** |                                                            |
       ** +------------------------------------------------------------+
- 
- 
+
+
      C                   IF        Idx = 0
- 
+
      C                   EXSR      SETUPVALID
      C                   WRITE     SDVSECDD0
                                                                                               CSE022
@@ -1004,18 +1006,18 @@
      C                   ENDDO                                                                CSE022
                                                                                               CSE022
      C                   ENDIF                                                                CSE022
- 
+
      C                   EXSR      CallMsgHdl
- 
+
      C                   ENDIF
- 
- 
+
+
      C     Idx           IFGT      0
      C                   EXSR      SETUPINVAL
       *
       * Only write to invalid files if repair in back office
      C                   IF        APRprLocn = 'B'
- 
+
      C                   WRITE     SDISECDD0
                                                                                               CSE022
       ** If support system is active, write invalid transaction to                            CSC011
@@ -1064,17 +1066,17 @@
      C                   ENDDO                                                                CSE022
                                                                                               CSE022
      C                   ENDIF                                                                CSE022
- 
+
      C                   ENDIF
- 
+
      C                   EXSR      CallMsgHdl
- 
+
      C                   ENDIF
- 
+
      C                   COMMIT
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1084,22 +1086,22 @@
       *                                                               *
       *****************************************************************
      C     RESETCYCLE    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
- 
+
+
      C                   RESET                   FldNoArr
- 
+
      C                   CLEAR                   CurCuSecd
- 
+
      C                   MOVE      *ALL'Y'       OKCuSecd
      C                   MOVE      *ALL'Y'       OKCuSecd2                                    CSE039
- 
+
      C                   CLEAR                   ValidSecd
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1109,20 +1111,20 @@
       *        Valid file record.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPINVAL    BEGSR
- 
+
       * Include Header fields that need to be o/p to the Invalid files
      C                   EVAL      DDFOtranID = APFOTranID
      C                   EVAL      DDFOAsocID = APFOAsocID
      C                   EVAL      DDRprLocn  = APRprLocn
      C                   EVAL      DDTMESTMP = TimeStamp
- 
+
      C                   EVAL      TranStatus = 'F'
- 
+
       /COPY WNCPYSRC,SDSECDC016
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1131,23 +1133,23 @@
       *    Valid file record.                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
- 
+
       * Set Valid file field(s) that are needed for all Action Codes
      C                   EVAL      V_SETYLC = DDACTN
      C                   EVAL      V_SECUST = DDCUSN
- 
+
       * Include Header fields that need to be o/p to the Valid file
      C                   EVAL      V_SEFRNT = APFOTranID
      C                   EVAL      V_SEAFRT = APFOAsocID
      C                   EVAL      V_SEREPA = APRprLocn
- 
+
      C                   EVAL      TranStatus = 'S'
- 
+
       /COPY WNCPYSRC,SDSECDC017
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1155,33 +1157,33 @@
       * CallMsgHdl - Call the Message Handling module                 *
       *                                                               *
       *****************************************************************
- 
+
      C     CallMsgHdl    BEGSR
- 
+
       ** Set up an array of sequence numbers that correspond to the fields
       **  with errors
- 
+
      C                   Z-ADD     1             Ix
      C                   DO        ArrayMax
- 
+
      C                   IF        FldNameArr(Ix) <> *blanks
- 
+
      C                   Z-ADD     1             Iy
      C     FldNameArr(Ix)LOOKUP    FieldArr(Iy)                           20
      C                   EVAL      FldNoArr(Ix) = FldSeqArr(Iy)
- 
+
      C                   ELSE
- 
+
      C                   LEAVE
- 
+
      C                   ENDIF
- 
+
      C                   ADD       1             Ix
- 
+
      C                   ENDDO
- 
+
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'ZAMSGHNDLE'
       ** Return code (10A, returned to this procedure)
      C                   PARM                    ReturnCode
@@ -1227,9 +1229,9 @@
      C                   PARM                    MsgFArray
       ** Whether or not to clear the program message queue (1A)
      C                   PARM                    ClrPgmMsgQ
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1237,9 +1239,9 @@
       * DtaSubs - Data Substitution                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     DtaSubs       begsr
- 
+
       ** Convert file fields to screen format
      C                   reset                   ReturnCode
      C                   CALLB     'SDSECDCVT'
@@ -1252,12 +1254,12 @@
       * Output parameters
       * Security Customer Details - screen formats
      C                   PARM                    CurCuSecd
- 
+
       ** Substitute the data for the various parts of the transaction,
       ** dependent on the flags that were set earlier.
- 
+
      C                   if        RepSecd = 'Y'
- 
+
      C                   clear                   IncData
      C                   clear                   CurData
      C                   RESET                   ReturnCode
@@ -1270,11 +1272,11 @@
      C                   PARM      TranInSecd    IncData        2000
       * Current Data
      C                   PARM      CurCuSecd     CurData        2000
- 
+
      C                   MOVEL     IncDATA       TranInSecd
- 
+
      C                   endif
- 
+
      C                   endsr
                                                                                               CSE022
       *****************************************************************                       CSE022
@@ -1369,7 +1371,7 @@
      C                   EVAL      WFIRST = 'N'                                               CSE022
                                                                                               CSE022
      C                   ENDSR                                                                CSE022
- 
+
       *****************************************************************
       /EJECT
      C/COPY ZACPYSRC,PSSR_ILE
@@ -1381,7 +1383,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -1393,16 +1395,16 @@
      C                   PARM                    #ProcPgm
      C                   PARM                    #ProcMod
      C                   PARM                    #ProcName
- 
+
       ** Set up the name of the primary and secondary message files from
       ** which the message handler will get the messages
      C                   EVAL      #MsgFile     = 'SDUSRMSG'
      C                   EVAL      MsgFArray(1) = 'DRSMM'
      C                   EVAL      MsgFArray(2) = 'Y2USRMSG'
- 
+
       *  Set up the Module ID, used to make the Transaction number unique
      C                   EVAL      ModuleID = 'SD'
- 
+
       *
       ** Access Bank details via access program
       *  (database error handling done in access program)
@@ -1410,7 +1412,7 @@
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Access API ICD via access program
      C                   CALLB     'AOAPIR0'
      C                   PARM      '*DBERR '     @RTCD
@@ -1494,16 +1496,16 @@
      C                   ELSE                                                                 CSE042
      C                   EVAL      CSE042 = 'N'                                               CSE042
      C                   ENDIF                                                                CSE042
- 
+
       ** Set up the name of the server/database updater data queue.
      C                   EVAL      DtaQName = 'APSECDDTQ'
- 
+
      C* Override SDSECSLR
      C                   Z-ADD     50            MESLEN           15 5
      C                   CALL      'QCMDEXC'
      C                   PARM                    ##OX1
      C                   PARM                    MESLEN
- 
+
       ** Check if CSC011 is installed                                                         CSC011
                                                                                               CSC011
      C                   CALLB     'AOSARDR0'                                                 CSC011
@@ -1532,7 +1534,7 @@
                                                                                               CSC011
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SDSECDC018
- 
+
      C                   ENDSR
       *****************************************************************
 **  CPY@

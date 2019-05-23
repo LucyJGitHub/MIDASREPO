@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 23Feb15               *
       *                 CDL094             Date 01Sep14               *
       *                 MD025009B          Date 12May14               *
       *                 CFT147             Date 14Jan13               *
@@ -57,6 +58,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL094 - Enhance Receive Settlement Instructions             *
@@ -88,9 +90,9 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -109,68 +111,68 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API CTL & VU modules.
      D/COPY ZACPYSRC,APICTLARR
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Incoming header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
- 
+
       * Incoming transaction in screen format
      D SPTRScnFmt    E DS                  EXTNAME(SDSPTRPD)
- 
+
       ** Spot Rate in File Format
      D SPTRFilFmt    E DS                  EXTNAME(SDVSPTRPD)
      D  QQCSCD1      E                     EXTFLD(QQCSCD)                                     CGL029
- 
+
       ** Current Transaction record in file Format
      D TranFilFmt    E DS                  EXTNAME(SDCURRPD)
      D  QQSPAE1      E                     EXTFLD(QQSPAE)                                     CGL029
@@ -178,43 +180,43 @@
      D  QQSWAE1      E                     EXTFLD(QQSWAE)                                     CGL029
      D  QQTAC41      E                     EXTFLD(QQTAC4)                                     CGL029
      D  QQTAC51      E                     EXTFLD(QQTAC5)                                     CGL029
- 
+
       * Current Transaction in Screen Format - Main Details
      D CurTrSPTR     E DS                  EXTNAME(SDSPTRPD)
      D                                     PREFIX(@)
- 
+
       ** Spot rate Details Error Indicator File
      D OkTrTran      E DS                  EXTNAME(SDESPTRPD)
- 
+
       * Pay settlement instructions in screen format
      D InPaySttmt    E DS                  EXTNAME(SDESSPPD)
- 
+
       * Receive settlement instructions in screen format
      D InRecSttmt    E DS                  EXTNAME(SDESSRPD)
- 
+
       * 24X7 Data area structure
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
- 
+
       ** SD data area
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
- 
+
       * External DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       * External DS for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
- 
+
       * First DS for access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       * Second DS for access programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D PCMD            S            100    DIM(4) CTDATA PERRCD(1)
       ** Override Database Table
      D/COPY OFCPYSRCZ,CFT147_040                                                              CFT147
- 
+
      D SCCMTJOB      E DS                  EXTNAME(SCCMTJOB) DTAARA(SCCMTJOB)                 CSC022
      D  wComitjobs             4    103                                                       CSC022
       ** External DS for Commitment Control Data Area                                         CSC022
@@ -226,20 +228,20 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       * Index for arrays of error message ids etc
      D Idx             S              3P 0 INZ(0)
- 
+
       * Index for arrays of warning message ids etc
      D WIdx            S              3P 0 INZ(0)
- 
+
       * Fields (500A) to receive the incoming transaction
      D Trans5001       S            500A
      D JavaUser        S             10A
- 
+
      D CSC011          S              1A
      D WRunDay         S                   LIKE(BJRDNB)
- 
+
       ** Define module parameter fields for call to CVT module
      D DDCYNM          S                   LIKE(A6CYNM)
      D DDDCY2          S                   LIKE(A6DLCI)
@@ -249,25 +251,25 @@
      D DDSWCY          S                   LIKE(A6SWCY)
      D DDSWC2          S                   LIKE(A6SWCY)
      D DDVSEU          S                   LIKE(A6CYCD)
- 
+
      D PCMDLEN         S             15  5
                                                                                               CSC022
       ** Commitment Control Variables                                                         CSC022
      D CSC022          S              1A   INZ('N')                                           CSC022
      D wSkip           S              1A   INZ('N')                                           CSC022
      D/COPY OFCPYSRCZ,CFT147_041                                                              CFT147
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -277,16 +279,16 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       * Incoming transaction is broken into 500A fields, so that a common CL
       * can be used between this module and the one that read the MQ queue.
       * This module needs to break these 500A fields by loading them into
       * the appropriate (externally described) data structure.
      C                   MOVEL     Trans5001     SPTRScnFmt
- 
+
       * Reset variables gradually updated
      C                   EXSR      RESETCYCLE
- 
+
       * Validate action code
      C                   EXSR      ValidateAc
       *
@@ -294,30 +296,30 @@
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
      C                   SELECT
- 
+
       * Processing for amends or changes
      C                   WHEN         DDACTN = 'A'
      C                   EXSR      SetupAmd
      C                   EXSR      ValidateTr
- 
+
      C                   ENDSL
- 
+
       * Write to database
      C     UpdateYN      IFEQ      'Y'
      C     Idx           ANDEQ     0
      C                   EXSR      SETUPVALID
      C                   EXSR      UpdateDB
      C                   ENDIF
- 
+
       * Remerge buffer with all relevant data structures
      C                   EVAL      Buffer = SPTRScnFmt
      C                                     + @TimeStamp                                      BUG4469
- 
+
      C     INVALID       TAG
      C                   SETON                                        LR
- 
+
      C                   RETURN
       /EJECT
       *****************************************************************
@@ -326,12 +328,12 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       * Transaction information
      C                   PARM                    Trans5001
      C                   PARM                    FldNameArr
@@ -346,20 +348,20 @@
      C                   PARM                    APIRetc           1
      C                   PARM                    @TimeStamp       26                         BUG4469
      C                   PARM                    AAuth             1                        BUG22196
- 
+
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'SDUSRMSG'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
      C                   EVAL      MsgFArray(3) = 'xxUSRMSG'
- 
+
       ** Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       @RtCd
      C                   PARM      '*FIRST '     @Optn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
      C                   IF        @RtCd <> *BLANKS
      C                   EVAL      DBKEY  =  @Optn                              ************
@@ -367,19 +369,19 @@
      C                   EVAL      DBASE  =  001                                ************
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check if CSC011 is installed
       ** If CSC011 is installed and in switchover mode, use
       ** S1DATE from DTAARA/SC24x7 as the rundate.
- 
+
      C                   EVAL      WRunDay = BJRDNB
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RtCd
      C                   PARM      '*VERIFY'     @Optn
      C                   PARM      'CSC011'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        @RtCd = *Blanks
      C                   EVAL      CSC011 = 'Y'
      C                   IN        SC24X7
@@ -387,7 +389,7 @@
      C                   IF        LIBR = S1SUPP
      C                   EVAL      WRunDay = S1DATE
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      CSC011 = 'N'
      C                   IF        @RtCd <> '*NRF'
@@ -398,9 +400,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       *                                                                                       CSC022
       ** Access SAR details file to determine if CSC022 is on.                                CSC022
       *                                                                                       CSC022
@@ -436,7 +438,7 @@
      C/COPY OFCPYSRCZ,CFT147_042                                                              CFT147
       *  Hook to enable non-core initial processing to be included
      D/COPY WNCPYSRC,SDSPTR01
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -451,7 +453,7 @@
       * The Spot Rate in file format from the database is retrieved
       * as well.
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'SDSPTRRTV'
       *
       *
@@ -492,8 +494,8 @@
       *
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
- 
+
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -503,9 +505,9 @@
       *                                                               *
       *****************************************************************
      C     SetupAmd      BEGSR
- 
+
       * For Amends, convert the Spot Rate transaction to screen format
- 
+
      C                   CALLB     'SDSPTRCVT'
       * INPUTS
       *
@@ -519,35 +521,35 @@
       *
       * Spot Rates Transaction Details - screen formats
      C                   PARM                    CurTrSPTR
- 
+
       * Currency Name
      C                   PARM                    DDCYNM
- 
+
       * Dealing currency
      C                   PARM                    DDDLCY
- 
+
       * SWIFT currency code
      C                   PARM                    DDSWCY
- 
+
       * BKEURO currency
      C                   PARM                    DDVSEU
- 
+
       * Spot Rate against base currency (when DDSPRT is against BKEURO)
       * (output screen field)
      C                   PARM                    DDSPR2
- 
+
       * Multiply divide indicator tied to DDSPR2
       * (output screen field)
      C                   PARM                    DDMDI2
- 
+
       * Dealing currency tied to DDSPR2 (output screen field)
      C                   PARM                    DDDCY2
- 
+
       * Swift currency code tied to DDSPR2 (output screen field)
      C                   PARM                    DDSWC2
- 
+
      C                   MOVE      @DDDFTS       DDDFTS
- 
+
      C                   ENDSR
       /EJECT
       ******************************************************************
@@ -556,11 +558,11 @@
       *                                                                *
       ******************************************************************
      C     ValidateTr    BEGSR
- 
+
       * Validate Internal Funding Deal details
- 
+
      C                   RESET                   RetCodeOut
- 
+
      C                   CALLB     'SDSPTRVAL'
       *
       * INPUTS
@@ -594,7 +596,7 @@
       *
       * Valid Spot Rates Transaction (DS) from/to caller
      C                   PARM                    SPTRFilFmt
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -604,22 +606,22 @@
       *                                                               *
       *****************************************************************
      C     RESETCYCLE    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIdArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIdx
- 
+
      C                   CLEAR                   CurTrSPTR
      C                   CLEAR                   SPTRFilFmt
- 
+
      C                   EVAL      OkTrTran = *ALL'Y'
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -628,13 +630,13 @@
       *              valid file record.                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
- 
+
       ** Set Valid file field(s) that are needed for all Action Codes
      C                   EVAL      AVTYLC = DDACTN
      C                   EVAL      AVCYCD = DDCYCD
- 
+
       ** Include Header fields that need to be o/p to the Valid file
      C                   EVAL      AVFOTRANID = APFOTranID
      C                   EVAL      AVRPRLOCN = APRprLocn
@@ -644,7 +646,7 @@
      C                             and @TimeStamp <> *BLANK                                  BUG4469
      C                   MOVEL     @TimeStamp    AVTMESTMP                                   BUG4469
      C                   ENDIF                                                               BUG4469
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -652,40 +654,40 @@
       * UPDATEDB - Update database                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     UPDATEDB      BEGSR
- 
+
       ** Override SDCURRL0
- 
+
      C                   Z-ADD     32            PCMDLEN
      C                   CALL      'QCMDEXC'
      C                   PARM                    PCMD(1)
      C                   PARM                    PCMDLEN
- 
+
       ** Override SDCURRL1
- 
+
      C                   Z-ADD     32            PCMDLEN
      C                   CALL      'QCMDEXC'
      C                   PARM                    PCMD(2)
      C                   PARM                    PCMDLEN
- 
+
       ** Spot Rate Transaction Details Updates
- 
+
      C                   CALLB     'SDSPTRUPD'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
      C                   PARM      *BLANK        @RTCD             7
      C                   PARM                    SPTRFilFmt
      C/COPY OFCPYSRCZ,CFT147_043                                                              CFT147
- 
+
       ** Delete override of SDCURRL0
- 
+
      C                   Z-ADD     21            PCMDLEN
      C                   CALL      'QCMDEXC'
      C                   PARM                    PCMD(3)
      C                   PARM                    PCMDLEN
- 
+
       ** Delete override of SDCURRL1
- 
+
      C                   Z-ADD     21            PCMDLEN
      C                   CALL      'QCMDEXC'
      C                   PARM                    PCMD(4)
@@ -725,7 +727,7 @@
      C                   MOVEL     '*ANY'        FldNameArr(1)
      C                   MOVEL     'SDM0089'     MsgIdArr(1)
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************

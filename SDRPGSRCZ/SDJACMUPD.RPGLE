@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CGL177             Date 11Jan16               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD036377           Date 30Oct15               *
       *                 MD033947           Date 28Apr15               *
       *                 MD030151           Date 05Sep14               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  CGL177 - CRS Reporting Phase 2                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD036377 - Database error upon F12 cancel                    *
@@ -61,15 +63,15 @@
       *  CGL031 - Taxation of Savings Income                          *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDJACCL9  UF A E           K DISK    INFSR(*PSSR)
       ** Midas SD Joint A/c Member Details by Joint A/c No./Customer No./Non-a/c Holder
- 
+
      FSDFCTLL0  UF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(@AHREAU:SDFCTLD0)
       ** Midas SD Standing Data Controls
@@ -85,65 +87,65 @@
       ** SD Cust Details by Country fo Tax                                                  BUG23732
       *                                                                                     BUG23732
      FSDACTXL1  IF   E           K DISK    INFSR(*PSSR)                                     BUG23732
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       **---------------------------------------------------------------
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** Standard D-specs
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** API Validation Error Array Declarations
      D/COPY ZACPYSRC,ERR_ARRAYS
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ Named Constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** 24x7 Status Data Area
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
- 
+
       ** Valid Joint A/c Member Details
      D SDVJACM       E DS                  EXTNAME(SDVJACMPD) PREFIX(A_:2)
- 
+
       ** Joint A/c Member Details - Before Update
      D B_JAcM        E DS                  EXTNAME(SDJACCPD) PREFIX(B_:2)
- 
+
       ** Joint A/c Member Details - Timestamp Check
      D JAcMChkFmt    E DS                  EXTNAME(SDJACCPD) PREFIX(C_:2)
- 
+
       ** Joint A/c Member Details Data Structure
      D SDJACM        E DS                  EXTNAME(SDJACCPD)
- 
+
       ** Bank Details Data Structure
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Switchable Feature Details Data Structure
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** API Message Header Format Definition
      D APHEAD        E DS                  EXTNAME(APHEADPD)
- 
+
       ** Short Access Object Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
       *                                                                                     BUG23732
@@ -171,15 +173,15 @@
       ** Data Structure for Additional Customer Details                                     BUG23732
       *                                                                                     BUG23732
      D SDACUS        E DS                  EXTNAME(SDACUSPD)                                BUG23732
- 
+
       ** +--------------------------------------+
       ** ¦ Declared Variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Entry Parameters
      D PRetCode        S             10A
- 
+
       ** API Parameters
      D POprMode        S              6A
      D PResMode        S              1A
@@ -197,12 +199,12 @@
      D PTimestamp      S             26A
      D PKey            S             18A
      D PAKey           S             18A
- 
+
       ** Access Object Parameters
      D PRtCd           S              7A
      D POptn           S              7A
      D PSARD           S              6A
- 
+
       ** Standard Utility Parameters
      D PZRtrn          S              6A
      D PZRtCd          S             10A
@@ -211,17 +213,17 @@
      D PZMsgID         S              7A
      D PZMsgF          S             10A
      D PZTmst          S               Z
- 
+
       ** Switchable Features
      D CSC011          S              1A   INZ('N')
      D CSD092          S              1A   INZ('N')                                           CSD092
- 
+
       ** Key Fields
      D KJANo           S                   LIKE(JCJANO)
      D KCust           S                   LIKE(JCCUST)
      D KNAHo           S                   LIKE(JCNAHO)
      D KFLNM           S                   LIKE(AHFLNM)
- 
+
       ** Working Variables
      D WI              S              3P 0
      D Ix              S              3P 0
@@ -262,38 +264,38 @@
       ** Override SDFTCSPD, SDFTNHPD                                                        MD027576
      D CMDNH           S             50    DIM(1) CTDATA PERRCD(1)                          MD027576
      D CMDCS           S             50    DIM(1) CTDATA PERRCD(1)                          MD027576
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +---------------- Start of Main Processing ------------------+
       ** ¦                                                            ¦
       ** ¦  *INZSR is automatically executed at program activation.   ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       ** Check for updates by other workstations.
- 
+
      C                   EXSR      SRChkWksUpd
- 
+
      C                   IF        PRetCode <> *BLANKS
      C                   RETURN
      C                   ENDIF
- 
+
       ** Insert, amend, or delete Joint A/c Member details.
- 
+
      C                   SELECT
- 
+
      C                   WHEN      A_CHTP = 'I'
      C                   EXSR      SRIJAcM
- 
+
      C                   WHEN      A_CHTP = 'A'
      C                   EXSR      SRAJAcM
- 
+
      C                   WHEN      A_CHTP = 'D'
      C                   EXSR      SRDJAcM
- 
+
      C                   ENDSL
       *                                                                                     MD026790
       ** Invoke exceptions update program                                                   MD026790
@@ -345,18 +347,18 @@
      C                   EXSR      SRWrHiFl                                                 BUG23732
       *                                                                                     BUG23732
      C                   ENDIF                                                              BUG23732
- 
+
       ** Update Standing Data Controls.
- 
+
      C                   EXSR      SRFCTL
- 
+
       ** Run 24x7 processing if necessary.
- 
+
      C                   IF        CSC011 = 'Y' AND
      C                             S1SOVR = 'S'
      C                   EXSR      SR24x7
      C                   ENDIF
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -366,15 +368,15 @@
       *                                                               *
       *****************************************************************
      C     SRIJAcM       BEGSR
- 
+
       ** Check first if the record exists.
- 
+
      C                   EVAL      KJANo = A_JANO
      C                   EVAL      KCust = A_CUST
      C                   EVAL      KNAHo = A_NAHO
- 
+
      C     KJAC9         CHAIN     SDJACCL9
- 
+
      C                   IF        %FOUND
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDJACCPD'
@@ -383,13 +385,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   CLEAR                   SDJACM
- 
+
       ** Update 'Before Image'.
- 
+
      C                   MOVEL(P)  SDJACM        B_JAcM
- 
+
      C                   EVAL      JCJANO = A_JANO
      C                   EVAL      JCCUST = A_CUST
      C                   EVAL      JCNAHO = A_NAHO
@@ -400,25 +402,25 @@
      C                   EVAL      JCLCDT = BJRDNB
      C                   EVAL      JCFRNT = A_FRNT
      C                   EVAL      JCREPA = A_REPA
- 
+
       ** If CSC011 is installed, supply a Front Office ID for the
       ** transaction even if it originated from SIN module.
- 
+
      C                   IF        CSC011 = 'Y'
      C                   IF        JCFRNT = *BLANKS
      C                   EVAL      JCFRNT = 'MD' + JCJANO
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Get timestamp.
- 
+
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    PZTmst
- 
+
      C                   EVAL      JCTMST = PZTmst
- 
+
      C                   WRITE     SDJACCD0
- 
+
      C                   IF        CSD092 = 'Y'                                               CSD092
      C                   CALL      'SD009696'                                                 CSD092
      C                   PARM      JCJANO        PCUST                                        CSD092
@@ -451,15 +453,15 @@
       *                                                               *
       *****************************************************************
      C     SRAJAcM       BEGSR
- 
+
       ** Check first if the record exists.
- 
+
      C                   EVAL      KJANo = A_JANO
      C                   EVAL      KCust = A_CUST
      C                   EVAL      KNAHo = A_NAHO
- 
+
      C     KJAC9         CHAIN     SDJACCL9
- 
+
      C                   IF        NOT %FOUND
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDJACCPD'
@@ -468,11 +470,11 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Update 'Before Image'.
- 
+
      C                   MOVEL(P)  SDJACM        B_JAcM
- 
+
      C                   EVAL      JCINVP = A_INVP
      C                   EVAL      JCPAHT = A_PAHT
      C                   EVAL      JCPAHO = A_PAHO
@@ -480,16 +482,16 @@
      C                   EVAL      JCLCDT = BJRDNB
      C                   EVAL      JCFRNT = A_FRNT                                            232543
      C                   EVAL      JCREPA = A_REPA                                            232543
- 
+
       ** Get timestamp.
- 
+
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    PZTmst
- 
+
      C                   EVAL      JCTMST = PZTmst
- 
+
      C                   UPDATE    SDJACCD0
- 
+
      C                   IF        CSD092 = 'Y'                                               CSD092
      C                   CALL      'SD009696'                                                 CSD092
      C                   PARM      JCJANO        PCUST                                        CSD092
@@ -522,15 +524,15 @@
       *                                                               *
       *****************************************************************
      C     SRDJAcM       BEGSR
- 
+
       ** Check first if the record exists.
- 
+
      C                   EVAL      KJANo = A_JANO
      C                   EVAL      KCust = A_CUST
      C                   EVAL      KNAHo = A_NAHO
- 
+
      C     KJAC9         CHAIN     SDJACCL9
- 
+
      C                   IF        NOT %FOUND
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDJACCPD'
@@ -539,7 +541,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        CGL157 = 'Y'                                               CGL177
      C                   CALL      'SD000561'                                                 CGL177
      C                   PARM      *Blanks       PReturn                                      CGL177
@@ -548,11 +550,11 @@
      C                   ENDIF                                                                CGL177
 
       ** Update 'Before Image'.
- 
+
      C                   MOVEL(P)  SDJACM        B_JAcM
- 
+
      C                   DELETE    SDJACCD0
- 
+
      C                   IF        CSD092 = 'Y'                                               CSD092
      C                   CALL      'SD009696'                                                 CSD092
      C                   PARM      JCJANO        PCUST                                        CSD092
@@ -585,59 +587,59 @@
       *                                                               *
       *****************************************************************
      C     SRChkWksUpd   BEGSR
- 
+
       ** Retrieve current Joint A/c Member details.
- 
+
      C                   EXSR      SRJAcMRtv
- 
+
       ** If timestamps are not the same, then the record has been updated
       ** by another workstation.
- 
+
       ** Processing varies according to the mode the program is running in.
       ** In interacive mode, simply check whether the timestamp field
       ** has been updated since the original Joint A/c Member detail was
       ** fetched by this program.
       ** In batch mode, check return parameters from the RTV module for
       ** errors and send messages (if necessesary) to the system operator.
- 
+
       ** Interactive Mode
- 
+
      C                   IF        PZType = '1'
- 
+
      C                   IF        A_TMST <> C_TMST
      C                   EVAL      PRetCode = '*RECUPD   '
      C                   ENDIF
- 
+
       ** Batch Mode
- 
+
      C                   ELSE
- 
+
      C                   IF        OKACTN = 'N' OR
      C                             OKCUST = 'N' OR
      C                             OKNAHO = 'N'
      C                   EVAL      PRetCode = '*RECUPD   '
- 
+
      C                   EVAL      WI = 1
- 
+
      C                   DOW       WI < ArrayMax AND
      C                             FldNameArr(WI) <> *BLANKS
- 
+
      C                   EVAL      PZDBErr = 'Update Error: ' + A_FRNT
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM      *BLANKS       PZRtCd
      C                   PARM                    PZDBErr
      C                   PARM                    PZMsgID
      C                   PARM                    PZMsgF
- 
+
      C                   EVAL      WI = WI + 1
- 
+
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -647,30 +649,30 @@
       *                                                               *
       *****************************************************************
      C     SRFCTL        BEGSR
- 
+
      C                   EVAL      KFLNM = 'SDJACCPD'
      C     KFLNM         CHAIN     SDFCTLL0
- 
+
      C                   IF        %FOUND
- 
+
      C                   SELECT
- 
+
      C                   WHEN      A_CHTP = 'I'
      C                   EVAL      AHNORC = AHNORC + 1
      C                   EVAL      AHNOIN = AHNOIN + 1
- 
+
      C                   WHEN      A_CHTP = 'A'
      C                   EVAL      AHNOAM = AHNOAM + 1
- 
+
      C                   WHEN      A_CHTP = 'D'
      C                   EVAL      AHNORC = AHNORC - 1
      C                   EVAL      AHNODL = AHNODL + 1
- 
+
      C                   ENDSL
- 
+
      C                   UPDATE    SDFCTLD0
      C                   ELSE
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDFCTLPA'
      C                   EVAL      DBKey = KFLNM
@@ -678,7 +680,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -688,44 +690,44 @@
       *                                                               *
       *****************************************************************
      C     SR24x7        BEGSR
- 
+
      C                   EXSR      SRJAcMLog
- 
+
      C                   IF        PRetCodeOut = *BLANKS
- 
+
      C                   EVAL      APTGTTYPE = 'SDJACM'
      C                   EVAL      APFOTRANID = JCFRNT
      C                   EVAL      APRPRLOCN = JCREPA
      C                   EVAL      APUSERID = PSUser
      C                   EVAL      APMIDUSR = PSUser
- 
+
      C                   IF        JCCUST <> *BLANKS
      C                   EVAL      PKey = JCJANO + JCCUST
      C                   ELSE
      C                   EVAL      PKey = JCJANO + JCNAHO
      C                   ENDIF
- 
+
       ** Log this Joint A/c Member.
- 
+
      C                   CALLB     'APLOGTRAN'
       **                 *********************
- 
+
      C                   PARM      *BLANKS       PRetCodeOut
      C                   PARM                    APHEAD
      C                   PARM                    TRANSDTL
      C                   PARM      *BLANKS       PTimestamp
      C                   PARM                    PKey
      C                   PARM      *BLANKS       PAKey
- 
+
      C                   ENDIF
- 
+
      C                   IF        PRetCodeOut <> *BLANKS
      C                   EVAL      PRetCode = '*APLOG    '
      C                   RETURN
      C                   ENDIF
- 
+
      C                   COMMIT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -735,76 +737,76 @@
       *                                                               *
       *****************************************************************
      C     SRJAcMRtv     BEGSR
- 
+
       ** 'I' & 'A' are possible default 2nd screen Action Codes.
- 
+
      C                   IF        A_CHTP = 'I' OR
      C                             A_CHTP = 'A'
      C                   EVAL      PDACTD = 'Y'
      C                   ELSE
      C                   EVAL      PDACTD = 'N'
      C                   ENDIF
- 
+
      C                   CLEAR                   JAcMChkFmt
- 
+
      C                   CALLB     'SDJACMRTV'
       **                 *********************
- 
+
       **********************
       ** Input Parameters **
       **********************
- 
+
       ** Return Code
      C                   PARM      *BLANKS       PRetCode
- 
+
       ** Operation Mode
      C                   PARM      *BLANK        POprMode
- 
+
       ** Response Mode
      C                   PARM      *BLANK        PResMode
- 
+
       ** Action Code
      C                   PARM      A_CHTP        PDACTN
- 
+
       ** Front Office Transaction ID
      C                   PARM      A_FRNT        PDFRNT
- 
+
       ** Joint A/c Number
      C                   PARM      A_JANO        PDJANO
- 
+
       ** Customer Number
      C                   PARM      A_CUST        PDCUST
- 
+
       ** Non-a/c Holder
      C                   PARM      A_NAHO        PDNAHO
- 
+
       ** Action Code Default
      C                   PARM                    PDACTD
- 
+
       ***********************
       ** Output Parameters **
       ***********************
- 
+
       ** Joint A/c Member Details - Timestamp Check
      C                   PARM                    JAcMChkFmt
- 
+
       ** OK - Action Code
      C                   PARM      'Y'           OKACTN
- 
+
       ** OK - Customer Number
      C                   PARM      'Y'           OKCUST
- 
+
       ** OK - Non-a/c Holder
      C                   PARM      'Y'           OKNAHO
- 
+
       ** Error Fields/Message IDs/Message Data (arrays) From/To Caller
      C                   PARM      *BLANKS       FldNameArr
      C                   PARM      *BLANKS       MsgIdArr
      C                   PARM      *BLANKS       MsgDtaArr
- 
+
       ** Array Index (3P0) From/To Caller
      C                   PARM      *ZERO         Ix
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -814,27 +816,27 @@
       *                                                               *
       *****************************************************************
      C     SRJAcMLog     BEGSR
- 
+
      C                   CALLB     'SDJACMLOG'
       **                 *********************
- 
+
       **********************
       ** Input Parameters **
       **********************
- 
+
       ** Return Code
      C                   PARM      *BLANKS       PRetCodeOut
- 
+
       ** Joint A/c Member Details - File Format
      C                   PARM                    SDJACM
- 
+
       ***********************
       ** Output Parameters **
       ***********************
- 
+
       ** Transaction Details
      C                   PARM                    TRANSDTL
- 
+
      C                   ENDSR
       *****************************************************************                     BUG23732
       /EJECT                                                                                BUG23732
@@ -1052,7 +1054,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       * Override SDFTNHL0                                                                   MD027576
      C                   Z-ADD     50            CMDLEN           15 5                      MD027576
      C                   CALL      'QCMDEXC'                                                MD027576
@@ -1074,34 +1076,34 @@
      C                   PARM                    CMDLEN                                       CGL177
                                                                                               CGL177
      C     *ENTRY        PLIST
- 
+
       **********************
       ** Input Parameters **
       **********************
- 
+
       ** Return Code
      C                   PARM                    PRetCode
- 
+
       ** Valid Joint A/c Member Details
      C                   PARM                    SDVJACM
- 
+
       ** Key Lists
- 
+
      C     KJAC9         KLIST
      C                   KFLD                    KJANo
      C                   KFLD                    KCust
      C                   KFLD                    KNAHo
- 
+
      C     KCustByTax    KLIST                                                              BUG23732
      C                   KFLD                    KCust                                      BUG23732
      C                   KFLD                    KCtax                                      BUG23732
       ** Get bank details.
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDBANKPD'
@@ -1110,19 +1112,19 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check if CSC011 is enabled.
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CSC011'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   EVAL      CSC011 = 'Y'
      C                   ELSE
- 
+
      C                   IF        PRtCd <> '*NRF   '
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SCSARDPD'
@@ -1131,7 +1133,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
                                                                                               CSD092
       ** Check if CSD092 is enabled.                                                          CSD092
@@ -1181,38 +1183,38 @@
      C                   ENDIF                                                                CGL177
                                                                                               CGL177
      C                   ENDIF                                                                CGL177
- 
+
       ** Determine whether the program is running interactively (PZType = '1')
       ** or in batch (PZType = '0').
- 
+
      C                   CALLB     'ZARTVJOBA'
      C                   PARM                    PZRtrn
      C                   PARM      *BLANK        PZType
- 
+
       ** Allow access to Joint A/c Members by Front Office ID when in RPR
       ** mode for inserts. Set RTV module parameter POprMode to '*FRONT'
       ** if the program  1. is running in interactive mode.
       **                 2. has a Last Change Type equal to 'I'.
       **                 3. has a Front Office ID.
- 
+
      C                   IF        PZType = '1' AND
      C                             A_CHTP = 'I' AND
      C                             A_FRNT <> *BLANKS
      C                   EVAL      POprMode = '*FRONT'
      C                   ELSE
- 
+
       ** Use Front Office ID if running in batch mode for inserts. Use
       ** Joint A/c Number otherwise.
- 
+
      C                   IF        PZType = '0' AND
      C                             A_CHTP = 'I'
      C                   EVAL      POprMode = '*FRONT'
      C                   ELSE
      C                   EVAL      POprMode = *BLANKS
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IN        SC24X7
       *                                                                                     BUG23732
       ** Check if CER048 is enabled.                                                        BUG23732
@@ -1274,7 +1276,7 @@
      C                   ENDIF                                                                CER069
       *                                                                                       CER069
      C                   ENDIF                                                                CER069
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

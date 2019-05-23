@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD040876           Date 13Sep16               *
-      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD040876           Date 13Sep16               *
+      *                 CGL177             Date 11Jan16               *
       *                 MD036311           Date 01Nov15               *
       *                 CGL157             Date 17Aug15               *
       *                 MD046248           Date 27Oct17               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD040876 - CRS MQ (Recompile)                                *
       *  CGL177 - CRS Reporting Phase 2                               *
       *  MD036311 - Database error on existing Customer and Non-Acct  *
@@ -72,10 +74,10 @@
       *  CGL032 - Automatic Exchange of Information.                  *
       *                                                               *
       *****************************************************************
- 
+
       ** Midas SD Non-A/C Holders Details Master File
      FSDNAHOL0  UF A E           K DISK    COMMIT
- 
+
       ** Midas SD Non-A/C Holders Details Master File - CRS                                   CGL157
      FSDCRNHL0  UF A E           K DISK    COMMIT                                             CGL157
                                                                                               CGL157
@@ -93,7 +95,7 @@
                                                                                               CGL157
       * Midas SD CRS Details File                                                             CGL157
      FSDCRSNL1  UF A E           K DISK    COMMIT                                             CGL157
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -105,12 +107,12 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
@@ -121,25 +123,25 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
                                                                                               CGL132
      D SysVal1         C                   'FATCADftCLsNewCustNH'                             CGL132
- 
+
       ** Rename fields for Timestamp checking
      D ChkNahlFmt    E DS                  Extname(SDNAHOPD)
      D                                     Prefix(CH)
- 
+
       **  Externally described data structure for Valid Non-A/C Holder
      D SDVNAHL       E DS                  Extname(SDVNAHLPD)
      D                                     Prefix(A_)
@@ -148,7 +150,7 @@
       ** FATCA customer details file                                                          CGL132
      D SDVFTNH       E DS                  EXTNAME(SDVFTNHPD)                                 CGL132
      D                                     PREFIX(A_)                                         CGL132
- 
+
       ** CRS Non-Acct Holder Details File                                                     CGL157
      D SDVCRNH       E DS                  EXTNAME(SDVCRNHPD)                                 CGL157
      D                                     PREFIX(A_)                                         CGL157
@@ -159,16 +161,16 @@
 
       ** Error indicators
      D SDENAHL       E DS                  Extname(SDENAHLPD)
- 
+
       **  Externally described data structure for 'Before Update' Non-A/C Holder
      D B_NAHOD       E DS                  Extname(SDNAHOPD)
      D                                     Prefix(B_)
- 
+
       **  Non-A/C Holders file
      D NAHODF        E DS                  Extname(SDNAHOPD)
      D NAHODF2       E DS                  EXTNAME(SDNAHOPD)                                  CGL132
      D                                     PREFIX(N_)                                         CGL132
- 
+
       ** CRS Non-Account Holder Detail file                                                   CGL157
      D SDCRNH        E DS                  Extname(SDCRNHPD)                                  CGL157
                                                                                               CGL157
@@ -177,25 +179,25 @@
                                                                                               CGL157
       ** DS for Bank details
      D SDBANK        E DS                  Extname(SDBANKPD)
- 
+
       ** First DS for access programs, Short Data Structure
      D DSFDY         E DS                  Extname(DSFDY)
- 
+
       ** Second DS for access programs, Long Data Structure
      D DSSDY         E DS                  Extname(DSSDY)
- 
+
       ** 24X7 status data area
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
- 
+
       ** SD data area
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
- 
+
       ** Midas API Message Header Format Definition
      D APHEAD        E DS                  EXTNAME(APHEADPD)
- 
+
       ** Data Structure for SAR Details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** External DS for Midas modules details                                                CSW207
      D SDMMOD        E DS                  Extname(SDMMODPD)                                  CSW207
                                                                                               CSW207
@@ -232,75 +234,75 @@
      D PCrsdF          S            222A   DIM(30)                                            CGL177
      D PCrsdX          S            222A   DIM(30)                                            CGL177
      D PCrsdZ          S            222A                                                      CGL177
- 
+
       ** Outward parameters
       ** RCD : Midas SD Deleted records file retrieval
      D PBRC            DS          3064
- 
+
       ** I :  File name
- 
+
      D    PBFNME               1     10
- 
+
       ** I :  Long Key
- 
+
      D    PBLKEY              11     60
- 
+
       ** I :  Deleted Data Record Pt1
- 
+
      D    PBDR01              61    310
- 
+
       ** I :  Deleted Data Record Pt2
- 
+
      D    PBDR02             311    560
- 
+
       ** I :  Deleted Data Record Pt3
- 
+
      D    PBDR03             561    810
- 
+
       ** I :  Deleted Data Record Pt4
- 
+
      D    PBDR04             811   1060
- 
+
       ** I :  Deleted Data Record Pt5
- 
+
      D    PBDR05            1061   1310
- 
+
       ** I :  Deleted Data Record Pt6
- 
+
      D    PBDR06            1311   1560
- 
+
       ** I :  Deleted Data Record Pt7
- 
+
      D    PBDR07            1561   1810
- 
+
       ** I :  Deleted Data Record Pt8
- 
+
      D    PBDR08            1811   2060
- 
+
       ** I :  Deleted Data Record Pt9
- 
+
      D    PBDR09            2061   2310
- 
+
       ** I :  Deleted Data Record Pt10
- 
+
      D    PBDR10            2311   2560
- 
+
       ** I :  Deleted Data Record Pt11
- 
+
      D    PBDR11            2561   2810
- 
+
       ** I :  Deleted Data Record Pt12
- 
+
      D    PBDR12            2811   3060
- 
+
       ** I :  Last Change Date
- 
+
      D    PBLCD             3061   3063P 0
- 
+
       ** I :  Type of Last Change
- 
+
      D    PBTYLC            3064   3064
- 
+
      D WUDELR          DS          3000
      D    WUDR01               1    250
      D    WUDR02             251    500
@@ -314,15 +316,15 @@
      D    WUDR10            2251   2500
      D    WUDR11            2501   2750
      D    WUDR12            2751   3000
- 
+
      D @Timestamp      S             26Z
- 
+
      D                 DS
      D TDATE                   1      6
      D TDAY                    1      2
      D TMONTH                  3      4
      D TYEAR                   5      6
- 
+
      D                 DS
      D  DATE                   1      6
      D  DAY                    1      2  0
@@ -359,9 +361,9 @@
      D KNAHO           S             10A                                                      CGL157
      D KCTRY           S              2A                                                      CGL157
      D X               S              2S 0                                                    CGL157
- 
+
       ** Fields defined for Calling SDNAHLLOG
- 
+
      D CSC011          S              1A
      D TRANSDTL        S           5800A
      D PNahoNum        S             18A
@@ -370,32 +372,32 @@
      D PRtCd           S              7A
      D POptn           S              7A
      D PSard           S              6A
- 
+
       ** Fields defined for Calling ZARTVJOBA
- 
+
      D @Return         S              6
      D @type           S              1
- 
+
       ** Fields defined for Calling RTV pgm
- 
+
      D @@MODE          S              6
      D @@RSMD          S              1
      D ACTN            S              1
      D FOTRID          S             20
      D @IN36           S              1
      D IDX             S              3  0
- 
+
       ** Parameter Fields for ZDATE1
- 
+
      D ZDATEA          S              6
      D ZDAYNO          S              5  0
      D ErrorFlag       S              1
- 
+
       ** Parameter Fields for ZDATE2
- 
+
      D ZDATEB          S              6  0
      D ZADATE          S              7
- 
+
      D C               S              2  0
      D MidasTrNum      S             10
      D DBError         S             28
@@ -417,7 +419,7 @@
                                                                                               CSW207
      D CSW207          S              1A   INZ('N')                                           CSW207
      D wPrivBank       S              1A   INZ('N')                                           CSW207
- 
+
      D CER047          S              1A                                                      CER047
      D CER048          S              1A                                                      CER048
      D CER054          S              1A                                                      CER054
@@ -426,45 +428,45 @@
       *****************************************************************
       ** MAIN - Main Body                                             *
       *****************************************************************
- 
+
       ** Ensure transaction has not been updated by another workstation
       ** - if so, bypass updating and return to calling program.
- 
+
      C                   EXSR      SRChkOthUpd
- 
+
      C     @@RTCD        IFNE      *BLANKS
      C                   GOTO      EXIT
      C                   ENDIF
- 
+
       ** Insert, Amend or Delete the Non-A/C Holder
- 
+
      C     A_NACHTP      CASEQ     'I'           SRInsert
      C     A_NACHTP      CASEQ     'A'           SRAmend
      C     A_NACHTP      CASEQ     'D'           SRDelete
      C                   ENDCS
- 
+
       ** If 24x7 Midas Availability is installed
       ** and Support System is active
- 
+
      C                   IF        (CSC011 = 'Y') AND (S1SUPP = LIBR)
- 
+
      C                   CALLB     'SDNAHLLOG'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    NAHODF
      C                   PARM                    TRANSDTL
- 
+
       ** If there is no error, write the log file
- 
+
      C                   IF        RetCodeOut = *BLANKS
- 
+
      C                   EVAL      APTGTTYPE = 'SDNAHO'
      C                   EVAL      APFOTRANID = NHFRNT
      C                   EVAL      APRPRLOCN  = NHREPA
      C                   EVAL      APUSERID   = PSUser
      C                   EVAL      APMIDUSR   = PSUser
- 
+
      C                   MOVEL     NHNAHO        PNahoNum
- 
+
      C                   CALLB     'APLOGTRAN'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    APHEAD
@@ -472,58 +474,58 @@
      C                   PARM      *BLANKS       PTimestamp
      C                   PARM                    PNahoNum
      C                   PARM      *BLANKS       PANahoNo
- 
+
      C                   ENDIF
- 
+
       ** If there is an error in either log file, end program
- 
+
      C                   IF        RetCodeOut <> *BLANKS
      C                   EVAL      @@RTCD = '*ERROR'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Exit from program
- 
+
      C     EXIT          TAG
- 
+
      C                   RETURN
- 
+
       ****************************************************************
       /EJECT
       *****************************************************************
       ** SRChkOthUpd - Check for update by another workstation        *
       *****************************************************************
- 
+
      C     SRChkOthUpd   BEGSR
- 
+
       ** Retrieve current Non-A/C Holder details
- 
+
      C                   MOVE      A_NANAHO      MidasTrNum
- 
+
       ** Determine whether program is running interactively or in batch
       **  ( 0 = batch   1 = interactive)
- 
+
      C                   CALLB     'ZARTVJOBA'
      C                   PARM                    @Return
      C                   PARM                    @type
- 
+
       ** Set retrieve mode to '*FRONT' (Access using Front Office ID)
       **  if insert
       ** Otherwise
       **  Set retrieve mode to blank  (Access using Midas transaction ID).
- 
+
      C*****A_NACHTP      IFNE      'I'                                                        232543
      C**********         MOVEL     *On           @TYPE                                        232543
      C**********         ENDIF                                                                232543
- 
+
      C     @Type         IFEQ      *Off
      C     A_NACHTP      IFEQ      'I'
      C                   MOVE      '*FRONT'      @@MODE
      C                   ELSE
      C                   MOVE      *BLANKS       @@MODE
      C                   ENDIF
- 
+
      C                   ELSE
      C     A_NACHTP      IFEQ      'I'                                                        232543
      C     A_NAFRNT      ANDNE     *BLANKS                                                    232543
@@ -532,9 +534,9 @@
      C                   MOVE      *BLANKS       @@MODE
      C                   ENDIF                                                                232543
      C                   ENDIF
- 
+
      C                   CALLB     'SDNAHLRTV'
- 
+
       ** INPUTS
       ** Return code
       ** Mode = '*FRONT' (FRONT OFFICE TRANSACTION INTERFACE)
@@ -543,7 +545,7 @@
       ** Action Code
       ** Front Office Transaction ID
       ** (Midas) Customer Reference
- 
+
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM                    @@MODE
      C                   PARM      ' '           @@RSMD
@@ -551,14 +553,14 @@
      C                   PARM      A_NAFRNT      FOTRID
      C                   PARM                    MidasTrNum
 als  C                   PARM                    @In36
- 
+
       ** OUTPUTS
       ** (Current) CUSTOMER in file format
       ** OK - Action code
       ** OK - Customer Number
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Array index (3P0) from/to caller
- 
+
      C                   PARM                    ChkNahlFmt
      C                   PARM                    CuFaFilFmt                                   CGL132
      C                   PARM                    CuFoFilFmt                                   CGL132
@@ -571,87 +573,87 @@ als  C                   PARM                    @In36
      C                   PARM      *BLANK        MsgIdArr
      C                   PARM      *BLANK        MsgDtaArr
      C                   PARM      *ZERO         Idx
- 
+
       ** Error if Timestamp is not the same (record has been changed
       **  by another workstation)
- 
+
       ** Processing varies according to mode program is running in.
       ** In interacive mode simply check whether the timestamp field
       ** has been updated since the original Customer was fetched
       ** by this program.
       ** In batch (API input) check return parameters from Retrieve
       ** module for errors, and send message to system operator.
- 
+
       ** Interactive mode:
- 
+
      C     @TYPE         IFEQ      *On
- 
+
      C*****CHNHTMST      IFNE      A_NATMST                                                   232543
      C     A_NACHTP      IFNE      'I'                                                        232543
      C     CHNHTMST      ANDNE     A_NATMST                                                   232543
      C                   MOVEL     '*RECUPD'     @@RTCD
      C                   ENDIF
- 
+
       ** Batch mode:
- 
+
      C                   ELSE
      C     OkActn        IFEQ      'N'
      C     OkNaho        OREQ      'N'
      C                   MOVEL     '*RECUPD'     @@RTCD
      C                   Z-ADD     1             C
- 
+
      C     C             DOWLE     ArrayMax
      C     FldNameArr(C) ANDNE     *BLANKS
- 
+
      C                   MOVEL     *BLANKS       DBError
      C                   MOVEL     MsgIDArr(C)   DBError
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    MsgSndRtn
      C                   PARM                    DBError
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
- 
+
      C                   ADD       1             C
      C                   Enddo
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       ****************************************************************
       ** SRInsert - Insert a Non-A/C Holder                          *
       ****************************************************************
- 
+
      C     SRInsert      BEGSR
- 
+
       ** Access Non-A/C Holder
- 
+
      C     A_NANAHO      CHAIN     SDNAHOL0                           99
- 
+
       ** Database error
- 
+
      C     *In99         IFEQ      *Off
      C                   MOVEL     A_NANAHO      DBKEY
      C                   MOVEL     'SDNAHOPD'    DBFILE
      C                   MOVEL     '001'         DBASE
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
       ** Initialise Non-A/C Holder
- 
+
      C                   CLEAR                   NAHODF
- 
+
       ** Store Old fields for comparisons
- 
+
      C                   MOVEL(P)  NAHODF        B_NAHOD
- 
+
       ** Set Non-A/C Holder fields on Insert
- 
+
      C                   EVAL      NHNAHO = A_NANAHO
      C                   EVAL      NHNARN = A_NANARN
      C                   EVAL      NHNATW = A_NANATW
@@ -680,7 +682,7 @@ als  C                   PARM                    @In36
      C                   IF        CSW207 = 'Y' or wPrivBank = 'Y'                            CSW207
      C                   EVAL      NHISAU = A_NAISAU                                          CSW207
      C                   ENDIF                                                                CSW207
- 
+
       ** Country of Citizenship                                                               CGL132
       ** Alternative Country of Citizenship                                                   CGL132
       ** TIN 2-5                                                                              CGL132
@@ -733,25 +735,25 @@ als  C                   PARM                    @In36
      C                   EVAL      NHCHTP = 'I'
      C                   EVAL      NHLCDT = BJRDNB
      C                   EVAL      NHREPI = ' '
- 
+
       ** Front Office ID
- 
+
      C                   EVAL      NHFRNT = A_NAFRNT
- 
+
       ** Repair Location
- 
+
      C                   EVAL      NHREPA = A_NAREPA
- 
+
       ** Timestamp
- 
+
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
      C                   EVAL      NHTMST  = TimeStamp
- 
+
       ** If CSC011 is installed, supply a Front Office ID for the
       ** transaction even if it originated from SIN module.
- 
+
      C                   IF        CSC011 = 'Y'
      C                   IF        NHFRNT = *BLANKS
      C                   EVAL      NHFRNT = 'MD' + NHNAHO
@@ -807,9 +809,9 @@ als  C                   PARM                    @In36
      C                   EVAL      NHPCT3 = A_NAPCT3                                          CGL157
      C                   EVAL      NHPCT4 = A_NAPCT4                                          CGL157
      C                   EVAL      NHPCT5 = A_NAPCT5                                          CGL157
- 
+
       ** Write New Non-A/C Holder
- 
+
      C                   WRITE     SDNAHOD0
                                                                                               CGL157
      C                   IF        CGL157 = 'Y'                                               CGL157
@@ -1102,47 +1104,47 @@ als  C                   PARM                    @In36
                                                                                               CGL132
      C                   WRITE     SDFTNHD0                                                   CGL132
      C                   ENDIF                                                                CGL132
- 
+
      C                   Z-ADD     1             WUNORC
      C                   Z-ADD     *ZERO         WUNOAM
      C                   Z-ADD     *ZERO         WUNODL
      C                   Z-ADD     1             WUNOIN
- 
+
      C                   MOVEL     'SDNAHOPD'    WFLNAME
- 
+
      C                   EXSR      SRSnChrC
- 
+
      C                   ENDSR
- 
+
       ****************************************************************
       /EJECT
       ****************************************************************
       ** SRAmend  - Amend a Non-A/C Holder                           *
       ****************************************************************
- 
+
      C     SRAmend       BEGSR
- 
+
       ** Access Non-A/C Holder details record
- 
+
      C     A_NANAHO      CHAIN     SDNAHOL0                           99
- 
+
       ** Database error
- 
+
      C     *In99         IFEQ      *On
      C                   MOVEL     A_NANAHO      DBKEY
      C                   MOVEL     'SDNAHOPD'    DBFILE
      C                   MOVEL     '004'         DBASE
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
       ** Update 'BEFORE' status
- 
+
      C                   MOVEL(P)  NAHODF        B_NAHOD
- 
+
       ** Set Non-A/C Holder fields on Amend
- 
+
       ** Move Non-key fields
- 
+
      C                   EVAL      NHNAHO = A_NANAHO
      C                   EVAL      NHNARN = A_NANARN
      C                   EVAL      NHNATW = A_NANATW
@@ -1191,7 +1193,7 @@ als  C                   PARM                    @In36
      C                   EVAL      NHCTN5  = A_NACTIN5                                        CGL132
      C                   EVAL      NHCRDT = A_NACRDT                                          CGL132
      C                   EVAL      NHLUSR = A_NALUSR                                          CGL132
- 
+
      C                   IF        CER047 = 'Y'                                               CER047
       *                                                                                       CER047
      C                   EVAL      NHTITL = A_NATITL                                          CER047
@@ -1225,9 +1227,9 @@ als  C                   PARM                    @In36
      C                   EVAL      NHLCDT = BJRDNB
      C**********         EVAL      NHREPI = ' '                                               232543
      C                   EVAL      NHREPI = A_NAREPI                                          232543
- 
+
       ***Front*Office ID                                                                      232543
- 
+
      C**********         EVAL      NHFRNT = *BLANKS                                           232543
      C**********         EVAL      NHREPA = ' '                                               232543
      C                   EVAL      NHFRNT = A_NAFRNT                                          232543
@@ -1273,13 +1275,13 @@ als  C                   PARM                    @In36
      C                   EVAL      NHPCT3 = A_NAPCT3                                          CGL157
      C                   EVAL      NHPCT4 = A_NAPCT4                                          CGL157
      C                   EVAL      NHPCT5 = A_NAPCT5                                          CGL157
- 
+
       ** Timestamp
- 
+
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
      C                   EVAL      NHTMST = TimeStamp
- 
+
      C                   IF        CER048 = 'Y'                                             BUG26384
      C                   EVAL      NHSTCD = A_NASTCD                                        BUG26384
      C                   ENDIF                                                              BUG26384
@@ -1290,7 +1292,7 @@ als  C                   PARM                    @In36
      C                   ENDIF                                                                CER054
                                                                                               CER054
       ** Update Record
- 
+
      C                   UPDATE    SDNAHOD0
       ** Access CRS Transaction Details if CGL157 is *ON                                      CGL157
                                                                                               CGL157
@@ -1888,61 +1890,61 @@ als  C                   PARM                    @In36
      C                   ENDDO                                                              MD027115
                                                                                             MD027115
      C                   ENDIF                                                                CGL132
- 
+
      C                   Z-ADD     *ZERO         WUNORC
      C                   Z-ADD     1             WUNOAM
      C                   Z-ADD     *ZERO         WUNOIN
      C                   Z-ADD     *ZERO         WUNODL
- 
+
      C                   MOVEL     'SDCUSTPD'    WFLNAME
      C                   EXSR      SRSnChrC
- 
+
      C                   ENDSR
- 
+
       ****************************************************************
       /EJECT
       ****************************************************************
       ** SRDelete - Delete a Non-A/C Holder                          *
       ****************************************************************
- 
+
      C     SRDelete      BEGSR
- 
+
       ** Access Non-A/C Holder
- 
+
      C     A_NANAHO      CHAIN     SDNAHOL0                           99
- 
+
       ** Database Error
- 
+
      C     *In99         IFEQ      *On
      C                   MOVEL     A_NANAHO      DBKEY
      C                   MOVEL     'SDCUSTPD'    DBFILE
      C                   MOVEL     '013'         DBASE
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
       ** Update 'BEFORE' Status
- 
+
      C                   MOVEL(P)  NAHODF        B_NAHOD
- 
+
       ** Set Non-A/C Holder fields on delete
- 
+
      C                   EVAL      NHLCDT = BJRDNB
      C                   EVAL      NHCHTP = 'D'
      C                   EVAL      NHLUSR = A_NALUSR                                          CGL132
- 
+
       ** Timestamp
- 
+
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
      C                   EVAL      NHTMST = TimeStamp
- 
+
       ** Front Office ID
- 
+
      C                   EVAL      NHFRNT = A_NAFRNT
- 
+
       ** Update Record
- 
+
      C                   UPDATE    SDNAHOD0
                                                                                               CGL157
       ** Access CRS Transaction Details if CGL157 is *ON                                      CGL157
@@ -1987,11 +1989,11 @@ als  C                   PARM                    @In36
      C                   UPDATE    SDFTNHD0                                                   CGL132
                                                                                               CGL132
      C                   ENDIF                                                                CGL132
- 
+
      C                   MOVEL     NAHODF        WUDELR
- 
+
       ** Write Deleted Record - SD Deleted Records File
- 
+
      C                   CLEAR                   PBRC
      C                   MOVEL     'SDNAHOPD'    PBFNME
      C                   MOVEL     A_NANAHO      PBLKEY
@@ -2009,13 +2011,13 @@ als  C                   PARM                    @In36
      C                   MOVEL     WUDR12        PBDR12
      C                   MOVEL     BJRDNB        PBLCD
      C                   MOVEL     'D'           PBTYLC
- 
+
      C                   CALL      'SD0520X'
      C                   PARM      *BLANK        @RTCD
      C                   PARM                    PBRC
- 
+
       ** Error detected?
- 
+
      C     @RTCD         IFEQ      '*ERROR*'
      C                   MOVEL     *BLANK        Dbkey
      C                   MOVEL     A_NANAHO      Dbkey
@@ -2023,15 +2025,15 @@ als  C                   PARM                    @In36
      C                   MOVEL     '014'         Dbase
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
      C                   Z-ADD     -1            WUNORC
      C                   Z-ADD     *ZERO         WUNOAM
      C                   Z-ADD     *ZERO         WUNOIN
      C                   Z-ADD     1             WUNODL
- 
+
      C                   MOVEL     'SDNAHOPD'    WFLNAME
      C                   EXSR      SRSnChrC
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2039,41 +2041,41 @@ als  C                   PARM                    @In36
       ** SRSnChrC - Change Standing Data Controls                     *
       *****************************************************************
      C     SRSnChrC      BEGSR
- 
+
      C                   MOVEL     *BLANK        W0RTN
- 
+
       ** Move key fields to @AHREAU
- 
+
      C                   MOVEL     *BLANK        AHFLNM
      C                   MOVEL     WFLNAME       AHFLNM
- 
+
      C     Klchsn        KLIST
      C                   KFLD                    AHFLNM
      C     Klchsn        CHAIN     @AHREAU                            90
- 
+
       ** Database Error
- 
+
      C     *In90         IFEQ      *On
      C                   MOVEL     AHFLNM        DBKEY
      C                   MOVEL     'SDFCTLL0'    DBFILE
      C                   MOVEL     '017'         DBASE
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
      C                   ADD       AHNORC        WUNORC
      C                   ADD       AHNOIN        WUNOIN
      C                   ADD       AHNOAM        WUNOAM
      C                   ADD       AHNODL        WUNODL
- 
+
      C                   Z-ADD     WUNORC        AHNORC
      C                   Z-ADD     WUNOIN        AHNOIN
      C                   Z-ADD     WUNOAM        AHNOAM
      C                   Z-ADD     WUNODL        AHNODL
- 
+
       ** Update record
- 
+
      C                   UPDATE    @AHREAU
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2081,44 +2083,44 @@ als  C                   PARM                    @In36
       *  *INZSR - Program Initialisation routine                      *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       **  Program parameters
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    @@RTCD
      C                   PARM                    SDVNAHL
      C                   PARM                    SDVFTNH                                      CGL132
      C                   PARM                    SDVCRNH                                      CGL157
      C                   PARM                    PCrsdF                                       CGL157
- 
+
       ** Access Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*MSG    '    @RTCD
      C                   PARM      '*FIRST  '    @OPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error
- 
+
      C     @RTCD         IFNE      *BLANK
      C                   MOVEL     @OPTN         Dbkey
      C                   MOVEL     'SDBANKPD'    Dbfile
      C                   MOVEL     '900'         Dbase
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
       ** Check if CSC011 is installed
- 
+
      C                   EVAL      CSC011 = 'N'
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CSC011'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
       ** Database error
- 
+
      C                   IF        (PRtCd <> *BLANKS) and
      C                             (PRtCd <> '*NRF   ')
      C                   EVAL      DBKEY = 'CSC011'
@@ -2126,7 +2128,7 @@ als  C                   PARM                    @In36
      C                   EVAL      DBASE = 905
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   EVAL      CSC011 = 'Y'
      C                   IN        SDSTAT
@@ -2240,7 +2242,7 @@ als  C                   PARM                    @In36
      C                   EXSR      SRERR                                                      CGL132
      C                   ENDIF                                                                CGL132
      C                   ENDIF                                                                CGL132
- 
+
       *                                                                                       CER047
       ** Call AOSARDR0 to check for CER047                                                    CER047
       *                                                                                       CER047
@@ -2335,13 +2337,13 @@ als  C                   PARM                    @In36
       **                                                              *
       *****************************************************************
      C     SRZDate1      BEGSR
- 
+
      C                   CALLB     'ZDATE1'
      C                   PARM                    ZDATEA
      C                   PARM                    ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2349,13 +2351,13 @@ als  C                   PARM                    @In36
       ** SRZDate2 - Format a date for output                          *
       *****************************************************************
      C     SRZDate2      BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATEB
      C                   PARM                    ZADATE
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2363,19 +2365,19 @@ als  C                   PARM                    @In36
       ** SRERR - Exception errors                                    *
       ****************************************************************
      C     SRERR         BEGSR
- 
+
      C                   MOVEL     '*ERROR '     @@RTCD
      C                   MOVEL     'SDNAHLUPD'   Dbpgm
      C                   MOVE      *On           *InU7
      C                   MOVE      *On           *InU8
      C                   MOVE      *On           *InLR
- 
+
      C                   DUMP
- 
+
       **  Terminate the program
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       ****************************************************************
 **  CPY@

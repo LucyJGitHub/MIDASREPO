@@ -23,17 +23,21 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 228778             Date 25Apr19               *
+      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 221934             Date 08Oct03               *
+      *                 221934             Date 08Oct03               *
       *                 CSD019             Date 02Jun03               *
       *                 CSD015  *CREATE    Date 03Mar03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  228778 - CWLCHECK Fails receiver too small.                  *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  221934 - Compliance Watch alpha site fix                     *
       *           CWLCHECK falls down if COMPWATCH job slow to start  *
@@ -119,6 +123,7 @@
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
       *
       ** Data Area giving Installation Control Details
+     D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSD101
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
@@ -288,7 +293,8 @@
      D I               S              3  0
       ** Array index for field names and contents
  
-     D Q               S              1  0                                                    221934
+     D***Q******         S              1  0                                           221934 228778
+     D Q               S              2  0                                                    228778
       ** Counter for loop to keep trying to call FofExec                                      221934
                                                                                               221934
      D QCMD            S             80                                                       221934
@@ -326,6 +332,14 @@
      D PMsgId          S              7A
      D PMsgF           S             10A
      D PMsgQ           S             10A
+                                                                                              CSD101
+     D Password        S            128                                                       CSD101
+     D PAction         S              1A                                                      CSD101
+     D PValidList      S             10A   INZ('SDINTFVL')                                    CSD101
+     D PLibrary        S             10A                                                      CSD101
+     D PIDName         S            100A                                                      CSD101
+     D PPass1          S            128A                                                      CSD101
+     D PDescr          S           1000A                                                      CSD101
  
       ** +--------------------------------------+
       ** ¦ Prototypes                           ¦
@@ -1132,10 +1146,10 @@
      C                   GOTO      EndHitL
      C                   ENDIF
  
-     C                   IF        W1CAPW = *BLANKS
-     C                   EVAL      PretCode = '*PASSWD'
-     C                   GOTO      EndHitL
-     C                   ENDIF
+     C**********         IF        W1CAPW = *BLANKS                                           CSD101
+     C**********         EVAL      PretCode = '*PASSWD'                                       CSD101
+     C**********         GOTO      EndHitL                                                    CSD101
+     C**********         ENDIF                                                                CSD101
                                                                                               CSD019
      C                   ENDIF                                                                CSD019
  
@@ -1187,7 +1201,29 @@
      C                   eval      strsrvnam=makestr(%TRIM(W1CASR))
      C                   eval      strdbname=makestr(%TRIM(W1CADB))
      C                   eval      strusrnam=makestr(%TRIM(W1CAUS))
-     C                   eval      strpasswd=makestr(%TRIM(W1CAPW))
+     C                   EVAL      Password = *Blanks                                         CSD101
+                                                                                              CSD101
+      ** Check if ID exists                                                                   CSD101
+                                                                                              CSD101
+     C                   IF        W1CAUS <> *BLANKS                                          CSD101
+     C                   EVAL      PLibrary = LIBR + 'DMLIB'                                  CSD101
+     C                   EVAL      PIDName = 'COMPLWATCH_' + W1CAUS                           CSD101
+                                                                                              CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       PReturnCode                                  CSD101
+     C                   PARM      'F'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM      *Blanks       PPass1                                       CSD101
+     C                   PARM      *Blanks       PDescr                                       CSD101
+                                                                                              CSD101
+     C                   IF        PReturnCode = *Blanks                                      CSD101
+     C                   EVAL      Password = PPass1                                          CSD101
+     C                   ENDIF                                                                CSD101
+     C                   ENDIF                                                                CSD101
+     C**********         eval      strpasswd=makestr(%TRIM(W1CAPW))                           CSD101
+     C                   eval      strpasswd=makestr(%TRIM(Password))                         CSD101
                                                                                               CSD019
      C                   ENDIF                                                                CSD019
                                                                                               CSD019
@@ -2341,6 +2377,8 @@
       *
      C*                  EVAL      res=FkCommTraceOn('LIB':'FILE')
       *
+     C                   IN        SDSTAT                                                     CSD101
+                                                                                              CSD101
      C                   ENDSR
  
       *********************************************************************

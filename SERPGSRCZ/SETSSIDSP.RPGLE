@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR642262           Date 14Sep10               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR642262           Date 14Sep10               *
       *                 AR636523           Date 02Sep10               *
       *                 AR635847           Date 31Aug10               *
       *                 AR634357           Date 27Aug10               *
@@ -75,6 +76,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR642262 - Error in IBAN validation                          *
       *  AR636523 - Incorrect error message on some fields            *
@@ -275,27 +277,27 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSETSSIDSDFCF   E             WORKSTN INFSR(*PSSR)
- 
+
       ** Midas SD Customers by unique SWIFT ID                                                199797
      FSDCUSTL7  IF   E           K DISK    RENAME(@CUSTGE:SDCUSTSW)                           199797
                                                                                               199797
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **
       ** Standard D-specs
       ** ================
@@ -309,54 +311,54 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
- 
+
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
       ** The following /COPY includes the MM standard declares:
- 
+
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
- 
+
      D/COPY ZACPYSRC,MSGHNDDCL
- 
+
       ** The following /COPY line declares the arrays for processing that
       ** take place in the *CTL modules.
- 
+
      D/COPY ZACPYSRC,APICTLARR
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       **********/COPY FTCPYSRC,SFTVALCSLL                                            CSW210 AR570983
       * Named Constant used to determine if a field contains invalid                        AR570983
       * characters for Telex and S.W.I.F.T.                                                 AR570983
@@ -379,7 +381,7 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Indicator Array
      D Indicators      DS                  BASED(IndicatorP)
      D  RecNotFnd             02     02
@@ -395,20 +397,20 @@
      D  ErrVar                87     87
      D  DspRollUp             88     88
      D  DspRollDn             89     89
- 
+
      D CCTNArr         S              1    DIM(12)
      D WErrIndArr      S              1    DIM(69)
      D WIMDArr         S             12    DIM(9)
- 
+
      D WInzIndArr      S              1    DIM(69) CTDATA PERRCD(69)
      D WInzOkFlags     S              1    DIM(69) CTDATA PERRCD(69)
- 
+
       ** Array for alphanumber validations
      D VA0             S              1    DIM(36) CTDATA PERRCD(36)
- 
+
       ** Array for Instructions type validation (alphabetic)
      D VA1             S              3    DIM(10) CTDATA PERRCD(10)
- 
+
       ** IBAN character test arrays                                                           CSW210
      D Alpha           S              1    DIM(26) CTDATA PERRCD(26)                          CSW210
      D Numeric         S              1    DIM(10) CTDATA PERRCD(10)                          CSW210
@@ -424,36 +426,36 @@
                                                                                               CSW210
       ** External DS branch details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** External DS customer details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D QQDFC1        E                     EXTFLD(QQDFAC)                                     CGL029
- 
+
       ** External DS security customer details
      D SDSECS        E DS                  EXTNAME(SDSECSPD)
- 
+
       ** External DS for book code details
      D SDBOOK        E DS                  EXTNAME(SDBOOKPD)
- 
+
       ** External DS for currency code details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External DS for counterparty nostro details
      D SDCNST        E DS                  EXTNAME(SDCNSTPD)
- 
+
       ** External DS for BIC directory details
      DMEBICD         E DS                  EXTNAME(MEBICDPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** DS for STDADSED to passed to SETSSIDSP or SEDSSIDSP
      D PAddSetD      E DS                  EXTNAME(STDADSED)
      D                                     Prefix(PA:2)
- 
+
       * Validation Work Fields                                                                CSW210
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)                                CSW210
                                                                                               CSW210
@@ -493,7 +495,7 @@
                                                                                               CSW210
       ** OK Flags
      D OkFlags         DS            69
- 
+
       ** Screen 1 for internal
      D  AWINOK                 1      1                                         Ind 10
      D  AWILOK                 2      2                                         Ind 11
@@ -507,7 +509,7 @@
      D  SRL3Ok                10     10                                         Ind 19
      D  NAC1Ok                11     11                                         Ind 20
      D  NAC2Ok                12     12                                         Ind 21
- 
+
       ** Screen 1 for non-internal
      D  GMESOk                13     13                                         Ind 22
      D  CONGOk                14     14                                         Ind 23
@@ -520,7 +522,7 @@
      D  CHIDOk                21     21                                         Ind 30
      D  TRRMOk                22     22                                         Ind 31
      D  FINDOk                23     23                                         Ind 32
- 
+
       ** Screen 2 for purchase
      D  PCCTNOk               24     24                                         Ind 33
      D  PDRSNOk               25     25                                         Ind 34
@@ -534,7 +536,7 @@
      D  PRED2Ok               33     33                                         Ind 42
      D  PNAS1Ok               34     34                                         Ind 43
      D  PNAS2Ok               35     35                                         Ind 44
- 
+
       ** Screen 2 for sale
      D  SCCTNOk               36     36                                         Ind 45
      D  SDRSNOk               37     37                                         Ind 46
@@ -551,7 +553,7 @@
      D  SRED2Ok               48     48                                         Ind 57
      D  SNAS1Ok               49     49                                         Ind 58
      D  SNAS2Ok               50     50                                         Ind 59
- 
+
       ** Screen 3
      D  IMMD1Ok               51     51                                         Ind 60
      D  IMSA1Ok               52     52                                         Ind 61
@@ -588,7 +590,7 @@
      D  IMMD9Ok               67     67                                         Ind 76       CSW206E
      D  IMSA9Ok               68     68                                         Ind 77       CSW206E
      D  PSETOk                69     69                                         Ind 78       CSW206E
- 
+
       ** DS for breakdown of 35 char line
      D  DSLen35        DS            35
      D   WWLI35                1     35
@@ -601,7 +603,7 @@
      D   WW1135               11     35
      D   WW1335               13     35
      D   WW1435               14     35
- 
+
       ** DS for input parm of ME9940
       ** ============================
      D**DSIParm        DS           512                                                       CGL029
@@ -670,7 +672,7 @@
      D   I#BTB6              432    466
      D   I#PYAC              467    490                                                       CGL029
      D   I#RCAC              491    514                                                       CGL029
- 
+
       ** DS for output parm of ME9940
       ** ============================
      D**DSOParm        DS           512                                                       CGL029
@@ -685,7 +687,7 @@
      D   O#BTB4              362    396
      D   O#BTB5              397    431
      D   O#BTB6              432    466
- 
+
       ** DS for error parm of ME9940
       ** ============================
      D  DSEParm        DS           256
@@ -703,16 +705,16 @@
       ** Error codes array
      D   E#ERCD               51    200
      D   O#E                  51    200
- 
+
       ** KMGECO data structure
      D                 DS
      D  W_GECO                 1     20
      D  W_DEST                 1      5
      D  W_INST                 6     12
      D  W_INSS                13     20
- 
+
       ** DS for Intermediary Fields
- 
+
      D WInterMed       DS
      D #5IMMD1                 1     12
      D #5IMMD2                13     24
@@ -730,12 +732,12 @@
      D #5IMMD7                73     84                                                      CSW206E
      D #5IMMD8                85     96                                                      CSW206E
      D #5IMMD9                97    108                                                      CSW206E
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      ** Entry Parameter
      D PAdDType        S              1A
      D PBranch         S              3A
@@ -765,11 +767,11 @@
      D PCSE029         S              1A                                                      209247
      D PCSW202         S              1A                                                    AR325342
      D PCSW201         S              1A                                                    AR571002
- 
+
      D PMode           S              1A
      D POType          S              1A
      D PRetCode        S                   LIKE(ReturnCode)
- 
+
      D WCnBk           S              4A
      D W#ISCD          S              4A
      D WZ#Parm         S            256A
@@ -868,14 +870,14 @@
      D WWAWIN          S             12A                                                    AR635847
      D WWBOFN          S             12A                                                    AR635847
      DCSW206           S              1                                                      CSW206E
- 
+
       ** Index for arrays of error message ids
      D Idx             S              3P 0
      D WIdx            S              3P 0                                                    CSW210
      D WCtr1           S              3P 0
      D WCtr2           S              3P 0
      D WCtr3           S              3P 0
- 
+
       ** Return Code                                                                          201486
      D PReturnCode     S             10                                                       201486
                                                                                               201486
@@ -910,7 +912,7 @@
                                                                                               201486
       ** Pointer for the indicator Array
      D IndicatorP      S               *   INZ(%Addr(*IN))
- 
+
      D ADLINE          S              1                                                       CSW210
      D ADSLON          S              1                                                       CSW210
      D ##CSID          S              1A                                                      CSW210
@@ -955,7 +957,7 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -966,13 +968,13 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * Main Procedure                                                    *
       *********************************************************************
- 
+
       ** Initial processing
- 
+
      C                   IF        WInit = ' '
      C                   EXSR      SRInit
      C                   ENDIF
@@ -982,41 +984,41 @@
      C                   DOW       PMode = '0'                                                205663
      C                   EXSR      SRDisplay0                                                 205663
      C                   ENDDO                                                                205663
- 
+
       ** Do while screen: Screen 1
- 
+
      C                   DOW       PMode = '1'
      C                   EXSR      SRDisplay1
      C                   ENDDO
- 
+
       ** Do while screen: Screen 2
- 
+
      C                   DOW       PMode = '2'
      C                   EXSR      SRDisplay2
      C                   ENDDO
- 
+
       ** Do while screen: Screen 3
- 
+
      C                   DOW       PMode = '3'
      C                   EXSR      SRDisplay3
      C                   ENDDO
- 
+
       ** Update
- 
+
      C                   IF        PMode = 'U'
      C                   EXSR      SRUpdate
      C                   ENDIF
- 
+
       **  Return
- 
+
      C                   IF        PMode = 'R'
      C                   EXSR      SRReturn
      C                   ENDIF
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       *****************************************************************
       *                                                               *
       *  SRInit - Initial Processing                                  *
@@ -1027,7 +1029,7 @@
       *                                                               *
       *****************************************************************
      C     SRInit        BEGSR
- 
+
       *                                                                                     AR571002
       ** Check to see if switchable feature CSW201 is on                                    AR571002
       *                                                                                     AR571002
@@ -1077,16 +1079,16 @@
      C                   PARM      PBranch       PBA               3                          201486
      C*****SDBRCH        PARM      SDBRCH        DSFDY                                 201486 CGL029
      C     SDBRCH        PARM      SDBRCH        DSSDY                                        CGL029
- 
+
       ** Condition display/non-display of customer or book field,
       ** only one field should appear
- 
+
      C                   IF        PCBInd = 'C'
      C                   EVAL      DspCustomer = True
      C                   ELSE
      C                   EVAL      DspCustomer = False
      C                   ENDIF
- 
+
       ** Display Custodian and Safe A/C                                                       209247
      C                   EVAL      *IN90 = *OFF                                               209247
      C                   IF        PCSE029 = 'Y'                                              209247
@@ -1100,7 +1102,7 @@
      C                   ENDIF                                                              AR325342
                                                                                             AR325342
       ** Condition display/non-diplay of "Portfolio" field
- 
+
      C                   IF        PBGPFMG = 'Y' OR PBGN4ST = 'Y'
      C                   EVAL      DspPortF = True
      C                   IF        PBFCLAS = 'I' OR PCBInd = 'B'
@@ -1109,31 +1111,31 @@
      C                   ELSE
      C                   EVAL      DspPortF = False
      C                   ENDIF
- 
+
       ** Check if proceesing is for trade purchase or trade sale
- 
+
      C                   IF        PAdDType = 'P'
      C                   EVAL      DspPuch = True
      C                   ELSE
      C                   EVAL      DspPuch = False
      C                   ENDIF
- 
+
       ** Check if ISO15022 message indicator is set to 'Y'
- 
+
      C                   IF        PISOMsgI = 'Y'
      C                   EVAL      DspISOMSgFlds = True
      C                   ELSE
      C                   EVAL      DspISOMSgFlds = False
      C                   ENDIF
- 
+
       ** Check if To be used for depot movement is set to 'Y'
- 
+
      C                   IF        PForDpmI = 'N'
      C                   EVAL      PrtSAPfld = True
      C                   ELSE
      C                   EVAL      PrtSAPfld = False
      C                   ENDIF
- 
+
      C                   EVAL      #1BRCH = PBranch
      C                   EVAL      #1CUST = PCustomer
      C                   EVAL      #1BOOK = PBook
@@ -1143,19 +1145,19 @@
      C                   EVAL      #1INVT = PInvType
      C                   EVAL      #1PORF = PPorRef
      C                   EVAL      #2DEPT = PForDpmI
- 
+
      C                   IF        ActionCode = 'E'
      C                   EVAL      PrtFlds = True
      C                   ELSE
      C                   EVAL      PrtFlds = False
      C                   ENDIF
- 
+
       ** Initialise values of screen details from input parm
- 
+
      C                   EXSR      SRSetScnFld1
      C                   EXSR      SRSetScnFld2
      C                   EXSR      SRSetScnFld3
- 
+
      C                   EVAL      WPInterMed = *BLANKS
      C                   EVAL      WPPSET = *BLANKS
      C                   EVAL      WPQFIN = *BLANKS                                         AR634357
@@ -1170,7 +1172,7 @@
      C                   EVAL      PMode = '0'                                                205663
      C                   ENDIF                                                                205663
      C                   EVAL      PRetCode = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1183,9 +1185,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSetScnFld1  BEGSR
- 
+
      C                   EVAL      #1AWIN  = PAAWIN
      C                   EVAL      #1AWIL  = PAAWIL
      C                   EVAL      #1AFPN  = PAAFPN
@@ -1198,7 +1200,7 @@
      C                   EVAL      #1SRL3  = PASRL3
      C                   EVAL      #1NAC1  = PANAC1
      C                   EVAL      #1NAC2  = PANAC2
- 
+
      C                   IF        PCSW210 = 'Y'                                              CSW210
                                                                                               CSW210
      C                   EVAL      @DEBTR1 = PADIDN                                           CSW210
@@ -1221,7 +1223,7 @@
      C                   EVAL      #2STMP  = PASTMP
      C                   EVAL      #2CHID  = PACHID
      C                   EVAL      #2TRRM  = PATRRM
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1234,9 +1236,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSetScnFld2  BEGSR
- 
+
      C                   IF        PAdDType = 'P'
      C                   EVAL      #3CCTN  = PACCTN
      C                   EVAL      #3DRSN  = PADRSN
@@ -1267,7 +1269,7 @@
      C                   EVAL      #4NAS1  = PANAS1
      C                   EVAL      #4NAS2  = PANAS2
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1280,9 +1282,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSetScnFld3  BEGSR
- 
+
      C                   EVAL      #5IMMD1 = PAIMD1
      C                   EVAL      #5IMMD2 = PAIMD2
      C**********         EVAL      #5IMMD3 = PAIMD3                                          CSW206D
@@ -1333,7 +1335,7 @@
                                                                                               CSW210
      C                   EVAL      #5RED1  = PARED1                                           CSW210
      C                   EVAL      #5RED2  = PARED2                                           CSW210
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1524,28 +1526,28 @@
       *                                                               *
       *****************************************************************
      C     SRDisplay1    BEGSR
- 
+
       ** Move 'OK' flags into array for checking
- 
+
      C                   MOVEA     OkFlags       WErrIndArr
- 
+
       ** Set screen error indicators according to status of 'OK' flags
- 
+
      C                   Z-ADD     1             WCtr1
      C                   Z-ADD     10            WCtr2
- 
+
      C                   DOU       WCtr1 > 23
- 
+
      C                   IF        WErrIndArr(WCtr1) = 'N' OR
      C                             WErrIndArr(WCtr1) = 'W'
      C                   EVAL      *IN(WCtr2) = '1'
      C                   ENDIF
- 
+
      C                   EVAL      WCtr1 = WCtr1 + 1
      C                   EVAL      WCtr2 = WCtr2 + 1
- 
+
      C                   ENDDO
- 
+
       ** OKFlags for SWIFT 2010 Changes                                                       CSW210
                                                                                               CSW210
      C                   IF        PCSW210 = 'Y'                                              CSW210
@@ -1584,11 +1586,11 @@
                                                                                               CSW210
       ** The following /COPY line includes processing for the error and
       ** warning messages.
- 
+
       /COPY ZACPYSRC,MSGHNDDSP1
- 
+
       ** Write message subfile, details and footer screen
- 
+
      C                   EVAL      DspRollUp = True
      C                   IF        PCBInd = 'B'                                               205663
      C                   EVAL      DspRollDn = False
@@ -1597,32 +1599,32 @@
      C                   ENDIF                                                                205663
      C                   WRITE     SETSSIDSF6
      C                   WRITE     SETSSIDSC1
- 
+
      C**********         IF        PBFCLAS = 'I' OR PCBInd = 'B'                              205663
      C                   IF        PCBInd = 'B'                                               205663
      C                   EXFMT     SETSSIDSF1
      C                   ELSE
      C                   EXFMT     SETSSIDSF2
      C                   ENDIF
- 
+
       ** Clear message subfile
- 
+
      C                   CALL      'ZA0250'
- 
+
       ** Reset error fields
- 
+
      C                   EVAL      Idx = 0
      C                   EVAL      WIdx = 0                                                   CSW210
      C                   CLEAR                   MsgIdArr
      C                   CLEAR                   FldNameArr
      C                   CLEAR                   WMsgIdArr
      C                   CLEAR                   WFldNamArr                                   CSW210
- 
+
       ** Set screen error indicators off
- 
+
      C                   MOVEA     WInzIndArr    *IN(10)
      C                   MOVEA     WInzOkFlags   OkFlags
- 
+
       ** Reset OKFlags for SWIFT 2010 Changes                                                 CSW210
                                                                                               CSW210
      C                   IF        PCSW210 = 'Y'                                              CSW210
@@ -1639,60 +1641,60 @@
      C                   ENDIF                                                                CSW210
                                                                                               CSW210
       ** Select processing type
- 
+
      C                   SELECT
- 
+
       ** F3 Pressed
- 
+
      C                   WHEN      *INKC = *ON
      C                   EVAL      PRetCode = 'SE10000'
      C                   EVAL      PMode = 'R'
- 
+
       ** F5 Pressed
- 
+
      C                   WHEN      *INKE = *ON
      C                   EXSR      SRSetScnFld1
- 
+
       ** F12 Pressed
- 
+
      C                   WHEN      *INKL = *ON
      C                   EVAL      PRetCode = 'SE10001'
      C                   EVAL      PMode = 'R'
- 
+
       ** Roll Down                                                                            205663
                                                                                               205663
      C                   WHEN      RollDn = True                                              205663
      C                   EVAL      PMode = '0'                                                205663
                                                                                               205663
      C                   OTHER
- 
+
       ** Validate inputs if not enquire
- 
+
      C                   IF        ActionCode <> 'E'
- 
+
      C                   EXSR      SRValidate1
- 
+
       ** If no errors found, proceed to next screen
      C                   IF        Idx = 0
- 
+
      C                   EVAL      PMode = '2'
- 
+
       ** Else, re-display screen
      C                   ELSE
- 
+
      C                   EVAL      PMode = '1'
- 
+
      C                   ENDIF
- 
+
       ** Proceed directly to next screen if enquire
      C                   ELSE
- 
+
      C                   EVAL      PMode = '2'
- 
+
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1706,10 +1708,10 @@
       *                                                               *
       *****************************************************************
      C     SRValidate1   BEGSR
- 
+
      C**********         IF        PBFCLAS = 'I' OR PCBInd = 'B'                              205663
      C                   IF        PMode = '0' OR PCBInd = 'B'                                205663
- 
+
       ** Validate screen 1 of internal customer
       ** ======================================
                                                                                               CSW210
@@ -1974,20 +1976,20 @@
      C                   ENDIF                                                                CSW210
                                                                                               CSW210
      C                   ENDIF                                                                CSW210
- 
+
       ** Validate a/c with institution number
       ** ------------------------------------
- 
+
       ** Validate if not blank
- 
+
      C                   MOVEL     #1AWIN        WWAWIN                                     AR635847
      C                   IF        #1AWIN <> *BLANKS
      C                   MOVEL     #1AWIN        PCustKey
- 
+
       ** Validate Customer Number/Shortname/Nostro
- 
+
      C                   EXSR      SRCust
- 
+
      C                   IF        WCustType <> 'C' AND WCustType <> 'S' AND
      C                             WCustType <> 'N'
      C                   EVAL      AWINOk = 'N'
@@ -1995,43 +1997,43 @@
      C                   EVAL      FldNameArr(Idx) = '#1AWIN'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5205'
      C                   ELSE
- 
+
       ** If customer or shortame a/c must be a bank
- 
+
      C**********         IF        WCustType = 'C' AND WCustType = 'S'                      AR634357
      C**********         IF        WBNBI = 'Y'                                              AR634357
      C                   IF        WCustType = 'C' OR WCustType = 'S'                       AR634357
      C                   IF        WWBNBI = 'Y'                                             AR634357
      C                   EVAL      #1AWIN = BBCUST
      C                   ELSE
- 
+
       ** Customer is non-bank
- 
+
      C                   EVAL      #1AWIN = BBCUST                                          AR634357
      C                   EVAL      AWINOk = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#1AWIN'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5225'
      C                   ENDIF
- 
+
       ** Entry is Nostro
- 
+
      C                   ELSE
- 
+
      C                   IF        WCustType = 'N'
      C                   EVAL      #1AWIN = AWCPNC
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Beneficiary of money number must no be blank
- 
+
      C                   IF        #1BOFN = *BLANKS
      C                   EVAL      AWINOk = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#1AWIN'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5226'
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
                                                                                               201486
@@ -2063,18 +2065,18 @@
      C                   ENDIF                                                                201486
                                                                                               201486
      C                   ENDIF                                                                201486
- 
+
       ** Validate a/c with institution line
       ** ----------------------------------
- 
+
       ** Validate if not blank
- 
+
      C                   MOVEL     #1AWIL        WWLI02                                     AR589197
      C                   IF        PISOMsgI <> 'Y'                                            210278
      C                             OR WWLI02 = '//'                                         AR589197
      C                   MOVEL     #1AWIL        WWAWIL
      C                   IF        #1AWIL <> *BLANKS AND WWAWIL <> '#'
- 
+
      C                   IF        #1AWIN = *BLANKS
      C                   EVAL      AWILOk = 'N'
      C                   EVAL      Idx = Idx + 1
@@ -2086,43 +2088,43 @@
      C                   MOVEL     #1AWIL        WWLI04
      C                   MOVEL     #1AWIL        WWLI05
      C                   MOVEL     #1AWIL        WWLI35
- 
+
      C                   EVAL      WErr35 = 'N'
      C                   IF        PCSW098 <> 'Y'
      C                   EXSR      SRLine35
      C                   ELSE
- 
+
       ** Set up parameters for call to ME9940
- 
+
      C                   CLEAR                   DSIParm
      C                   EVAL      I#VFLD = 'AWBK '
      C                   EVAL      I#PR   = 'PAY'
- 
+
      C                   IF        WCustType = 'N'
      C                   EVAL      I#PRTT = 'X'
      C                   ELSE
      C                   EVAL      I#PRTT = WCustType
      C                   ENDIF
- 
+
      C                   MOVEL     #1AWIN        I#PRTY
      C                   MOVEL     PCcy          I#PCCY
      C                   MOVEL     PCcy          I#RCCY
      C                   MOVEL     WWLI35        I#ACLN
      C                   MOVEL     '5XX'         I#MTYP                                     AR589197
- 
+
      C                   CLEAR                   DSOParm
      C                   CLEAR                   DSEParm
      C                   EVAL      E#CPGM  = 'SETSSIDSP'
      C                   EVAL      E#MSGD  = 'MEC0017'
      C                   EVAL      E#MSGF  = 'MEMSG'
- 
+
      C                   MOVEL     WAWBK         WACLN
- 
+
      C                   EXSR      SRME9940
- 
+
       ** If no issuer code defined for the currency clearing system,
       ** set flag to display warning message for later display.
- 
+
      C                   IF        WICNIL = 'Y'
      C                   EVAL      AWILOk = 'W'
      C**********         EVAL      Idx = Idx + 1                                            AR589197
@@ -2133,11 +2135,11 @@
      C                   EVAL      WMsgIdArr(WIdx) = 'SEW5176'                              AR589197
      C                   EVAL      WICNIL = *BLANK
      C                   ENDIF
- 
+
      C                   MOVEL     WWLI35        WAWBK
- 
+
      C                   ENDIF
- 
+
      C                   IF        WErr35 <> 'Y'
      C                   MOVEL     WWLI35        #1AWIL
      C                   ELSE
@@ -2146,7 +2148,7 @@
      C                   EVAL      FldNameArr(Idx) = '#1AWIL'
      C                   EVAL      MsgIdArr(Idx) = WErr35Msg
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF                                                                210278
@@ -2182,20 +2184,20 @@
                                                                                               CSW210
      C                   ENDIF                                                                CSW210
      C                   ENDIF                                                                CSW210
- 
+
       ***Validate*a/c*for*payment*number**                                                    CSW210
       ***-------------------------------**                                                    CSW210
- 
+
       ***Validate*if*not*blank**                                                              CSW210
- 
+
      C**********         IF        #1AFPN <> *BLANKS                                          CSW210
- 
+
      C**********         MOVEL     #1AFPN        PCustKey                                     CSW210
- 
+
       ***Validate*Customer*Number/Shortname/Nostro**                                          CSW210
- 
+
      C**********         EXSR      SRCust                                                     CSW210
- 
+
      C**********         IF        WCustType <> 'C' AND WCustType <> 'S' AND                  CSW210
      C**********                   WCustType <> 'N'                                           CSW210
      C**********         EVAL      AFPNOk = 'N'                                               CSW210
@@ -2203,25 +2205,25 @@
      C**********         EVAL      FldNameArr(Idx) = '#1AFPN'                                 CSW210
      C**********         EVAL      MsgIdArr(Idx) = 'SEW5205'                                  CSW210
      C**********         ELSE                                                                 CSW210
- 
+
       ***If*customer*or*shortame*a/c*must*be*a*bank**                                         CSW210
- 
+
      C**********         IF        WCustType = 'C' AND WCustType = 'S'                        CSW210
      C**********         EVAL      #1AFPN = BBCUST                                            CSW210
- 
+
       ***Entry*is*Nostro**                                                                    CSW210
- 
+
      C**********         ELSE                                                                 CSW210
- 
+
      C**********         IF        WCustType = 'N'                                            CSW210
      C**********         EVAL      #1AFPN = AWCPNC                                            CSW210
      C**********         ENDIF                                                                CSW210
      C**********         ENDIF                                                                CSW210
- 
+
      C**********         ENDIF                                                                CSW210
- 
+
       ***Either*SWIFT*Field*53*or*(57*AND*58)*can*be*Entered**                                CSW210
- 
+
      C**********         IF        PAdDType = 'S' AND #1AFPN <> *BLANKS                       CSW210
      C**********         IF        #1AWIN <> *BLANKS OR #1AWIL <> *BLANKS OR                  CSW210
      C**********                   #1BOFN <> *BLANKS OR #1BOF1 <> *BLANKS OR                  CSW210
@@ -2262,16 +2264,16 @@
      C**********         ENDIF                                                         201486 CSW210
                                                                                               201486
      C**********         ENDIF                                                         201486 CSW210
- 
+
       ***Validate*a/c*for*payment*line**                                                      CSW210
       ***-----------------------------**                                                      CSW210
- 
+
       ***Validate*if*not*blank**                                                              CSW210
- 
+
      C**********         IF        PISOMsgI <> 'Y'                                     210278 CSW210
      C**********         MOVEL     #1AFPL        WWAFPL                                       CSW210
      C**********         IF        #1AFPL <> *BLANKS AND WWAFPL <> '#'                        CSW210
- 
+
      C**********         MOVEL     #1AFPL        WWLI01                                       CSW210
      C**********         IF        WWLI01 <> '/'                                              CSW210
      C**********         EVAL      AFPLOk = 'N'                                               CSW210
@@ -2279,7 +2281,7 @@
      C**********         EVAL      FldNameArr(Idx) = '#1AFPL'                                 CSW210
      C**********         EVAL      MsgIdArr(Idx) = 'SEW5210'                                  CSW210
      C**********         ENDIF                                                                CSW210
- 
+
      C**********         MOVEL     #1AFPL        WWLI02                                       CSW210
      C**********         IF        WWLI02 = '//'                                              CSW210
      C**********         EVAL      AFPLOk = 'N'                                               CSW210
@@ -2287,7 +2289,7 @@
      C**********         EVAL      FldNameArr(Idx) = '#1AFPL'                                 CSW210
      C**********         EVAL      MsgIdArr(Idx) = 'SEW5211'                                  CSW210
      C**********         ENDIF                                                                CSW210
- 
+
      C**********         MOVE      #1AFPL        WWLI34                                       CSW210
      C**********         IF        WWLI01 = '/' AND WWLI34 = *BLANKS                          CSW210
      C**********         EVAL      AFPLOk = 'N'                                               CSW210
@@ -2295,12 +2297,12 @@
      C**********         EVAL      FldNameArr(Idx) = '#1AFPL'                                 CSW210
      C**********         EVAL      MsgIdArr(Idx) = 'SEW5212'                                  CSW210
      C**********         ENDIF                                                                CSW210
- 
+
      C**********         ENDIF                                                                CSW210
      C**********         ENDIF                                                         210278 CSW210
- 
+
       ***Either*SWIFT*Field*53*or*(57*AND*58)*can*be*Entered**                                CSW210
- 
+
      C**********         IF        PAdDType = 'S' AND #1AFPL <> *BLANKS                       CSW210
      C**********         IF        #1AWIN <> *BLANKS OR #1AWIL <> *BLANKS OR                  CSW210
      C**********                   #1BOFN <> *BLANKS OR #1BOF1 <> *BLANKS OR                  CSW210
@@ -2311,20 +2313,20 @@
      C**********         EVAL      MsgIdArr(Idx) = 'SEW5215'                                  CSW210
      C**********         ENDIF                                                                CSW210
      C**********         ENDIF                                                                CSW210
- 
+
       ** Validate beneficiary of money number
       ** ------------------------------------
- 
+
       ** Validate if not blank
- 
+
      C                   MOVEL     #1BOFN        WWBOFN                                     AR635847
      C                   IF        #1BOFN <> *BLANKS
      C                   MOVEL     #1BOFN        PCustKey
- 
+
       ** Validate Customer Number/Shortname/Nostro
- 
+
      C                   EXSR      SRCust
- 
+
      C                   IF        WCustType <> 'C' AND WCustType <> 'S' AND
      C                             WCustType <> 'N'
      C                   EVAL      BOFNOk = 'N'
@@ -2332,31 +2334,31 @@
      C                   EVAL      FldNameArr(Idx) = '#1BOFN'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5205'
      C                   ELSE
- 
+
       ** If customer or shortame a/c must be a bank
- 
+
      C**********         IF        WCustType = 'C' AND WCustType = 'S'                      AR634357
      C                   IF        WCustType = 'C' OR WCustType = 'S'                       AR634357
      C                   EVAL      #1BOFN = BBCUST
- 
+
       ** Entry is Nostro
- 
+
      C                   ELSE
- 
+
      C                   IF        WCustType = 'N'
      C                   EVAL      #1BOFN = AWCPNC
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Account with institution must not be blank
- 
+
      C                   IF        #1AWIN = *BLANKS
      C                   EVAL      BOFNOk = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#1BOFN'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5245'
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
                                                                                               201486
@@ -2388,18 +2390,18 @@
      C                   ENDIF                                                                201486
                                                                                               201486
      C                   ENDIF                                                                201486
- 
+
       ** Validate beneficiary of money line
       ** ----------------------------------
- 
+
       ** Validate if not blank
- 
+
      C                   MOVEL     #1BOF1        WWLI02                                     AR589197
      C                   IF        PISOMsgI <> 'Y'                                            210278
      C                             OR WWLI02 = '//'                                         AR589197
      C                   MOVEL     #1BOF1        WWBOF1
      C                   IF        #1BOF1 <> *BLANKS AND WWBOF1 <> '#'
- 
+
      C                   IF        #1BOFN = *BLANKS
      C                   EVAL      BOF1Ok = 'N'
      C                   EVAL      Idx = Idx + 1
@@ -2411,7 +2413,7 @@
      C                   MOVEL     #1BOF1        WWLI04
      C                   MOVEL     #1BOF1        WWLI05
      C                   MOVEL     #1BOF1        WWLI35
- 
+
      C                   IF        WWLI02 = '//' AND WCustType = 'C' AND
      C                             WWBNBI = 'N' OR WWLI02 = '//' AND
      C                             WCustType = 'S' AND WWBNBI = 'N'
@@ -2419,45 +2421,45 @@
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#1BOF1'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5250'
- 
+
      C                   ELSE
- 
+
      C                   EVAL      WErr35 = 'N'
      C                   IF        PCSW098 <> 'Y'
      C                   EXSR      SRLine35
      C                   ELSE
- 
+
       ** Set up parameters for call to ME9940
- 
+
      C                   CLEAR                   DSIParm
      C                   EVAL      I#VFLD = 'BENF '
      C                   EVAL      I#PR   = 'PAY'
- 
+
      C                   IF        WCustType = 'N'
      C                   EVAL      I#PRTT = 'X'
      C                   ELSE
      C                   EVAL      I#PRTT = WCustType
      C                   ENDIF
- 
+
      C                   MOVEL     #1BOFN        I#PRTY
      C                   MOVEL     PCcy          I#PCCY
      C                   MOVEL     PCcy          I#RCCY
      C                   MOVEL     WWLI35        I#ACLN
      C                   MOVEL     '5XX'         I#MTYP                                     AR589197
- 
+
      C                   CLEAR                   DSOParm
      C                   CLEAR                   DSEParm
      C                   EVAL      E#CPGM  = 'SETSSIDSP'
      C                   EVAL      E#MSGD  = 'MEC0018'
      C                   EVAL      E#MSGF  = 'MEMSG'
- 
+
      C                   MOVEL     WBENF         WACLN
- 
+
      C                   EXSR      SRME9940
- 
+
       ** If no issuer code defined for the currency clearing system,
       ** set flag to display warning message for later display.
- 
+
      C                   IF        WICNIL = 'Y'
      C                   EVAL      BOF1Ok = 'W'
      C**********         EVAL      Idx = Idx + 1                                            AR589197
@@ -2468,11 +2470,11 @@
      C                   EVAL      WMsgIdArr(WIdx) = 'SEW5176'                              AR589197
      C                   EVAL      WICNIL = *BLANK
      C                   ENDIF
- 
+
      C                   MOVEL     WWLI35        WBENF
- 
+
      C                   ENDIF
- 
+
      C                   IF        WErr35 <> 'Y'
      C                   MOVEL     WWLI35        #1BOF1
      C                   ELSE
@@ -2481,34 +2483,34 @@
      C                   EVAL      FldNameArr(Idx) = '#1BOF1'
      C                   EVAL      MsgIdArr(Idx) = WErr35Msg
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate beneficiary of money line (2nd line)
       ** ---------------------------------------------
- 
+
       ** Validate if not blank and #1BOF1 not in error
- 
+
      C                   MOVEL     #1BOF2        WWBOF2
      C                   IF        #1BOF2 <> *BLANKS AND WWBOF2 <> '#' AND
      C                             BOF1Ok <> 'N'
- 
+
      C                   IF        #1BOF1 = *BLANKS
      C                   EVAL      BOF2Ok = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#1BOF2'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5255'
      C                   ENDIF
- 
+
      C                   IF        WWBOF1 <> '/' AND WWBOF2 = '/'
      C                   EVAL      BOF2Ok = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#1BOF2'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5256'
      C                   ENDIF
- 
+
      C                   MOVEL     #1BOF2        WWLI02
      C                   IF        WWBOF2 = '/' AND WWLI02 <> '//'
      C                   EVAL      BOF2Ok = 'N'
@@ -2516,14 +2518,14 @@
      C                   EVAL      FldNameArr(Idx) = '#1BOF2'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5257'
      C                   ENDIF
- 
+
      C                   IF        #1BOF1 = #1BOF2
      C                   EVAL      BOF2Ok = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#1BOF2'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5258'
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF                                                                210278
      C                                                                                        CSW210
@@ -2558,43 +2560,43 @@
                                                                                               CSW210
      C                   ENDIF                                                                CSW210
      C                   ENDIF                                                                CSW210
- 
+
       ** Validate sender to receiver info (line 1)
       ** -----------------------------------------
- 
+
      C                   EVAL      WKSRL1 = *BLANK
      C                   EVAL      WWSRL1 = *BLANK
      C                   EVAL      WWVALI = *BLANK
- 
+
       ** Validate if not blank
- 
+
      C                   IF        #1SRL1 <> *BLANKS
- 
+
      C                   MOVEL     #1SRL1        WWSRL1
      C                   IF        WWSRL1 = '/'
- 
+
      C                   IF        PAdDType = 'S'
      C                   MOVEL     #1SRL1        WWSR10
      C                   MOVEL     WWSR10        WWSR06
      C                   MOVE      WWSR10        WWSR04
- 
+
      C                   IF        WWSR06 = '/PRIOR' AND WWSR04 = 'REQ/'
      C                   EVAL      WWVALI = 'Y'
      C                   EVAL      WKSRL1 = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        PAdDType = 'P'
      C                   MOVEL     #1SRL1        WWSR10
      C                   MOVEL     WWSR10        WWSR06
      C                   MOVE      WWSR10        WWSR04
- 
+
      C                   IF        WWSR06 = '/TRADE' AND WWSR04 = 'CP/ '
      C                   EVAL      WWVALI = 'Y'
      C                   EVAL      WKSRL1 = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   MOVEL     #1SRL1        WWSR06
      C                   MOVEL     #1SRL1        WWSR07
      C                   MOVEL     #1SRL1        WWSR08
@@ -2602,50 +2604,50 @@
      C                             WWSR06 = '/PHON/'
      C                   EVAL      WWVALI = 'Y'
      C                   ENDIF
- 
+
      C                   IF        WWSR07 = '/TELEX/'
      C                   EVAL      WWVALI = 'Y'
      C                   ENDIF
- 
+
      C                   IF        WWSR08 = '/BROKER/'
      C                   EVAL      WWVALI = 'Y'
      C                   ENDIF
- 
+
      C                   IF        PCSW014 = 'Y'
      C                   MOVEL     #1SRL1        WWSR06
      C                   IF        WWSR06 = '/OCMT/'
      C                   EVAL      WWVALI = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        WWVALI <> 'Y'
      C                   EVAL      SRL1Ok = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#1SRL1'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5265'
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate sender to receiver info (line 2)
       ** -----------------------------------------
- 
+
      C                   EVAL      WWSRL2 = *BLANK
      C                   EVAL      WWVALI = *BLANK
- 
+
       ** Validate if not blank
- 
+
      C                   IF        #1SRL2 <> *BLANKS
- 
+
      C                   IF        #1SRL1 = *BLANK
      C                   EVAL      SRL2Ok = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#1SRL2'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5255'
      C                   ENDIF
- 
- 
+
+
      C                   MOVEL     #1SRL2        WWSRL2
      C                   IF        WWSRL1 <> '/' AND WWSRL2 = '/'
      C                   EVAL      SRL2Ok = 'N'
@@ -2653,7 +2655,7 @@
      C                   EVAL      FldNameArr(Idx) = '#1SRL2'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5256'
      C                   ENDIF
- 
+
      C                   MOVEL     #1SRL2        WWLI02
      C                   IF        WKSRL1 = *BLANK AND WWSRL1 = '/' AND
      C                             WWLI02 <> '//'
@@ -2662,14 +2664,14 @@
      C                   EVAL      FldNameArr(Idx) = '#1SRL2'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5214'
      C                   ENDIF
- 
+
      C                   IF        WWSRL2 = '/' AND WWLI02 <> '//'
      C                   EVAL      SRL2Ok = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#1SRL2'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5257'
      C                   ENDIF
- 
+
      C                   MOVE      #1SRL2        WWLI33
      C                   IF        WWLI02 = '//' AND WWLI33 = *BLANKS
      C                   EVAL      SRL2Ok = 'N'
@@ -2677,39 +2679,39 @@
      C                   EVAL      FldNameArr(Idx) = '#1SRL2'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5213'
      C                   ENDIF
- 
+
      C                   IF        #1SRL2 = #1SRL1
      C                   EVAL      SRL2Ok = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#1SRL2'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5258'
      C                   ENDIF
- 
+
      C                   IF        WKSRL1 <> *BLANK AND #1SRL2 <> *BLANKS
      C                   EVAL      SRL2Ok = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#1SRL2'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5259'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Validate sender to receiver info (line 3)
       ** -----------------------------------------
- 
+
      C                   EVAL      WWSRL3 = *BLANK
- 
+
       ** Validate if not blank
- 
+
      C                   IF        #1SRL3 <> *BLANKS
- 
+
      C                   IF        #1SRL2 = *BLANK
      C                   EVAL      SRL3Ok = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#1SRL3'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5255'
      C                   ENDIF
- 
+
      C                   MOVEL     #1SRL3        WWSRL3
      C                   IF        WWSRL2 <> '/' AND WWSRL3 = '/'
      C                   EVAL      SRL3Ok = 'N'
@@ -2717,7 +2719,7 @@
      C                   EVAL      FldNameArr(Idx) = '#1SRL3'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5256'
      C                   ENDIF
- 
+
      C                   MOVEL     #1SRL3        WWLI02
      C                   IF        WWSRL2 = '/' AND WWLI02 <> '//'
      C                   EVAL      SRL3Ok = 'N'
@@ -2725,14 +2727,14 @@
      C                   EVAL      FldNameArr(Idx) = '#1SRL3'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5214'
      C                   ENDIF
- 
+
      C                   IF        WWSRL2 = '/' AND WWLI02 <> '//'
      C                   EVAL      SRL3Ok = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#1SRL3'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5257'
      C                   ENDIF
- 
+
      C                   MOVE      #1SRL3        WWLI33
      C                   IF        WWLI02 = '//' AND WWLI33 = *BLANKS
      C                   EVAL      SRL3Ok = 'N'
@@ -2740,25 +2742,25 @@
      C                   EVAL      FldNameArr(Idx) = '#1SRL3'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5213'
      C                   ENDIF
- 
+
      C                   IF        #1SRL3 = #1SRL2
      C                   EVAL      SRL3Ok = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#1SRL3'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5258'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Validate narrative (line 1)
       ** ---------------------------
- 
+
      C                   EVAL      WWNAC1 = *BLANK
- 
+
       ** Validate if not blank
- 
+
      C                   IF        #1NAC1 <> *BLANKS
- 
+
      C                   MOVEL     #1NAC1        WWNAC1
      C                   MOVE      #1NAC1        WWLI34
      C                   IF        WWNAC1 = '/' AND WWLI34 = *BLANKS
@@ -2767,25 +2769,25 @@
      C                   EVAL      FldNameArr(Idx) = '#1NAC1'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5263'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Validate narrative (line 2)
       ** ---------------------------
- 
+
      C                   EVAL      WWNAC2 = *BLANK
- 
+
       ** Validate if not blank
- 
+
      C                   IF        #1NAC2 <> *BLANKS
- 
+
      C                   IF        #1NAC1 = *BLANKS
      C                   EVAL      NAC2Ok = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#1NAC2'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5255'
      C                   ENDIF
- 
+
      C                   MOVEL     #1NAC2        WWNAC2
      C                   IF        WWNAC1 <> '/' AND WWNAC2 = '/'
      C                   EVAL      NAC2Ok = 'N'
@@ -2793,7 +2795,7 @@
      C                   EVAL      FldNameArr(Idx) = '#1NAC2'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5256'
      C                   ENDIF
- 
+
      C                   MOVEL     #1NAC2        WWLI02
      C                   IF        WWNAC1 = '/' AND WWLI02 <> '//'
      C                   EVAL      NAC2Ok = 'N'
@@ -2801,14 +2803,14 @@
      C                   EVAL      FldNameArr(Idx) = '#1NAC2'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5214'
      C                   ENDIF
- 
+
      C                   IF        WWNAC2 = '/' AND WWLI02 <> '//'
      C                   EVAL      NAC2Ok = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#1NAC2'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5257'
      C                   ENDIF
- 
+
      C                   MOVE      #1NAC2        WWLI33
      C                   IF        WWLI02 = '//' AND WWLI33 = *BLANKS
      C                   EVAL      NAC2Ok = 'N'
@@ -2816,18 +2818,18 @@
      C                   EVAL      FldNameArr(Idx) = '#1NAC2'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5213'
      C                   ENDIF
- 
+
      C                   IF        #1NAC2 = #1NAC1
      C                   EVAL      NAC2Ok = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#1NAC2'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5258'
      C                   ENDIF
- 
+
       ** May not be blank as a continuation line
- 
+
      C                   ELSE
- 
+
      C                   MOVEL     #1NAC2        WWLI02
      C                   IF        WWNAC1 = '/' AND WWLI02 <> '//'
      C                   EVAL      NAC2Ok = 'N'
@@ -2835,22 +2837,22 @@
      C                   EVAL      FldNameArr(Idx) = '#1NAC2'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5214'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** End of validation for screen1 of internal customer
       ** ==================================================
- 
+
      C                   ELSE
- 
+
       ** Validate screen 1 of non-internal customer
       ** ==========================================
- 
+
       ** Validate settlement message request
       ** -----------------------------------
- 
+
       ** If #2GMES is not 'Y', 'N', or blank
- 
+
      C                   IF        #2GMES <> 'Y' AND #2GMES <> 'N' AND
      C                             #2GMES <> *BLANKS
      C                   EVAL      GMESOk = 'N'
@@ -2858,12 +2860,12 @@
      C                   EVAL      FldNameArr(Idx) = '#2GMES'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5101'
      C                   ENDIF
- 
+
       ** Validate confirmation message request
       ** -------------------------------------
- 
+
       ** If #2CONG is not 'Y' , 'N' or blank
- 
+
      C                   IF        #2CONG <> 'Y' AND #2CONG <> 'N' AND
      C                             #2CONG <> *BLANKS
      C                   EVAL      CONGOk = 'N'
@@ -2871,16 +2873,16 @@
      C                   EVAL      FldNameArr(Idx) = '#2CONG'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5101'
      C                   ENDIF
- 
+
       **  If #2CONG is 'Y' then check that the counterparty has a STTX
       **  or SWIFT ADDRESS or TELEX ADDRESS.
- 
+
      C                   IF        #2CONG = 'Y'
      C**********         MOVEL     PACUST        PCustKey                                     201190
      C**********         MOVEL     #1CUST        PCustKey                            201190 AR579693
      C                   EVAL      PCustKey = #1CUST                                        AR579693
      C                   EXSR      SRCUST
- 
+
      C                   IF        BBCSID = *BLANKS AND BBSTAD = *BLANKS AND
      C                             BBTXA1 = *BLANKS
      C                   EVAL      CONGOk = 'N'
@@ -2889,27 +2891,27 @@
      C                   EVAL      MsgIdArr(Idx) = 'SEW5127'
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate instructions type if not blank
       ** ---------------------------------------
- 
+
      C                   IF        #2INST <> *BLANKS
- 
+
       ** Check instructions type as a alpha input field
- 
+
      C     #2INST        LOOKUP    VA1                                    86
- 
+
      C                   ENDIF
- 
+
       ** Validate instructions sub-type if not blank
       ** -------------------------------------------
- 
+
      C                   IF        #2INSS <> *BLANKS
- 
+
       ** Check internal of bridge instruction sub-type
- 
+
      C                   IF        #2INST = 'INT' OR #2INST = 'BRG'
- 
+
      C                   IF        #2INSS <> 'SETTL' AND #2INSS <> 'MATCH' AND
      C                             #2INSS <> 'TRANS'
      C                   EVAL      INSSOk = 'N'
@@ -2918,9 +2920,9 @@
      C                   EVAL      MsgIdArr(Idx) = 'SEW5104'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        #2INST = 'EXT'
- 
+
      C                   IF        #2INSS <> 'BOOK ' AND #2INSS <> ' BOOK' AND
      C                             #2INSS <> 'PHYSI'
      C                   EVAL      INSSOk = 'N'
@@ -2928,18 +2930,18 @@
      C                   EVAL      FldNameArr(Idx) = '#2INSS'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5105'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        PISOMsgI <> 'Y'                                            199797
                                                                                               199797
       ** Validate requested priority
       ** ---------------------------
- 
+
       ** If #2RPTY  not '1', '2', '3', '4', or blank
- 
+
      C                   IF        #2RPTY <> '1' AND #2RPTY <> '2' AND
      C                             #2RPTY <> '3' AND #2RPTY <> '4' AND
      C                             #2RPTY <> *BLANK
@@ -2948,24 +2950,24 @@
      C                   EVAL      FldNameArr(Idx) = '#2RPTY'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5125'
      C                   ENDIF
- 
+
       ** Validate guaranteed delivery
       ** ----------------------------
- 
+
       ** If #2GDEL not 'G' or blank
- 
+
      C                   IF        #2GDEL <> 'G' AND #2GDEL <> *BLANK
      C                   EVAL      GDELOk = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#2GDEL'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5150'
      C                   ENDIF
- 
+
       ** Validate sender's role
       ** ----------------------
- 
+
       ** If #2SROL not 'AGEN', 'CUST', 'PRIN', or blank
- 
+
      C                   IF        #2SROL <> 'AGEN' AND #2SROL <> 'CUST' AND
      C                             #2SROL <> 'PRIN' AND #2SROL <> *BLANKS
      C                   EVAL      SROLOk = 'N'
@@ -2975,27 +2977,27 @@
      C                   ENDIF
                                                                                               199797
      C                   ENDIF                                                                199797
- 
+
       ** Validate stamp status
       ** ---------------------
- 
+
      C                   EVAL      STMPOk = 'Y'
- 
+
       ** Validate charity identifier
       ** ---------------------------
- 
+
      C                   EVAL      CHIDOk = 'Y'
- 
+
       ** Validate transaction report maker
       ** ---------------------------------
- 
+
      C                   EVAL      TRRMOk = 'Y'
- 
+
       ** Validate settlement against payment/free
       ** ----------------------------------------
- 
+
       ** If #2FIND is not 'F' or 'A', or blanks
- 
+
      C                   IF        #2FIND <> 'F' AND #2FIND <> 'A' AND
      C                             #2FIND <> *BLANKS
      C                   EVAL      FINDOk = 'N'
@@ -3003,12 +3005,12 @@
      C                   EVAL      FldNameArr(Idx) = '#2FIND'
      C                   EVAL      MsgIdArr(Idx) = 'SE10032'
      C                   ENDIF
- 
+
       ** End of validation for screen1 of non-internal customer
       ** ======================================================
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3022,106 +3024,106 @@
       *                                                               *
       *****************************************************************
      C     SRDisplay2    BEGSR
- 
+
       ** Move 'OK' flags into array for checking
- 
+
      C                   MOVEA     OkFlags       WErrIndArr
- 
+
       ** Set screen error indicators according to status of 'OK' flags
- 
+
      C                   Z-ADD     24            WCtr1
      C                   Z-ADD     33            WCtr2
- 
+
      C                   DOU       WCtr1 > 50
- 
+
      C                   IF        WErrIndArr(WCtr1) = 'N' OR
      C                             WErrIndArr(WCtr1) = 'W'
      C                   EVAL      *IN(WCtr2) = '1'
      C                   ENDIF
- 
+
      C                   EVAL      WCtr1 = WCtr1 + 1
      C                   EVAL      WCtr2 = WCtr2 + 1
- 
+
      C                   ENDDO
- 
+
       ** The following /COPY line includes processing for the error and
       ** warning messages.
- 
+
       /COPY ZACPYSRC,MSGHNDDSP1
- 
+
       ** Write message subfile, details and footer screen
- 
+
      C                   EVAL      DspRollDn = True
- 
+
      C                   IF        PISOMsgI = 'Y'
      C                   EVAL      DspRollUp = True
      C                   ELSE
      C                   EVAL      DspRollUp = False
      C                   ENDIF
- 
+
      C                   WRITE     SETSSIDSF6
      C                   WRITE     SETSSIDSC1
- 
+
      C                   IF        PAdDType = 'P'
      C                   EXFMT     SETSSIDSF3
      C                   ELSE
      C                   EXFMT     SETSSIDSF4
      C                   ENDIF
- 
+
       ** Clear message subfile
- 
+
      C                   CALL      'ZA0250'
- 
+
       ** Reset error fields
- 
+
      C                   EVAL      Idx = 0
      C                   EVAL      WIdx = 0                                                   CSW210
      C                   CLEAR                   MsgIdArr
      C                   CLEAR                   FldNameArr
      C                   CLEAR                   WMsgIdArr
      C                   CLEAR                   WFldNamArr                                   CSW210
- 
+
       ** Set screen error indicators off
- 
+
      C                   MOVEA     WInzIndArr    *IN(10)
      C                   MOVEA     WInzOkFlags   OkFlags
- 
+
       ** Select processing type
- 
+
      C                   SELECT
- 
+
       ** F3 Pressed
- 
+
      C                   WHEN      *INKC = *ON
      C                   EVAL      PRetCode = 'SE10000'
      C                   EVAL      PMode = 'R'
- 
+
       ** F5 Pressed
- 
+
      C                   WHEN      *INKE = *ON
      C                   EXSR      SRSetScnFld2
- 
+
       ** F12 Pressed
- 
+
      C                   WHEN      *INKL = *ON
      C                   EVAL      PRetCode = 'SE10001'
      C                   EVAL      PMode = 'R'
- 
+
       ** Roll Down
- 
+
      C                   WHEN      RollDn = True
      C                   EVAL      PMode = '1'
- 
+
      C                   OTHER
- 
+
       ** Validate inputs
- 
+
      C                   IF        ActionCode <> 'E'
- 
+
      C                   EXSR      SRValidate2
- 
+
      C                   IF        Idx = 0
- 
+
      C                   IF        PISOMsgI = 'Y'
      C                   IF        WAGNA <> 'N'                                               201486
      C                   EVAL      PMode = '3'
@@ -3131,25 +3133,25 @@
      C                   EVAL      PMode = 'U'
      C                   ENDIF                                                                201486
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EVAL      PMode = '2'
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   IF        PISOMsgI = 'Y'
      C                   EVAL      PMode = '3'
      C                   ELSE
      C                   EVAL      PMode = 'R'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3163,18 +3165,18 @@
       *                                                               *
       *****************************************************************
      C     SRValidate2   BEGSR
- 
+
       ** Validate clearing correspondent
       ** -------------------------------
- 
+
      C                   IF        PAdDType = 'P'
      C                   EVAL      WkCCTN = #3CCTN
      C                   ELSE
      C                   EVAL      WkCCTN= #4CCTN
      C                   ENDIF
- 
+
       ** Validate if not blank
- 
+
      C                   IF        WkCCTN <> *BLANKS
       **********                                                                              199797
       ** Check entry is alphanumeric with no embedded blanks                                  199797
@@ -3224,7 +3226,7 @@
                                                                                               199797
      C     *LOVAL        SETLL     SDCUSTSW                                                   199797
      C     WkCCTN        CHAIN     SDCUSTSW                           99                      199797
- 
+
      C**********         IF        *IN87 = *ON                                                199797
      C                   IF        *IN99 = '1'                                                199797
       *                                                                                       204364
@@ -3253,18 +3255,18 @@
      C                   ENDIF
      C                   ENDIF                                                                204364
      C                   ENDIF                                                                204751
- 
+
      C                   ENDIF
- 
+
       ** Validate deliverer/receiver of securities
       ** -----------------------------------------
- 
+
      C                   IF        PAdDType = 'P'
      C                   EVAL      WkDRSN = #3DRSN
      C                   ELSE
      C                   EVAL      WkDRSN= #4DRSN
      C                   ENDIF
- 
+
       ***********                                                                      201429 204585
       ***Field*is*mandatory*for*Depot-in*and*settlement*message********                201429 204585
       ***requested*is*'Y'*and*ISO15022*is*set*to*'Y'.******************                201429 204585
@@ -3285,14 +3287,14 @@
      C***********        ENDIF                                                         201429 204585
                                                                                               201429
       ** Validate if not blank
- 
+
      C                   IF        WkDRSN <> *BLANKS
      C                   MOVEL     WkDRSN        PCustKey
- 
+
       ** Validate Customer Number/Shortname/Nostro
- 
+
      C                   EXSR      SRCust
- 
+
      C                   EVAL      OkDRSN = *BLANKS                                           201486
                                                                                               201486
      C                   IF        WCustType <> 'C' AND WCustType <> 'S' AND
@@ -3309,9 +3311,9 @@
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5205'
      C                   ELSE
- 
+
       ** If customer or shortame
- 
+
      C**********         IF        WCustType = 'C' AND WCustType = 'S'                        204753
      C                   IF        WCustType = 'C' OR WCustType = 'S'                         204753
      C                   IF        PAdDType = 'P'
@@ -3319,11 +3321,11 @@
      C                   ELSE
      C                   EVAL      #4DRSN = BBCUST
      C                   ENDIF
- 
+
       ** Entry is Nostro
- 
+
      C                   ELSE
- 
+
      C                   IF        WCustType = 'N'
      C                   IF        PAdDType = 'P'
      C                   EVAL      #3DRSN = AWCPNC
@@ -3331,10 +3333,10 @@
      C                   EVAL      #4DRSN = AWCPNC
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
                                                                                               201486
      C                   IF        PAdDType = 'P'                                             201486
@@ -3379,10 +3381,10 @@
      C                   ENDIF                                                                201486
                                                                                               201486
      C                   ENDIF                                                                201486
- 
+
       ** Validate deliverer/receiver of securities line 1
       ** ------------------------------------------------
- 
+
      C                   IF        PISOMsgI <> 'Y'                                            199797
                                                                                               199797
      C                   IF        PAdDType = 'P'
@@ -3390,14 +3392,14 @@
      C                   ELSE
      C                   EVAL      WkDRS1= #4DRS1
      C                   ENDIF
- 
+
       ** Validate if not blank
- 
+
      C                   MOVEL     WkDRS1        WWDRS1
      C                   IF        WkDRS1 <> *BLANKS AND WWDRS1 <> '#'
- 
+
      C                   IF        WWDRS1 <> '/'
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PDRS1Ok = 'N'
@@ -3407,12 +3409,12 @@
      C                   EVAL      FldNameArr(Idx) = '#4DRS1'
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5210'
- 
+
      C                   ENDIF
- 
+
      C                   MOVEL     WkDRS1        WWLI02
      C                   IF        WWLI02 = '//'
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PDRS1Ok = 'N'
@@ -3422,12 +3424,12 @@
      C                   EVAL      FldNameArr(Idx) = '#4DRS1'
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5211'
- 
+
      C                   ENDIF
- 
+
      C                   MOVE      WkDRS1        WWLI34
      C                   IF        WWDRS1 = '/' AND WWLI34 = *BLANKS
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PDRS1Ok = 'N'
@@ -3437,28 +3439,28 @@
      C                   EVAL      FldNameArr(Idx) = '#4DRS1'
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5212'
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Validate deliverer/receiver of securities line 2
       ** ------------------------------------------------
- 
+
      C                   IF        PAdDType = 'P'
      C                   EVAL      WkDRS2 = #3DRS2
      C                   ELSE
      C                   EVAL      WkDRS2= #4DRS2
      C                   ENDIF
- 
+
       ** Validate if not blank
- 
+
      C                   MOVEL     WkDRS2        WWDRS2
      C                   IF        WkDRS2 <> *BLANKS AND WWDRS2 <> '#' AND
      C                             PDRS1Ok <> 'N' AND SDRS1Ok <> 'N'
- 
+
      C                   IF        WkDRS1 = *BLANKS
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PDRS2Ok = 'N'
@@ -3468,11 +3470,11 @@
      C                   EVAL      FldNameArr(Idx) = '#4DRS2'
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5255'
- 
+
      C                   ENDIF
- 
+
      C                   IF        WkDRS2 = WkDRS1
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PDRS2Ok = 'N'
@@ -3482,13 +3484,13 @@
      C                   EVAL      FldNameArr(Idx) = '#4DRS2'
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5258'
- 
+
      C                   ENDIF
- 
+
      C                   MOVEL     WkDRS2        WWLI02
      C                   MOVE      WkDRS2        WWLI33
      C                   IF        WWLI02 <> '//' OR WWLI33 = *BLANKS
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PDRS2Ok = 'N'
@@ -3498,29 +3500,29 @@
      C                   EVAL      FldNameArr(Idx) = '#4DRS2'
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5213'
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Validate deliverer/receiver of securities line 3
       ** ------------------------------------------------
- 
+
      C                   IF        PAdDType = 'P'
      C                   EVAL      WkDRS3 = #3DRS3
      C                   ELSE
      C                   EVAL      WkDRS3= #4DRS3
      C                   ENDIF
- 
+
       ** Validate if not blank
- 
+
      C                   MOVEL     WkDRS3        WWDRS3
      C                   IF        WkDRS3 <> *BLANKS AND WWDRS3 <> '#' AND
      C                             PDRS1Ok <> 'N' AND SDRS1Ok <> 'N'  AND
      C                             PDRS2Ok <> 'N' AND SDRS2Ok <> 'N'
- 
+
      C                   IF        WkDRS2 = *BLANKS
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PDRS3Ok = 'N'
@@ -3530,11 +3532,11 @@
      C                   EVAL      FldNameArr(Idx) = '#4DRS3'
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5255'
- 
+
      C                   ENDIF
- 
+
      C                   IF        WkDRS3 = WkDRS1 OR WkDRS3 = WkDRS2
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PDRS3Ok = 'N'
@@ -3543,14 +3545,14 @@
      C                   EVAL      SDRS3Ok = 'N'
      C                   EVAL      FldNameArr(Idx) = '#4DRS3'
      C                   ENDIF
- 
+
      C                   EVAL      MsgIdArr(Idx) = 'SEW5258'
      C                   ENDIF
- 
+
      C                   MOVEL     WkDRS3        WWLI02
      C                   MOVE      WkDRS3        WWLI33
      C                   IF        WWLI02 <> '//' OR WWLI33 = *BLANKS
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PDRS3Ok = 'N'
@@ -3560,30 +3562,30 @@
      C                   EVAL      FldNameArr(Idx) = '#4DRS3'
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5213'
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Validate deliverer/receiver of securities line 4
       ** ------------------------------------------------
- 
+
      C                   IF        PAdDType = 'P'
      C                   EVAL      WkDRS4 = #3DRS4
      C                   ELSE
      C                   EVAL      WkDRS4= #4DRS4
      C                   ENDIF
- 
+
       ** Validate if not blank
- 
+
      C                   MOVEL     WkDRS4        WWDRS4
      C                   IF        WkDRS4 <> *BLANKS AND WWDRS4 <> '#' AND
      C                             PDRS1Ok <> 'N' AND SDRS1Ok <> 'N'  AND
      C                             PDRS2Ok <> 'N' AND SDRS2Ok <> 'N'  AND
      C                             PDRS3Ok <> 'N' AND SDRS3Ok <> 'N'
- 
+
      C                   IF        WkDRS3 = *BLANKS
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PDRS4Ok = 'N'
@@ -3593,12 +3595,12 @@
      C                   EVAL      FldNameArr(Idx) = '#4DRS4'
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5255'
- 
+
      C                   ENDIF
- 
+
      C                   IF        WkDRS4 = WkDRS1 OR WkDRS4 = WkDRS2 OR
      C                             WkDRS4 = WkDRS3
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PDRS4Ok = 'N'
@@ -3608,13 +3610,13 @@
      C                   EVAL      FldNameArr(Idx) = '#4DRS4'
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5258'
- 
+
      C                   ENDIF
- 
+
      C                   MOVEL     WkDRS4        WWLI02
      C                   MOVE      WkDRS4        WWLI33
      C                   IF        WWLI02 <> '//' OR WWLI33 = *BLANKS
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PDRS4Ok = 'N'
@@ -3624,30 +3626,30 @@
      C                   EVAL      FldNameArr(Idx) = '#4DRS4'
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5213'
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
                                                                                               199797
      C                   ENDIF                                                                199797
- 
+
       ** Validate beneficiary securities
       ** -------------------------------
- 
+
      C                   IF        PAdDType = 'S'
- 
+
       ** Validate beneficiary securities number
       ** --------------------------------------
- 
+
       ** Validate if not blank
- 
+
      C                   IF        #4BSSN <> *BLANKS
      C                   MOVEL     #4BSSN        PCustKey
- 
+
       ** Validate Customer Number/Shortname/Nostro
- 
+
      C                   EXSR      SRCust
- 
+
      C                   IF        WCustType <> 'C' AND WCustType <> 'S' AND
      C                             WCustType <> 'N'
      C                   EVAL      BSSNOk = 'N'
@@ -3655,25 +3657,25 @@
      C                   EVAL      FldNameArr(Idx) = '#4BSSN'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5205'
      C                   ELSE
- 
+
       ** If customer or shortame a/c must be a bank
- 
+
      C**********         IF        WCustType = 'C' AND WCustType = 'S'                      AR634357
      C                   IF        WCustType = 'C' OR WCustType = 'S'                       AR634357
      C                   EVAL      #4BSSN = BBCUST
- 
+
       ** Entry is Nostro
- 
+
      C                   ELSE
- 
+
      C                   IF        WCustType = 'N'
      C                   EVAL      #4BSSN = AWCPNC
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      WANGA = 'Y'                                                201486
                                                                                               201486
      C                   IF        #4BSSN = T4BSSN and #4BSS1 = *BLANKS                       201486
@@ -3705,19 +3707,19 @@
                                                                                               201486
       ** Validate beneficiary securities account line 1
       ** ----------------------------------------------
- 
+
      C                   IF        PISOMsgI <> 'Y'                                            199797
                                                                                               199797
      C                   MOVEL     #4BSS1        WWBSS1
      C                   IF        #4BSS1 <> *BLANKS AND WWBSS1 <> '#'
- 
+
      C                   IF        WWBSS1 <> '/'
      C                   EVAL      BSS1Ok = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#4BSS1'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5210'
      C                   ENDIF
- 
+
      C                   MOVEL     #4BSS1        WWLI02
      C                   IF        WWLI02 = '//'
      C                   EVAL      BSS1Ok = 'N'
@@ -3725,7 +3727,7 @@
      C                   EVAL      FldNameArr(Idx) = '#4BSS1'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5211'
      C                   ENDIF
- 
+
      C                   MOVE      #4BSS1        WWLI34
      C                   IF        WWBSS1 = '/' AND WWLI34 = *BLANKS
      C                   EVAL      BSS1Ok = 'N'
@@ -3733,30 +3735,30 @@
      C                   EVAL      FldNameArr(Idx) = '#4BSS1'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5212'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Validate beneficiary securities account line 2
       ** ----------------------------------------------
- 
+
      C                   MOVEL     #4BSS2        WWBSS2
      C                   IF        #4BSS2 <> *BLANKS AND WWBSS2 <> '#' AND
      C                             BSS1Ok <> 'N'
- 
+
      C                   IF        #4BSS1 = *BLANKS
      C                   EVAL      BSS2Ok = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#4BSS2'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5255'
      C                   ENDIF
- 
+
      C                   IF        #4BSS2 = #4BSS1
      C                   EVAL      BSS2Ok = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#4BSS2'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5258'
      C                   ENDIF
- 
+
      C                   MOVEL     #4BSS2        WWLI02
      C                   MOVE      #4BSS2        WWLI33
      C                   IF        WWLI02 <> '//' OR WWLI33 = *BLANKS
@@ -3765,33 +3767,33 @@
      C                   EVAL      FldNameArr(Idx) = '#4BSS2'
      C                   EVAL      MsgIdArr(Idx) = 'SEW5213'
      C                   ENDIF
- 
+
      C                   ENDIF
                                                                                               199797
      C                   ENDIF                                                                199797
- 
+
       ** End validation of beneficiary of securities
       ** -------------------------------------------
- 
+
      C                   ENDIF
- 
- 
+
+
       ** Validate further information line 1
       ** -----------------------------------
- 
+
      C                   IF        PAdDType = 'P'
      C                   EVAL      WkFIN1 = #3FIN1
      C                   ELSE
      C                   EVAL      WkFIN1= #4FIN1
      C                   ENDIF
- 
+
       ** Validate if not blank
- 
+
      C                   MOVEL     WkFIN1        WWFIN1
      C                   IF        WkFIN1 <> *BLANKS
- 
+
      C                   IF        WWFIN1 = '/'
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PFIN1Ok = 'N'
@@ -3801,28 +3803,28 @@
      C                   EVAL      FldNameArr(Idx) = '#4FIN1'
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5285'
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Validate further information line 2
       ** -----------------------------------
- 
+
      C                   IF        PAdDType = 'P'
      C                   EVAL      WkFIN2 = #3FIN2
      C                   ELSE
      C                   EVAL      WkFIN2= #4FIN2
      C                   ENDIF
- 
+
       ** Validate if not blank
- 
+
      C                   MOVEL     WkFIN2        WWFIN2
      C                   IF        WkFIN2 <> *BLANKS  AND PFIN1OK <> 'N' AND
      C                             SFIN1OK <> 'N'
- 
+
      C                   IF        WkFIN1 = *BLANKS
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PFIN2Ok = 'N'
@@ -3832,11 +3834,11 @@
      C                   EVAL      FldNameArr(Idx) = '#4FIN2'
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5255'
- 
+
      C                   ENDIF
- 
+
      C                   IF        WkFIN2 = WkFIN1
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PFIN2Ok = 'N'
@@ -3846,12 +3848,12 @@
      C                   EVAL      FldNameArr(Idx) = '#4FIN2'
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5258'
- 
+
      C                   ENDIF
- 
- 
+
+
      C                   IF        WWFIN2 = '/'
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PFIN2Ok = 'N'
@@ -3861,27 +3863,27 @@
      C                   EVAL      FldNameArr(Idx) = '#4FIN2'
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5285'
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ***Validate*registration*details*line*1**                                               CSW210
       ***------------------------------------**                                               CSW210
- 
+
      C**********         IF        PAdDType = 'P'                                             CSW210
      C**********         EVAL      WkRED1 = #3RED1                                            CSW210
      C**********         ELSE                                                                 CSW210
      C**********         EVAL      WkRED1= #4RED1                                             CSW210
      C**********         ENDIF                                                                CSW210
- 
+
       ***Validate*if*not*blank**                                                              CSW210
- 
+
      C**********         MOVEL     WkRED1        WWRED1                                       CSW210
      C**********         IF        WkRED1 <> *BLANKS                                          CSW210
- 
+
      C**********         IF        WWRED1 = '/'                                               CSW210
- 
+
      C**********         EVAL      Idx = Idx + 1                                              CSW210
      C**********         IF        PAdDType = 'P'                                             CSW210
      C**********         EVAL      PRED1Ok = 'N'                                              CSW210
@@ -3891,28 +3893,28 @@
      C**********         EVAL      FldNameArr(Idx) = '#4RED1'                                 CSW210
      C**********         ENDIF                                                                CSW210
      C**********         EVAL      MsgIdArr(Idx) = 'SEW5285'                                  CSW210
- 
+
      C**********         ENDIF                                                                CSW210
- 
+
      C**********         ENDIF                                                                CSW210
- 
+
       ***Validate*registration*details*line*2**                                               CSW210
       ***------------------------------------**                                               CSW210
- 
+
      C**********         IF        PAdDType = 'P'                                             CSW210
      C**********         EVAL      WkRED2 = #3RED2                                            CSW210
      C**********         ELSE                                                                 CSW210
      C**********         EVAL      WkRED2= #4RED2                                             CSW210
      C**********         ENDIF                                                                CSW210
- 
+
       ***Validate*if*not*blank**                                                              CSW210
- 
+
      C**********         MOVEL     WkRED2        WWRED2                                       CSW210
      C**********         IF        WkRED2 <> *BLANKS  AND PRED1OK <> 'N' AND                  CSW210
      C**********                   SRED1OK <> 'N'                                             CSW210
- 
+
      C**********         IF        WkRED1 = *BLANKS                                           CSW210
- 
+
      C**********         EVAL      Idx = Idx + 1                                              CSW210
      C**********         IF        PAdDType = 'P'                                             CSW210
      C**********         EVAL      PRED2Ok = 'N'                                              CSW210
@@ -3922,11 +3924,11 @@
      C**********         EVAL      FldNameArr(Idx) = '#4RED2'                                 CSW210
      C**********         ENDIF                                                                CSW210
      C**********         EVAL      MsgIdArr(Idx) = 'SEW5255'                                  CSW210
- 
+
      C**********         ENDIF                                                                CSW210
- 
+
      C**********         IF        WkRED2 = WkRED1                                            CSW210
- 
+
      C**********         EVAL      Idx = Idx + 1                                              CSW210
      C**********         IF        PAdDType = 'P'                                             CSW210
      C**********         EVAL      PRED2Ok = 'N'                                              CSW210
@@ -3936,12 +3938,12 @@
      C**********         EVAL      FldNameArr(Idx) = '#4RED2'                                 CSW210
      C**********         ENDIF                                                                CSW210
      C**********         EVAL      MsgIdArr(Idx) = 'SEW5258'                                  CSW210
- 
+
      C**********         ENDIF                                                                CSW210
- 
- 
+
+
      C**********         IF        WWRED2 = '/'                                               CSW210
- 
+
      C**********         EVAL      Idx = Idx + 1                                              CSW210
      C**********         IF        PAdDType = 'P'                                             CSW210
      C**********         EVAL      PRED2Ok = 'N'                                              CSW210
@@ -3951,29 +3953,29 @@
      C**********         EVAL      FldNameArr(Idx) = '#4RED2'                                 CSW210
      C**********         ENDIF                                                                CSW210
      C**********         EVAL      MsgIdArr(Idx) = 'SEW5285'                                  CSW210
- 
+
      C**********         ENDIF                                                                CSW210
- 
+
      C**********         ENDIF                                                                CSW210
- 
- 
+
+
       ** Validate narrative line 1
       ** -------------------------
- 
+
      C                   IF        PAdDType = 'P'
      C                   EVAL      WkNAS1 = #3NAS1
      C                   ELSE
      C                   EVAL      WkNAS1= #4NAS1
      C                   ENDIF
- 
+
       ** Validate if not blank
- 
+
      C                   MOVEL     WkNAS1        WWNAS1
      C                   MOVE      WkNAS1        WWLI34
      C                   IF        WkNAS1 <> *BLANKS
- 
+
      C                   IF        WWNAS1 = '/' AND WWLI34 = *BLANKS
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PNAS1Ok = 'N'
@@ -3983,27 +3985,27 @@
      C                   EVAL      FldNameArr(Idx) = '#4NAS1'
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5263'
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Validate narrative line 2
       ** -------------------------
- 
+
      C                   IF        PAdDType = 'P'
      C                   EVAL      WkNAS2 = #3NAS2
      C                   ELSE
      C                   EVAL      WkNAS2= #4NAS2
      C                   ENDIF
- 
+
       ** Validate if not blank
- 
+
      C                   IF        WkNAS2 <> *BLANKS  AND PNAS1OK <> 'N' AND
      C                             SNAS1OK <> 'N'
- 
+
      C                   IF        WkNAS1 = *BLANKS
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PNAS2Ok = 'N'
@@ -4013,11 +4015,11 @@
      C                   EVAL      FldNameArr(Idx) = '#4NAS2'
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5255'
- 
+
      C                   ENDIF
- 
+
      C                   IF        WkNAS2 = WkNAS1
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PNAS2Ok = 'N'
@@ -4027,12 +4029,12 @@
      C                   EVAL      FldNameArr(Idx) = '#4NAS2'
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5258'
- 
+
      C                   ENDIF
- 
+
      C                   MOVEL     WkNAS2        WWNAS2
      C                   IF        WWNAS1 <> '/' AND WWNAS2 = '/'
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PNAS2Ok = 'N'
@@ -4042,12 +4044,12 @@
      C                   EVAL      FldNameArr(Idx) = '#4NAS2'
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5256'
- 
+
      C                   ENDIF
- 
+
      C                   MOVEL     WkNAS2        WWLI02
      C                   IF        WWNAS1 = '/' AND WWLI02 <> '//'
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PNAS2Ok = 'N'
@@ -4057,11 +4059,11 @@
      C                   EVAL      FldNameArr(Idx) = '#4NAS2'
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5214'
- 
+
      C                   ENDIF
- 
+
      C                   IF        WWNAS2 = '/' AND WWLI02 <> '//'
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PNAS2Ok = 'N'
@@ -4071,12 +4073,12 @@
      C                   EVAL      FldNameArr(Idx) = '#4NAS2'
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5257'
- 
+
      C                   ENDIF
- 
+
      C                   MOVE      WkNAS2        WWLI33
      C                   IF        WWLI02 = '//' AND WWLI33 = *BLANKS
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PNAS2Ok = 'N'
@@ -4086,16 +4088,16 @@
      C                   EVAL      FldNameArr(Idx) = '#4NAS2'
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5213'
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
       ** May not be blank as a continuation line
- 
+
      C                   MOVEL     WkNAS2        WWLI02
      C                   IF        WWNAS1 = '/' AND WWLI02 <> '//'
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        PAdDType = 'P'
      C                   EVAL      PNAS2Ok = 'N'
@@ -4105,14 +4107,14 @@
      C                   EVAL      FldNameArr(Idx) = '#4NAS2'
      C                   ENDIF
      C                   EVAL      MsgIdArr(Idx) = 'SEW5214'
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** End of validation for screen2
       ** =============================
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4126,29 +4128,29 @@
       *                                                               *
       *****************************************************************
      C     SRDisplay3    BEGSR
- 
+
       ** Move 'OK' flags into array for checking
- 
+
      C                   MOVEA     OkFlags       WErrIndArr
- 
+
       ** Set screen error indicators according to status of 'OK' flags
- 
- 
+
+
      C                   Z-ADD     51            WCtr1
      C                   Z-ADD     60            WCtr2
- 
+
      C                   DOU       WCtr1 > 69
- 
+
      C                   IF        WErrIndArr(WCtr1) = 'N' OR
      C                             WErrIndArr(WCtr1) = 'W'
      C                   EVAL      *IN(WCtr2) = '1'
      C                   ENDIF
- 
+
      C                   EVAL      WCtr1 = WCtr1 + 1
      C                   EVAL      WCtr2 = WCtr2 + 1
- 
+
      C                   ENDDO
- 
+
       ** OKFlags for SWIFT 2010 Changes                                                       CSW210
                                                                                               CSW210
      C                   IF        ReD1Ok = 'N' OR                                            CSW210
@@ -4173,9 +4175,9 @@
                                                                                               CSW210
       ** The following /COPY line includes processing for the error and
       ** warning messages.
- 
+
       /COPY ZACPYSRC,MSGHNDDSP1
- 
+
      C                   IF        CSW206 = 'Y'                                              CSW206E
      C                   EVAL      *IN85 = '1'                                               CSW206E
      C                   ELSE                                                                CSW206E
@@ -4183,33 +4185,33 @@
      C                   ENDIF                                                               CSW206E
                                                                                              CSW206E
       ** Write message subfile, details and footer screen
- 
+
      C                   EVAL      DspRollUp = False
      C                   EVAL      DspRollDn = True
- 
+
      C                   WRITE     SETSSIDSF6
      C                   WRITE     SETSSIDSC1
- 
+
      C                   EXFMT     SETSSIDSF5
- 
+
       ** Clear message subfile
- 
+
      C                   CALL      'ZA0250'
- 
+
       ** Reset error fields
- 
+
      C                   EVAL      Idx = 0
      C                   EVAL      WIdx = 0                                                   CSW210
      C                   CLEAR                   MsgIdArr
      C                   CLEAR                   FldNameArr
      C                   CLEAR                   WMsgIdArr
      C                   CLEAR                   WFldNamArr                                   CSW210
- 
+
       ** Set screen error indicators off
- 
+
      C                   MOVEA     WInzIndArr    *IN(10)
      C                   MOVEA     WInzOkFlags   OkFlags
- 
+
       ** Reset OKFlags for SWIFT 2010 Changes                                                 CSW210
                                                                                               CSW210
      C                   MOVEA     '00'          *IN(41)                                      CSW210
@@ -4220,39 +4222,39 @@
      C                   EVAL      QFInOk = 'Y'                                               CSW210
                                                                                               CSW210
       ** Select processing type
- 
+
      C                   SELECT
- 
+
       ** F3 Pressed
- 
+
      C                   WHEN      *INKC = *ON
      C                   EVAL      PRetCode = 'SE10000'
      C                   EVAL      PMode = 'R'
- 
+
       ** F5 Pressed
- 
+
      C                   WHEN      *INKE = *ON
      C                   EXSR      SRSetScnFld3
- 
+
       ** F12 Pressed
- 
+
      C                   WHEN      *INKL = *ON
      C                   EVAL      PRetCode = 'SE10001'
      C                   EVAL      PMode = 'R'
- 
+
       ** Roll Down
- 
+
      C                   WHEN      RollDn = True
      C                   EVAL      PMode = '2'
- 
+
      C                   OTHER
- 
+
       ** Validate inputs
- 
+
      C                   IF        ActionCode <> 'E'
- 
+
      C                   EXSR      SRValidate3
- 
+
      C                   IF        Idx = 0 AND
      C                             WInterMed = WPInterMed AND
      C                             #5PSET = WPPSET
@@ -4264,15 +4266,15 @@
      C                   ELSE
      C                   EVAL      PMode = '3'
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EVAL      PMode = 'R'
- 
+
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4286,18 +4288,18 @@
       *                                                               *
       *****************************************************************
      C     SRValidate3   BEGSR
- 
+
       ** Clear Intermediary array variable
- 
+
      C                   CLEAR                   WIMDArr
      C                   EVAL      WPInterMed = WInterMed
      C                   EVAL      WAGNA = 'Y'                                                201486
- 
+
       ** Validate intermediary 1
       ** -----------------------
- 
+
      C                   IF        #5IMMD1 <> *BLANKS
- 
+
      C                   EVAL      WWIMMD = #5IMMD1
      C                   EVAL      TWIMMD = T5IMMD1                                           201486
      C                   EVAL      WWIMSA = #5IMSA1
@@ -4305,41 +4307,41 @@
      C                   EVAL      #5IMMD1 = WWIMMD
      C                   EVAL      #5IMSA1 = WWIMSA                                           201486
      C                   EVAL      T5IMMD1 = TWIMMD                                           201486
- 
+
      C                   IF        WErrIMMD = 'Y'
      C                   EVAL      IMMD1Ok = 'N'
      C                   EVAL      FldNameArr(Idx) = '#5IMMD1'
      C                   ENDIF
- 
+
      C                   IF        WErrIMSA = 'Y'
      C                   EVAL      IMSA1Ok = 'N'
      C                   EVAL      FldNameArr(Idx) = '#5IMSA1'
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   IF        #5IMSA1 <> *BLANK
      C                   EVAL      IMSA1Ok = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#5IMSA1'
      C                   EVAL      MsgIdArr(Idx) = 'SE10009'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Validate intermediary 2
       ** -----------------------
- 
+
      C                   IF        #5IMMD2 <> *BLANKS
- 
+
      C                   IF        #5IMMD1 = *BLANKS
      C                   EVAL      IMMD2Ok = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#5IMMD2'
      C                   EVAL      MsgIdArr(Idx) = 'SE10025'
- 
+
      C                   ELSE
- 
+
      C                   EVAL      WWIMMD = #5IMMD2
      C                   EVAL      WWIMSA = #5IMSA2
      C                   EVAL      TWIMMD = T5IMMD2                                           201486
@@ -4347,44 +4349,44 @@
      C                   EVAL      #5IMMD2 = WWIMMD
      C                   EVAL      #5IMSA2 = WWIMSA                                           201486
      C                   EVAL      T5IMMD2 = TWIMMD                                           201486
- 
+
      C                   IF        WErrIMMD = 'Y'
      C                   EVAL      IMMD2Ok = 'N'
      C                   EVAL      FldNameArr(Idx) = '#5IMMD2'
      C                   ENDIF
- 
+
      C                   IF        WErrIMSA = 'Y'
      C                   EVAL      IMSA2Ok = 'N'
      C                   EVAL      FldNameArr(Idx) = '#5IMSA2'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   IF        #5IMSA2 <> *BLANK
      C                   EVAL      IMSA2Ok = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#5IMSA2'
      C                   EVAL      MsgIdArr(Idx) = 'SE10010'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        CSW206 = 'N'                                              CSW206E
       ** Validate intermediary 3
       ** -----------------------
- 
+
      C**********         IF        #5IMMD3 <> *BLANKS                                        CSW206D
- 
+
      C**********         IF        #5IMMD2 = *BLANKS                                         CSW206D
      C**********         EVAL      IMMD3Ok = 'N'                                             CSW206D
      C**********         EVAL      Idx = Idx + 1                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMMD3'                               CSW206D
      C**********         EVAL      MsgIdArr(Idx) = 'SE10024'                                 CSW206D
- 
+
      C**********         ELSE                                                                CSW206D
- 
+
      C**********         EVAL      WWIMMD = #5IMMD3                                          CSW206D
      C**********         EVAL      WWIMSA = #5IMSA3                                          CSW206D
      C**********         EVAL      TWIMMD = T5IMMD3                                   201486 CSW206D
@@ -4392,28 +4394,28 @@
      C**********         EVAL      #5IMMD3 = WWIMMD                                          CSW206D
      C**********         EVAL      #5IMSA3 = WWIMSA                                   201486 CSW206D
      C**********         EVAL      T5IMMD3 = TWIMMD                                   201486 CSW206D
- 
+
      C**********         IF        WErrIMMD = 'Y'                                            CSW206D
      C**********         EVAL      IMMD3Ok = 'N'                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMMD3'                               CSW206D
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         IF        WErrIMSA = 'Y'                                            CSW206D
      C**********         EVAL      IMSA3Ok = 'N'                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMSA3'                               CSW206D
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         ELSE                                                                CSW206D
- 
+
      C**********         IF        #5IMSA3 <> *BLANK                                         CSW206D
      C**********         EVAL      IMSA3Ok = 'N'                                             CSW206D
      C**********         EVAL      Idx = Idx + 1                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMSA3'                               CSW206D
      C**********         EVAL      MsgIdArr(Idx) = 'SE10011'                                 CSW206D
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         ENDIF                                                               CSW206D
      C                   IF        #5IMMD3 <> *BLANKS                                        CSW206E
                                                                                              CSW206E
@@ -4455,20 +4457,20 @@
      C                   ENDIF                                                               CSW206E
                                                                                              CSW206E
      C                   ENDIF                                                               CSW206E
- 
+
       ** Validate intermediary 4
       ** -----------------------
- 
+
      C**********         IF        #5IMMD4 <> *BLANKS                                        CSW206D
- 
+
      C**********         IF        #5IMMD3 = *BLANKS                                         CSW206D
      C**********         EVAL      IMMD4Ok = 'N'                                             CSW206D
      C**********         EVAL      Idx = Idx + 1                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMMD4'                               CSW206D
      C**********         EVAL      MsgIdArr(Idx) = 'SE10023'                                 CSW206D
- 
+
      C**********         ELSE                                                                CSW206D
- 
+
      C**********         EVAL      WWIMMD = #5IMMD4                                          CSW206D
      C**********         EVAL      WWIMSA = #5IMSA4                                          CSW206D
      C**********         EVAL      TWIMMD = T5IMMD4                                   201486 CSW206D
@@ -4476,28 +4478,28 @@
      C**********         EVAL      #5IMMD4 = WWIMMD                                          CSW206D
      C**********         EVAL      #5IMSA4 = WWIMSA                                   201486 CSW206D
      C**********         EVAL      T5IMMD4 = TWIMMD                                   201486 CSW206D
- 
+
      C**********         IF        WErrIMMD = 'Y'                                            CSW206D
      C**********         EVAL      IMMD4Ok = 'N'                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMMD4'                               CSW206D
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         IF        WErrIMSA = 'Y'                                            CSW206D
      C**********         EVAL      IMSA4Ok = 'N'                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMSA4'                               CSW206D
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         ELSE                                                                CSW206D
- 
+
      C**********         IF        #5IMSA4 <> *BLANK                                         CSW206D
      C**********         EVAL      IMSA4Ok = 'N'                                             CSW206D
      C**********         EVAL      Idx = Idx + 1                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMSA4'                               CSW206D
      C**********         EVAL      MsgIdArr(Idx) = 'SE10012'                                 CSW206D
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         ENDIF                                                               CSW206D
      C                   IF        #5IMMD4 <> *BLANKS                                        CSW206E
                                                                                              CSW206E
@@ -4539,20 +4541,20 @@
      C                   ENDIF                                                               CSW206E
                                                                                              CSW206E
      C                   ENDIF                                                               CSW206E
- 
+
       ** Validate intermediary 5
       ** -----------------------
- 
+
      C**********         IF        #5IMMD5 <> *BLANKS                                        CSW206D
- 
+
      C**********         IF        #5IMMD4 = *BLANKS                                         CSW206D
      C**********         EVAL      IMMD5Ok = 'N'                                             CSW206D
      C**********         EVAL      Idx = Idx + 1                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMMD5'                               CSW206D
      C**********         EVAL      MsgIdArr(Idx) = 'SE10022'                                 CSW206D
- 
+
      C**********         ELSE                                                                CSW206D
- 
+
      C**********         EVAL      WWIMMD = #5IMMD5                                          CSW206D
      C**********         EVAL      WWIMSA = #5IMSA5                                          CSW206D
      C**********         EVAL      TWIMMD = T5IMMD5                                   201486 CSW206D
@@ -4560,28 +4562,28 @@
      C**********         EVAL      #5IMMD5 = WWIMMD                                          CSW206D
      C**********         EVAL      #5IMSA5 = WWIMSA                                   201486 CSW206D
      C**********         EVAL      T5IMMD5 = TWIMMD                                   201486 CSW206D
- 
+
      C**********         IF        WErrIMMD = 'Y'                                            CSW206D
      C**********         EVAL      IMMD5Ok = 'N'                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMMD5'                               CSW206D
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         IF        WErrIMSA = 'Y'                                            CSW206D
      C**********         EVAL      IMSA5Ok = 'N'                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMSA5'                               CSW206D
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         ELSE                                                                CSW206D
- 
+
      C**********         IF        #5IMSA5 <> *BLANK                                         CSW206D
      C**********         EVAL      IMSA5Ok = 'N'                                             CSW206D
      C**********         EVAL      Idx = Idx + 1                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMSA5'                               CSW206D
      C**********         EVAL      MsgIdArr(Idx) = 'SE10013'                                 CSW206D
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         ENDIF                                                               CSW206D
      C                   IF        #5IMMD5 <> *BLANKS                                        CSW206E
                                                                                              CSW206E
@@ -4623,20 +4625,20 @@
      C                   ENDIF                                                               CSW206E
                                                                                              CSW206E
      C                   ENDIF                                                               CSW206E
- 
+
       ** Validate intermediary 6
       ** -----------------------
- 
+
      C**********         IF        #5IMMD6 <> *BLANKS                                        CSW206D
- 
+
      C**********         IF        #5IMMD5 = *BLANKS                                         CSW206D
      C**********         EVAL      IMMD6Ok = 'N'                                             CSW206D
      C**********         EVAL      Idx = Idx + 1                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMMD6'                               CSW206D
      C**********         EVAL      MsgIdArr(Idx) = 'SE10021'                                 CSW206D
- 
+
      C**********         ELSE                                                                CSW206D
- 
+
      C**********         EVAL      WWIMMD = #5IMMD6                                          CSW206D
      C**********         EVAL      WWIMSA = #5IMSA6                                          CSW206D
      C**********         EVAL      TWIMMD = T5IMMD6                                   201486 CSW206D
@@ -4644,28 +4646,28 @@
      C**********         EVAL      #5IMMD6 = WWIMMD                                          CSW206D
      C**********         EVAL      #5IMSA6 = WWIMSA                                   201486 CSW206D
      C**********         EVAL      T5IMMD6 = TWIMMD                                   201486 CSW206D
- 
+
      C**********         IF        WErrIMMD = 'Y'                                            CSW206D
      C**********         EVAL      IMMD6Ok = 'N'                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMMD6'                               CSW206D
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         IF        WErrIMSA = 'Y'                                            CSW206D
      C**********         EVAL      IMSA6Ok = 'N'                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMSA6'                               CSW206D
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         ELSE                                                                CSW206D
- 
+
      C**********         IF        #5IMSA6 <> *BLANK                                         CSW206D
      C**********         EVAL      IMSA6Ok = 'N'                                             CSW206D
      C**********         EVAL      Idx = Idx + 1                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMSA6'                               CSW206D
      C**********         EVAL      MsgIdArr(Idx) = 'SE10014'                                 CSW206D
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         ENDIF                                                               CSW206D
      C                   IF        #5IMMD6 <> *BLANKS                                        CSW206E
                                                                                              CSW206E
@@ -4707,20 +4709,20 @@
      C                   ENDIF                                                               CSW206E
                                                                                              CSW206E
      C                   ENDIF                                                               CSW206E
- 
+
       ** Validate intermediary 7
       ** -----------------------
- 
+
      C**********         IF        #5IMMD7 <> *BLANKS                                        CSW206D
- 
+
      C**********         IF        #5IMMD6 = *BLANKS                                         CSW206D
      C**********         EVAL      IMMD7Ok = 'N'                                             CSW206D
      C**********         EVAL      Idx = Idx + 1                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMMD7'                               CSW206D
      C**********         EVAL      MsgIdArr(Idx) = 'SE10020'                                 CSW206D
- 
+
      C**********         ELSE                                                                CSW206D
- 
+
      C**********         EVAL      WWIMMD = #5IMMD7                                          CSW206D
      C**********         EVAL      WWIMSA = #5IMSA7                                          CSW206D
      C**********         EVAL      TWIMMD = T5IMMD7                                   201486 CSW206D
@@ -4728,28 +4730,28 @@
      C**********         EVAL      #5IMMD7 = WWIMMD                                          CSW206D
      C**********         EVAL      #5IMSA7 = WWIMSA                                   201486 CSW206D
      C**********         EVAL      T5IMMD7 = TWIMMD                                   201486 CSW206D
- 
+
      C**********         IF        WErrIMMD = 'Y'                                            CSW206D
      C**********         EVAL      IMMD7Ok = 'N'                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMMD7'                               CSW206D
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         IF        WErrIMSA = 'Y'                                            CSW206D
      C**********         EVAL      IMSA7Ok = 'N'                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMSA7'                               CSW206D
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         ELSE                                                                CSW206D
- 
+
      C**********         IF        #5IMSA7 <> *BLANK                                         CSW206D
      C**********         EVAL      IMSA7Ok = 'N'                                             CSW206D
      C**********         EVAL      Idx = Idx + 1                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMSA7'                               CSW206D
      C**********         EVAL      MsgIdArr(Idx) = 'SE10015'                                 CSW206D
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         ENDIF                                                               CSW206D
      C                   IF        #5IMMD7 <> *BLANKS                                        CSW206E
                                                                                              CSW206E
@@ -4791,20 +4793,20 @@
      C                   ENDIF                                                               CSW206E
                                                                                              CSW206E
      C                   ENDIF                                                               CSW206E
- 
+
       ** Validate intermediary 8
       ** -----------------------
- 
+
      C**********         IF        #5IMMD8 <> *BLANKS                                        CSW206D
- 
+
      C**********         IF        #5IMMD7 = *BLANKS                                         CSW206D
      C**********         EVAL      IMMD8Ok = 'N'                                             CSW206D
      C**********         EVAL      Idx = Idx + 1                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMMD8'                               CSW206D
      C**********         EVAL      MsgIdArr(Idx) = 'SE10019'                                 CSW206D
- 
+
      C**********         ELSE                                                                CSW206D
- 
+
      C**********         EVAL      WWIMMD = #5IMMD8                                          CSW206D
      C**********         EVAL      WWIMSA = #5IMSA8                                          CSW206D
      C**********         EVAL      TWIMMD = T5IMMD8                                   201486 CSW206D
@@ -4812,28 +4814,28 @@
      C**********         EVAL      #5IMMD8 = WWIMMD                                          CSW206D
      C**********         EVAL      #5IMSA8 = WWIMSA                                   201486 CSW206D
      C**********         EVAL      T5IMMD8 = TWIMMD                                   201486 CSW206D
- 
+
      C**********         IF        WErrIMMD = 'Y'                                            CSW206D
      C**********         EVAL      IMMD8Ok = 'N'                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMMD8'                               CSW206D
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         IF        WErrIMSA = 'Y'                                            CSW206D
      C**********         EVAL      IMSA8Ok = 'N'                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMSA8'                               CSW206D
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         ELSE                                                                CSW206D
- 
+
      C**********         IF        #5IMSA8 <> *BLANK                                         CSW206D
      C**********         EVAL      IMSA8Ok = 'N'                                             CSW206D
      C**********         EVAL      Idx = Idx + 1                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMSA8'                               CSW206D
      C**********         EVAL      MsgIdArr(Idx) = 'SE10018'                                 CSW206D
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         ENDIF                                                               CSW206D
      C                   IF        #5IMMD8 <> *BLANKS                                        CSW206E
                                                                                              CSW206E
@@ -4875,13 +4877,13 @@
      C                   ENDIF                                                               CSW206E
                                                                                              CSW206E
      C                   ENDIF                                                               CSW206E
- 
+
       ** Validate intermediary 9
       ** -----------------------
- 
+
      C**********         IF        #5IMMD9 <> *BLANKS                                        CSW206D
      C                   IF        #5IMMD9 <> *BLANKS                                        CSW206E
- 
+
      C**********         IF        #5IMMD8 = *BLANKS                                          209934
      C**********         EVAL      IMMD9Ok = 'N'                                              209934
      C**********         EVAL      Idx = Idx + 1                                              209934
@@ -4889,7 +4891,7 @@
      C**********         EVAL      MsgIdArr(Idx) = 'SE10018'                                  209934
       **********                                                                              209934
      C**********         ELSE                                                                 209934
- 
+
      C**********         EVAL      WWIMMD = #5IMMD9                                          CSW206D
      C**********         EVAL      WWIMSA = #5IMSA9                                          CSW206D
      C**********         EVAL      TWIMMD = T5IMMD9                                   201486 CSW206D
@@ -4897,12 +4899,12 @@
      C**********         EVAL      #5IMMD9 = WWIMMD                                          CSW206D
      C**********         EVAL      #5IMSA9 = WWIMSA                                   201486 CSW206D
      C**********         EVAL      T5IMMD9 = TWIMMD                                   201486 CSW206D
- 
+
      C**********         IF        WErrIMMD = 'Y'                                            CSW206D
      C**********         EVAL      IMMD9Ok = 'N'                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMMD9'                               CSW206D
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         IF        WErrIMSA = 'Y'                                            CSW206D
      C**********         EVAL      IMSA9Ok = 'N'                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMSA9'                               CSW206D
@@ -4924,18 +4926,18 @@
      C                   EVAL      IMSA9Ok = 'N'                                             CSW206E
      C                   EVAL      FldNameArr(Idx) = '#5IMSA9'                               CSW206E
      C                   ENDIF                                                               CSW206E
- 
+
      C**********         ENDIF                                                                209934
- 
+
      C**********         ELSE                                                                CSW206D
- 
+
      C**********         IF        #5IMSA9 <> *BLANK                                         CSW206D
      C**********         EVAL      IMSA9Ok = 'N'                                             CSW206D
      C**********         EVAL      Idx = Idx + 1                                             CSW206D
      C**********         EVAL      FldNameArr(Idx) = '#5IMSA9'                               CSW206D
      C**********         EVAL      MsgIdArr(Idx) = 'SE10017'                                 CSW206D
      C**********         ENDIF                                                               CSW206D
- 
+
      C**********         ENDIF                                                               CSW206D
      C                   ELSE                                                                CSW206E
                                                                                              CSW206E
@@ -4948,7 +4950,7 @@
                                                                                              CSW206E
      C                   ENDIF                                                               CSW206E
      C                   ENDIF                                                               CSW206E
- 
+
       ** Validate place of settlement
       ** ----------------------------
                                                                                              CSW206E
@@ -4956,11 +4958,11 @@
      C                   IF        CSW206 = 'Y' OR PCSW210 = 'Y'                              CSW210
      C                   EVAL      #5PSET = #5PSET1                                          CSW206E
      C                   ENDIF                                                               CSW206E
- 
+
      C                   EVAL      WPPSET = #5PSET
- 
+
      C                   IF        #5PSET <> *BLANKS
- 
+
      C                   MOVEL     #5PSET        PCustKey
      C                   CALLB     'AOCUSTR0'
      C                   PARM      *BLANKS       @RtCd
@@ -4968,22 +4970,22 @@
      C                   PARM                    PCustKey
      C                   PARM      *BLANKS       PKeySts
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
       ** If Return code is not blank then check if entry is a valid BIC code
- 
+
      C                   IF        @RtCd <> *BLANKS
- 
+
      C                   EVAL      PSETOk = 'N'
- 
+
      C**********         IF        PCFT007 = 'Y'                                              199797
- 
+
      C                   MOVEL     #5PSET        WKCSID8
      C                   MOVE      #5PSET        WKCSID4
      C                   MOVEL     WKCSID4       WKCSID3
- 
- 
+
+
       ** Call program to validate ID
- 
+
      C                   CALL      'ME1400'
      C                   PARM      *BLANKS       @RtCd
      C                   PARM                    WKCSID8
@@ -4994,11 +4996,11 @@
      C                   PARM      *BLANKS       WKBICC
      C                   PARM      *BLANKS       WKBICS
      C                   PARM      *BLANKS       WKBICI
- 
- 
+
+
       ** BIC identifier not found
      C                   MOVE      #5PSET        WkVar1            1                          204704
- 
+
      C                   IF        @RtCd = 'Y2U0005' OR @RtCd = 'MIN0246'
      C                             OR WkVar1 <> ' '                                           204704
      C                   EVAL      PSETOk = 'N'
@@ -5006,26 +5008,26 @@
      C                   EVAL      PSETOk = 'Y'
      C                   ENDIF
      C**********         ENDIF                                                                199797
- 
+
      C                   IF        PSETOk = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#5PSET'
      C                   EVAL      MsgIdArr(Idx) = 'SE10031'
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EVAL      #5PSET = BBCUST
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
                                                                                              CSW206E
      C**********         IF        CSW206 = 'Y'                                       CSW206E CSW210
      C                   IF        CSW206 = 'Y' OR PCSW210 = 'Y'                              CSW210
      C                   EVAL      #5PSET1 = #5PSET                                          CSW206E
      C                   ENDIF                                                               CSW206E
- 
+
       ** Validate registration details line 1                                                 CSW210
       ** ------------------------------------                                                 CSW210
                                                                                               CSW210
@@ -5197,7 +5199,7 @@
                                                                                               CSW210
       ** End of screen 3 validation
       ** ==========================
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -5212,31 +5214,31 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCUST        BEGSR
- 
+
      C                   EVAL      WCustType = *BLANK
- 
+
      C                   CALLB     'AOCUSTR0'
      C                   PARM      *BLANKS       @RtCd
      C                   PARM      '*KEY   '     @Optn
      C                   PARM                    PCustKey
      C                   PARM                    PKeySts
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
       ** If Return code is blank then set WCustType to 'C' if Customer
       ** Number; to 'S' if Customer Shortname.
- 
+
      C                   IF        @RtCd = *BLANK AND PKeySts <> '*ERROR'
- 
+
      C                   IF        PKeySts = '*CNUM'
      C                   EVAL      WCustType = 'C'
      C                   ELSE
      C                   EVAL      WCustType = 'S'
      C                   ENDIF
- 
+
       ** If Customer Number or Shortname then save file fields.
- 
+
      C                   EVAL      WWCABA = BBCABA
      C                   EVAL      WWCSID = BBCSID
      C                   EVAL      WWBLCD = BBBLCD
@@ -5244,30 +5246,30 @@
      C                   EVAL      WWCHSC = BBCHSC
      C                   EVAL      WWBNBI = BBBNBI
      C                   MOVE      BBFWCD        WWFWCD
- 
+
       ** Else (error on Customer file) may be a Counterparty Nostro
- 
+
      C                   ELSE
- 
+
      C                   MOVEL     PCustKey      PNost
- 
+
      C                   CALL      'AOCNSTR0'
      C                   PARM      *BLANKS       @RtCd
      C                   PARM      '*KEY   '     @Optn
      C                   PARM                    PNost             8
      C     SDCNST        PARM      SDCNST        DSFDY
- 
+
       ** If Counterparty Nostro found set WCustType to 'N'.
- 
+
      C                   IF        @RtCd = *BLANK
      C                   EVAL      WCustType = 'N'
      C                   EVAL      WCSID = AWSWID
      C                   EVAL      WFWCD = AWFWCD
      C                   EVAL      WBNBI = 'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -5736,60 +5738,60 @@
       *                                                               *
       *****************************************************************
      C     SRLine35      BEGSR
- 
+
       ** Validate First Character
- 
+
      C                   IF        WWLI01 <> '/'
      C                   EVAL      WErr35 = 'Y'
      C                   ENDIF
- 
+
       ** Validate First 2 Characters
- 
+
      C                   IF        WWLI02 = '//' AND
      C                             WWLI04 <> '//BL' AND WWLI04 <> '//CH' AND
      C                             WWLI04 <> '//CP' AND WWLI04 <> '//FW' AND
      C                             WWLI04 <> '//SC'
      C                   EVAL      WErr35 = 'Y'
      C                   ENDIF
- 
+
       ** Validate First 4 Characters
- 
+
      C                   IF        PACCY <> 'USD' AND
      C                             WWLI04 <> '//CH' AND WWLI04 <> '//CP' AND
      C                             WWLI04 <> '//FW'
      C                   EVAL      WErr35 = 'Y'
      C                   ENDIF
- 
+
      C                   IF        PACCY <> 'DEM' AND
      C                             WWLI04 = '//BL'
      C                   EVAL      WErr35 = 'Y'
      C                   ENDIF
- 
- 
+
+
       ** Invalid Entry
- 
+
      C                   IF        WErr35 = 'Y'
      C                   EVAL      WErr35Msg = 'SEW5235'
      C                   GOTO      EVal35
      C                   ENDIF
- 
+
       ** Validate First 5 Characters
- 
+
      C                   IF        WWLI05 = '//CP'
- 
+
      C                   IF        WCustType = 'C' OR WCustType = 'S'
- 
+
       ** If //CP is followed by Blanks then Default this to the
       ** Customer CHIPS Participant
- 
+
      C                   IF        WWBNBI = 'Y' AND WW0535 = *BLANKS
      C                   MOVEL     WWCABA        WW0507
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Error If ' //CP' is not followed by a 3 Digit Number
       ** followed by Blanks
- 
+
      C                   MOVEL     WW0507        WWNUM4
      C                   MOVEL     WWNUM4        WWALP3
      C                   IF        WW0507 <> WWALP3 OR WW0835 <> *BLANKS
@@ -5798,27 +5800,27 @@
      C                   GOTO      EVal35
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If Leftmost 4 Chars are '//FW' followed by Blanks and
       ** Customer SWIFT Id is Blank then Set Up Fedwire Account
- 
+
      C                   IF        WWLI04 = '//FW'
- 
+
      C                   IF        WW0535 = *BLANKS AND WWCSID = *BLANKS
      C                   MOVEL     WWFWCD        WW0513
      C                   ENDIF
- 
+
       ** Error If Positions 14 -35 of WWLI35 are not Blank
- 
+
      C                   IF        WW1435 <> *BLANKS
      C                   EVAL      WErr35 = 'Y'
      C                   EVAL      WErr35Msg = 'SEW5237'
      C                   GOTO      EVal35
      C                   ENDIF
- 
+
       ** Fedwire Account may only be Blank for a Bank with a Valid
       ** SWIFT Address
- 
+
      C                   IF        WW0513 = *BLANKS
      C                   IF        WCustType <> 'C' OR WCustType <> 'S' OR
      C                             WWBNBI = 'N' OR WWCSID = *BLANKS
@@ -5826,11 +5828,11 @@
      C                   EVAL      WErr35Msg = 'SEW5237'
      C                   GOTO      EVal35
      C                   ENDIF
- 
+
       ** Else, must be A 9 Digit Number
- 
+
      C                   ELSE
- 
+
      C                   MOVEL     WW0513        WWNU10
      C                   MOVEL     WWNU10        WWALP9
      C                   IF        WW0513 <> WWALP9
@@ -5838,33 +5840,33 @@
      C                   EVAL      WErr35Msg = 'SEW5239'
      C                   GOTO      EVal35
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Customer or Bank must have a SWIFT Address or a Fedwire A/c
- 
+
      C                   IF        WWCSID = *BLANKS AND WWFWCD = *BLANKS
      C                   EVAL      WErr35 = 'Y'
      C                   EVAL      WErr35Msg = 'SEW5240'
      C                   GOTO      EVal35
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** If Leftmost 4 Chars of WWLI35 are '//BL' followed by Blanks
       ** Set Up the Bankleitzahl Code
- 
+
      C                   IF        WWLI04 = '//BL'
- 
+
      C                   IF        WCustType = 'C' OR WCustType = 'S'
      C                   IF        WWBNBI = 'Y' AND WW0535 = *BLANKS
      C                   MOVEL     WWBLCD        WW0512
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Error If '//BL' not followed by 8 Digits Number followed by
       ** Blanks
- 
+
      C                   MOVEL     WW0512        WWNUM9
      C                   MOVEL     WWNUM9        WWALP8
      C                   IF        WW0512 <> WWALP8 OR WW1335 <> *BLANKS
@@ -5872,39 +5874,39 @@
      C                   EVAL      WErr35Msg = 'SEW5241'
      C                   GOTO      EVal35
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** If Leftmost 4 Chars of WWLI35 are '//CH' followed by Blanks
       ** Set Up Customer CHIPS Universal Id
- 
+
      C                   IF        WWLI04 = '//CH'
- 
+
      C                   IF        WCustType = 'C' OR WCustType = 'S'
      C                   IF        WWBNBI = 'Y' AND WW0535 = *BLANKS
      C                   MOVEL     WWCHID        WW0510
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** If Leftmost 4 Chars of WWLI35 are '//SC' followed by Blanks
       ** Set Up CHAPS Sort Code
- 
+
      C                   IF        WWLI04 = '//SC'
- 
+
      C                   IF        WCustType = 'C' OR WCustType = 'S'
      C                   IF        WWBNBI = 'Y' AND WW0535 = *BLANKS
      C                   MOVEL     WWCHSC        WW0510
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Error If '//CH' or '//SC' are not followed by a 6 Digit Number
- 
+
      C                   IF        WWLI04 = '//CH' OR WWLI04 = '//SC'
- 
+
      C                   MOVEL     WW0510        WWNUM7
      C                   MOVEL     WWNUM7        WWALP6
      C                   IF        WW0510 <> WWALP6 OR WW1135 <> *BLANKS
@@ -5912,9 +5914,9 @@
      C                   EVAL      WErr35Msg = 'SEW5242'
      C                   GOTO      EVal35
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     EVal35        ENDSR
       *****************************************************************
       /EJECT
@@ -5928,31 +5930,31 @@
       *                                                               *
       *****************************************************************
      C     SRME9940      BEGSR
- 
+
      C                   CALL      'ME9940'
      C                   PARM      *BLANKS       @RtCd
      C                   PARM                    DSIParm
      C                   PARM                    DSOParm
      C                   PARM                    DSEParm
      C                   PARM                    WZ#Parm
- 
+
      C                   MOVEL     O#ACLN        WWLI35
      C                   IF        E#ERRM <> *BLANKS
      C                   EVAL      WErr35 = 'Y'
      C                   ELSE
- 
+
       ** Check whether Issuer Code has been defined for the currency
       ** clearing system. If not, set flag on to issue warning message
       ** for later display (SEW5176).
- 
+
      C                   MOVEL     WZ#PARM       W#ISCD
      C                   IF        WWLI02 = '//' AND W#ISCD = *BLANKS AND
      C                             O#ACLN <> WACLN
      C                   EVAL      WICNIL = 'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -5965,15 +5967,15 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValImdF     BEGSR
- 
+
      C                   EVAL      WErrImmd = 'N'
      C                   EVAL      WErrImsa = 'N'
- 
+
       ** Validate Settlement parties
       ** ---------------------------
- 
+
      C                   MOVEL     WWIMMD        PCustKey
      C                   CALLB     'AOCUSTR0'
      C                   PARM      *BLANKS       @RtCd
@@ -5981,22 +5983,22 @@
      C                   PARM                    PCustKey
      C                   PARM      *BLANKS       PKeySts
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
       ** If Return code is not blank then check if entry is a valid BIC code
- 
+
      C                   IF        @RtCd <> *BLANKS
- 
+
      C                   EVAL      WErrImmd = 'Y'
- 
+
      C**********         IF        PCFT007 = 'Y'                                              199797
- 
+
      C                   MOVEL     WWIMMD        WKCSID8
      C                   MOVE      WWIMMD        WKCSID4
      C                   MOVEL     WKCSID4       WKCSID3
- 
- 
+
+
       ** Call program to validate ID
- 
+
      C                   CALL      'ME1400'
      C                   PARM      *BLANKS       @RtCd
      C                   PARM                    WKCSID8
@@ -6007,16 +6009,16 @@
      C                   PARM      *BLANKS       WKBICC
      C                   PARM      *BLANKS       WKBICS
      C                   PARM      *BLANKS       WKBICI
- 
- 
+
+
       ** BIC identifier not found
- 
+
      C                   IF        @RtCd = 'Y2U0005' OR @RtCd = 'MIN0246'
      C                   EVAL      WErrImmd = 'Y'
      C                   ELSE
      C                   EVAL      WErrImmd = 'N'
      C                   ENDIF
- 
+
      C**********         ENDIF                                                                199797
      C                   MOVE      WWIMMD        WKCSID1           1                          204704
      C                   IF        WKCSID1 <> ' '                                             204704
@@ -6024,34 +6026,34 @@
      C**********         ELSE                                                          204704 205141
      C**********         EVAL      WErrImmd = 'N'                                      204704 205141
      C                   ENDIF                                                                204704
- 
+
      C                   IF        WErrImmd = 'Y'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      MsgIdArr(Idx) = 'SE10026'
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C**********         EVAL      WWIMMD = BBCUST                                            205141
      C                   EVAL      WWIMMD = BBCSID                                            205141
      C                   IF        WWIMMD = *BLANKS                                           209934
      C                   EVAL      WWIMMD = BBCUST                                            209934
      C                   ENDIF                                                                209934
- 
+
      C                   ENDIF
- 
+
       ** Check settlement amount is unique
- 
+
      C                   IF        WErrImmd = 'N'
      C                   EVAL      WCtr3 = 1
- 
+
      C                   DOW       WCtr3 <= 9
- 
+
      C                   IF        WIMDArr(WCtr3) = *BLANKS
      C                   MOVEL     WWIMMD        WIMDArr(WCtr3)
      C                   LEAVE
      C                   ELSE
- 
+
      C                   IF        WIMDArr(WCtr3) = WWIMMD
      C                   EVAL      WErrImmd = 'Y'
      C                   EVAL      Idx = Idx + 1
@@ -6059,52 +6061,52 @@
      C                   EVAL      MsgIdArr(Idx) = 'SE10038'
      C                   LEAVE
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      WCtr3 = WCtr3 + 1
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   EXSR      SRDOORS                                                    201486
                                                                                               201486
       ** Validate Safekeeping account
       ** ----------------------------
- 
+
       ** A settlement message is requested
- 
+
      C                   IF        #2GMES = 'Y'
                                                                                               199797
      C                   IF        PISOMsgI <> 'Y'                                            199797
- 
+
       ** Safekeeping account must start with a slash "/"
- 
+
      C                   MOVEL     WWIMSA        WWSAFA1
      C                   IF        WWSAFA1 <> '/'
      C                   EVAL      WErrImsa = 'Y'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      MsgIdArr(Idx) = 'SEW5210'
      C                   ENDIF
- 
+
      C                   MOVEL     WWIMSA        WWLI02
      C                   IF        WWLI02 = '//'
      C                   EVAL      WErrImsa = 'Y'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      MsgIdArr(Idx) = 'SEW5211'
      C                   ENDIF
- 
+
      C                   MOVE      WWIMSA        WWLI19
      C                   IF        WWSAFA1 = '/' AND WWLI19 = *BLANKS
      C                   EVAL      WErrImsa = 'Y'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      MsgIdArr(Idx) = 'SEW5212'
      C                   ENDIF
- 
+
      C                   ENDIF
                                                                                               199797
      C                   ENDIF                                                                199797
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -6187,13 +6189,13 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRUpdate      BEGSR
- 
+
      C**********         IF        PABCH = *BLANKS AND PACUST = 0 AND                         199797
      C**********                   PABK = *BLANKS AND PACCY = *BLANKS AND                     199797
      C**********                   PAINV = *BLANKS AND PAPREF = *BLANKS                       199797
- 
+
      C                   EVAL      PABCH   = #1BRCH
      C                   MOVE      #1CUST        PACUST
      C                   EVAL      PABK    = #1BOOK
@@ -6201,15 +6203,15 @@
      C                   EVAL      PAMKT   = #1MKCT                                           CSE034
      C                   EVAL      PAINV   = #1INVT
      C                   EVAL      PAPREF  = #1PORF
- 
+
      C**********         ENDIF                                                                199797
- 
+
      C                   IF        PAdDType = 'P'
      C                   EVAL      PATYPE  = 'P'
      C                   ELSE
      C                   EVAL      PATYPE  = 'S'
      C                   ENDIF
- 
+
      C                   EVAL      PAGMES  = #2GMES
      C                   EVAL      PACONG  = #2CONG
      C                   EVAL      PAINST  = #2INST
@@ -6218,7 +6220,7 @@
      C                   EVAL      PAGDEL  = #2GDEL
      C                   EVAL      PASROL  = #2SROL
      C                   EVAL      PAFIND  = #2FIND
- 
+
      C                   IF        PAdDType = 'P'
      C                   EVAL      PACCTN  = #3CCTN
      C                   EVAL      PADRSN  = #3DRSN
@@ -6249,7 +6251,7 @@
      C                   EVAL      PANAS1  = #4NAS1
      C                   EVAL      PANAS2  = #4NAS2
      C                   ENDIF
- 
+
      C                   EVAL      PAIMD1 = #5IMMD1
      C                   EVAL      PAIMD2 = #5IMMD2
      C**********         EVAL      PAIMD3 = #5IMMD3                                          CSW206D
@@ -6289,7 +6291,7 @@
      C                   ELSE                                                                CSW206E
      C                   EVAL      PAPSET  = #5PSET1                                         CSW206E
      C                   ENDIF                                                               CSW206E
- 
+
      C                   IF        PCSW210 = 'Y'                                              CSW210
      C                   EVAL      PAPSET  = #5PSET1                                          CSW210
      C                   ELSE                                                                 CSW210
@@ -6319,13 +6321,13 @@
      C                   EVAL      PADAD2  = @DADDR2                                          CSW210
      C                   EVAL      PADAD3  = @DADDR3                                          CSW210
      C                   EVAL      PADAD4  = @DADDR4                                          CSW210
- 
+
      C                   EVAL      PASTMP  = #2STMP
      C                   EVAL      PACHID  = #2CHID
      C                   EVAL      PATRRM  = #2TRRM
- 
+
      C                   EVAL      PMODE = 'R'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -6339,22 +6341,22 @@
       *                                                               *
       *****************************************************************
      C     SRReturn      BEGSR
- 
+
      C                   EVAL      WInit = ' '
      C                   EVAL      RetCodeOut = PRetCode
      C                   CLEAR                   PrevMsg                                      CSW210
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** The following /COPY line includes the ProcMsgs subroutine
       ** to process error and warning messages.
- 
+
      C/COPY ZACPYSRC,MSGHNDDSP2
- 
+
       ***Subroutine SWIFT                                                            CSW210 AR570983
       **********                                                                     CSW210 AR570983
       **********/COPY FTCPYSRC,SFTSWFTCLE                                            CSW210 AR570983
@@ -6567,11 +6569,11 @@
       * *INZSR - Initial Processing
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Receive entry parameters.
- 
+
      C     *ENTRY        PLIST
- 
+
       ** Input Parameters
       ** ================
       ** Action Code
@@ -6587,7 +6589,7 @@
       ** Customer/Book indicator
       ** ISO15022 message indicator
       ** To be used for depot movement
- 
+
      C                   PARM                    ActionCode
      C                   PARM                    PBranch
      C                   PARM                    PCustomer
@@ -6601,27 +6603,27 @@
      C                   PARM                    PCBInd
      C                   PARM                    PISOMsgI
      C                   PARM                    PForDpmI
- 
+
       ** SDBANKPD
       ** ========
       ** Rundate
- 
+
      C                   PARM                    PBJMRDT
- 
+
       ** SDMMODPD
       ** ========
       ** Portfolio Management
       ** Private Banking
- 
+
      C                   PARM                    PBGPFMG
      C                   PARM                    PBGN4ST
- 
+
       ** SDSECSPD
       ** ========
       ** Customer classification
- 
+
      C                   PARM                    PBFCLAS
- 
+
       ** SCSARDPD
       ** ========
       ** ERI
@@ -6630,7 +6632,7 @@
       ** ISO15022 Data Export                                                                 209247
       ** SWIFT 2010 changes                                                                   CSW210
       ** IBAN                                                                                 CSW210
- 
+
      C                   PARM                    PCSW014
      C                   PARM                    PCSW098
      C                   PARM                    PCFT007
@@ -6639,64 +6641,64 @@
      C                   PARM                    PCSW210                                      CSW210
      C                   PARM                    PCFT004                                      CSW210
      C                   PARM                    PCSW202                                    AR325342
- 
+
       ** Input-Output Parameters
       ** =======================
       ** Data Structure for additional settlement details
- 
+
      C                   PARM                    PAddSetD
- 
+
       ** Output Parameters
       ** =================
       ** Return code
- 
+
      C                   PARM                    RetCodeOut
- 
+
       ** Move workstation ID to screen field.
- 
+
      C                   EVAL      #1USER = PsUser
      C                   EVAL      #1WID  = PsJobName
      C                   EVAL      #1DATE = PBJMRDT
- 
+
       ** Initialise the fixed parameters for ZAMSGHNDLE.
- 
+
      C                   EVAL      ModuleID     = 'SE'
      C                   EVAL      APRPRLOCN    = 'S'
      C                   EVAL      APCNFVALFO   = 'N'
      C                   EVAL      APRespMode   = 'S'
- 
+
       ** Set up the prime and secondary message files for
       ** finding message IDs.
- 
+
      C                   EVAL      #MsgFile     = 'SEUSRMSG'
      C                   EVAL      MsgFArray(1) = 'DRSMM'
      C                   EVAL      MsgFArray(2) = 'MEMSG'
- 
+
       ** Message subfile control
- 
+
      C                   EVAL      *IN97 =  '1'
      C                   EVAL      #1PGMQ = '*'
- 
+
       ** Program, module and procedure names for database error processing
       ** =================================================================
       ** The following /COPY sets these values.
- 
+
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module.
- 
+
      C/COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
 **  CPY@
 (c) Finastra International Limited 2001
 ** WInzIndArr

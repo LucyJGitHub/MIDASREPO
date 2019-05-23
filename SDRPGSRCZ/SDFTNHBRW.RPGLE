@@ -12,14 +12,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD039670           Date 26Jul16               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD039670           Date 26Jul16               *
       *                 MD029849           Date 12Sep14               *
       *                 MD026515           Date 28Apr14               *
       *                 CGL132   *CREATE   Date 01May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039670 - FATCA Housekeeping program                        *
       *  MD029849 - Issues on NAHL/NAHE with FATCA                    *
@@ -38,10 +40,10 @@
      F                                     SFILE(SDFTNHS1:@@RRN)
       * Customer file - by Front Office Id.
      FSDFTNHL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*pssr)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -53,12 +55,12 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
@@ -71,7 +73,7 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -79,58 +81,58 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
      D/COPY ZACPYSRC,MSGHNDDCL
       **--------------------------------------------------------------------------------------------
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @FTR            S             30    DIM(3) CTDATA PERRCD(1)
- 
+
       ** EXTERNAL DS FOR BANK DETAILS
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for SAR Details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D SystemDS        DS            12
      D  DDHMSV
      D  DDMCSV
@@ -157,13 +159,13 @@
      D  DDTEOV
      D  DDTXOV
      D  DDAUOV
- 
+
      D/COPY WNCPYSRC,SDCUSDBD01
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -182,13 +184,13 @@
       ** Set up the customer reference to be used by the message handler
      C                   EVAL      TranRef = DDCUSN
      C                   EVAL      ActionCode = DDACTN
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes processing for the error and
       ** warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP1
       **--------------------------------------------------------------------------------------------
- 
+
       ** Initialization
       *
      C                   EXSR      INIT
@@ -202,7 +204,7 @@
       **  Stay in loop while F11 toggle key is used.
       *
      C     *INKN         DOUEQ     '0'
- 
+
       *
       * Clear program message queue
      C                   CALL      'ZA0250'
@@ -313,7 +315,7 @@
      C                   ENDIF
       *
      C                   Z-ADD     @@RRN         DDSFRN
- 
+
      C                   EVAL      DDNAHO = FNNAHO
      C                   EVAL      DDHMSVD = FNHMSV
      C                   EVAL      DDHMOVD = FNHMOV
@@ -339,7 +341,7 @@
      C                   EVAL      DDTXOVD = FNTXOV
      C                   EVAL      DDAUSVD = FNAUSV
      C                   EVAL      DDAUOVD = FNAUOV
- 
+
      C                   WRITE     SDFTNHS1
      C/COPY WNCPYSRC,SDCUSDBC02
                                                                                             MD025047
@@ -406,7 +408,7 @@
      C                   RETURN
      C                   END
       *
- 
+
       **  If F14, bypass further processing.
      C     *INKN         IFEQ      '1'
      C                   MOVEL     '1'           @INKN
@@ -415,7 +417,7 @@
      C                   ENDIF
       *
      C                   ENDDO
- 
+
      C                   ENDSR
       ********************************************************************
       /EJECT
@@ -490,7 +492,7 @@
      C                   ENDIF                                                              MD039670
       **
      C                   MOVE      *BLANK        IgnorRec         12
- 
+
      C                   IF        DDHMSV <> *BLANK
      C                   IF        FNHMSV <> DDHMSV AND
      C                             DDHMSV <> 'B' OR
@@ -1126,7 +1128,7 @@
      C                   EVAL      %SUBST(IgnorRec:12:1) = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        %SCAN(' ' : USindicia) <> *ZERO and
      C                             (%SCAN('Y' : USindicia) <> *ZERO or
      C                              %SCAN('N' : USindicia) <> *ZERO)
@@ -1142,7 +1144,7 @@
      C                              %SCAN('B' : OverrideDS) <> *ZERO)
      C
      C                   MOVE      *ZEROS        USidx             2 0
- 
+
      C                   DO        12
      C                   EVAL      USidx = USidx + 1
      C                   IF        %SUBST(USindicia:USidx:1) = *BLANK
@@ -1153,9 +1155,9 @@
      C                   EVAL      %SUBST(IgnorRec:USidx:1) = 'Y'
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   IF        IgnorRec = 'YYYYYYYYYYYY'
      C                   MOVE      *BLANK        FNNAHO
      C                   ENDIF
@@ -1194,11 +1196,11 @@
       *                                                               *
       *****************************************************************
      C     ZEDIT         BEGSR
- 
+
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD           16
      C                   PARM                    ZADEC             1 0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1208,13 +1210,13 @@
       *                                                               *
       *****************************************************************
      C     ZDATE2        BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE             6 0
      C                   PARM                    ZADATE            7
- 
+
      C                   ENDSR
       ********************************************************************
       /EJECT
@@ -1282,7 +1284,7 @@
      C                   MOVEL     @OPTN         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      *IN55 = '0'                                              MD029849
      C                   IF        PMODE = 'E'                                              MD029849
      C                   EVAL      *IN55 = '1'                                              MD029849
@@ -1328,7 +1330,7 @@
       ** functions for the message handler, ZAMSGHNDLE.
      D/COPY SDCPYSRC,MSGHNDDATA
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDSR
       *****************************************************************
       *
@@ -1337,7 +1339,7 @@
       ** to process error and warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP2
       **--------------------------------------------------------------------------------------------
- 
+
       *****************************************************************
       ** Program, module and procedure names for database error processing.
       ** =================================================================

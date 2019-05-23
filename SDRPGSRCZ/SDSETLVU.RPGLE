@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD052610           Date 04Feb19
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD052610           Date 04Feb19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD046115           Date 28Jul17               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD-52610 - when ddactn=action/enquire stop doung CovertSt    *
       *             querying of cust details is already done on java  *
       *  MD046248 - Finastra Rebranding                               *

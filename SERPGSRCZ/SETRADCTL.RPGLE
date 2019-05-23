@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       *                 CSF011A            Date 28Nov11               *
       *                 AR698195B          Date 20Jan11               *
       *                 CSW210             Date 04May10               *
@@ -113,6 +114,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
@@ -215,7 +217,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       * Valid Trades
      FSEVTRADPD UF A E             DISK    INFSR(*pssr)
      F                                     PREFIX(V_)
@@ -234,17 +236,17 @@
       * Invalid Trades
      FSEITRADPD UF A E             DISK    INFSR(*pssr)
      F                                     COMMIT
- 
+
      FSEVTRADL0 IF   E           K DISK    RENAME(SEVTRADD0:SEVTRADCHK)
      F                                     INFSR(*pssr)                         CAP013
      FSEVTRADL1 IF   E           K DISK    RENAME(SEVTRADD0:SEVTRADCK1)         CAP013
      F                                     INFSR(*pssr)                         CAP013
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
       * Trade Extension File 3                                                                CSE039
      FTRADSDX3  UF A E             DISK    INFSR(*pssr)                                       CSE039
      F                                     COMMIT                                             CSE039
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SETRADC016
                                                                                               CER001
@@ -261,7 +263,7 @@
      FSEITDLX1PDUF A E             DISK    USROPN                                             CER001
      F                                     INFSR(*pssr)                                       CER001
      F                                     COMMIT                                             CER001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -280,62 +282,62 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API *CTL modules.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** used in checking whether there are messages on the data queue.
      D/COPY ZACPYSRC,DTAQCHKDCL
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** String for error messages to the operator
      D ProcErr         C                   CONST('Error in module')
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -343,10 +345,10 @@
                                                                                               CSC022
      D WCmtJobArr      S             10A   DIM(10)                                            CSC022
       ** Array for commitment job names                                                       CSC022
- 
+
       * Incoming Header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
- 
+
       * Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(SETRPRPD)
      D TranInSeco    E DS                  EXTNAME(SETRSEPD)
@@ -363,7 +365,7 @@
      D                                     PREFIX(I)                                          247873
      D TranInSwfO    E DS                  EXTNAME(SETRSWPD)                                  247873
      D                                     PREFIX(O)                                          247873
- 
+
       *                                                                                       CSE045
       ** Securities retrieved from file - file format                                         CSE045
      D CrSEFilFmt    E DS                  EXTNAME(TRADSDX2)                                  CSE045
@@ -385,7 +387,7 @@
       *                                                                                       CSE045
       ** Securities screen error indicators                                                   CSE045
      D SEETES        E DS                  EXTNAME(SEETESPD)                                  CSE045
- 
+
      D ValidTrad     E DS                  EXTNAME(SEVTRADPD)
      D                                     PREFIX(V_)
      D ValidTrX1     E DS                  EXTNAME(SEVTRX1PD)
@@ -394,21 +396,21 @@
      D                                     PREFIX(VA_)
      D ValidTX1B     E DS                  EXTNAME(SEVTRX1PD)
      D                                     PREFIX(VB_)
- 
+
      D ValidTrX2     E DS                  EXTNAME(SEVTRX2PD)                                 CSE045
      D                                     PREFIX(V_)                                         CSE045
      D ValidTX2A     E DS                  EXTNAME(SEVTRX2PD)                                 CSE045
      D                                     PREFIX(VA_)                                        CSE045
      D ValidTX2B     E DS                  EXTNAME(SEVTRX2PD)                                 CSE045
      D                                     PREFIX(VB_)                                        CSE045
- 
+
      D TradFilFmt    E DS                  EXTNAME(TRADSD)
      D TX1AFilFmt    E DS                  EXTNAME(TRADSDX1)
      D                                     PREFIX(A_)
      D TX1BFilFmt    E DS                  EXTNAME(TRADSDX1)
      D                                     PREFIX(B_)
- 
- 
+
+
       * (Current) Trade in Screen Format - Primary Details
      D CurTrPrim     E DS                  EXTNAME(SETRPRPD)
      D                                     PREFIX(@)
@@ -434,8 +436,8 @@
       * (Current) Trade in Screen Format - SWIFT 'B' Details
      D CurTrSwftB    E DS                  EXTNAME(SETRSWPD)
      D                                     PREFIX(@B)
- 
- 
+
+
       * Error indicators
      D OKTrPrim      E DS                  EXTNAME(SEETRPRPD)
      D OKTrSeco      E DS                  EXTNAME(SEETRSEPD)
@@ -445,8 +447,8 @@
      D DDCLTY2OK     E                     EXTFLD(DDCLTYOK)
      D OKTrChcm      E DS                  EXTNAME(SEETRCCPD)
      D OKTrSwft      E DS                  EXTNAME(SEETRSWPD)
- 
- 
+
+
       ** Security Details
      D SECTY         E DS                  EXTNAME(SECTYD)
      D SEC_RECI      E                     EXTFLD(RECI)
@@ -459,7 +461,7 @@
      D SEC_REPA      E                     EXTFLD(REPA)                                       CAP137
      D SEC_TMST      E                     EXTFLD(TMST)                                       CAP137
      D SEC_NDEC      E                     EXTFLD(NDEC)                                       CSE037
- 
+
       ** Investment Type Details
      D INVTP         E DS                  EXTNAME(INVTPD)
      D INV_RECI      E                     EXTFLD(RECI)
@@ -467,14 +469,14 @@
      D INV_CHTP      E                     EXTFLD(CHTP)
      D INV_TNLU      E                     EXTFLD(TNLU)
      D INV_NDEC      E                     EXTFLD(NDEC)                                       CSE037
- 
- 
+
+
       ** The following /COPY includes the customer details data structure
      D/COPY SECPYSRC,SE_CUSTDT
       ** The following /COPY includes the currency details data structures
      D/COPY SECPYSRC,SE_CCYDT
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)                                  CSE045
@@ -506,7 +508,7 @@
       * First DS for Access programs - short data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * Second DS for Access programs - long data structure
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
       ** 24X7 status data area                                                                CSC011
                                                                                               CSC011
@@ -527,16 +529,16 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Error message field(s)
      D     Msg1        S                   LIKE(#MsgID)
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Fields (500A) to receive the incoming transaction
      D Trans5001       S            500A
      D Trans5002       S            500A
@@ -560,26 +562,26 @@
       ** Field (4755A) to receive the incoming Extra Data                                     CSE045
      D***OthDData4755    S           4755A                                            CSE045 CSF011A
      D OthrData        S           4878A                                                     CSF011A
- 
+
       ** Index for arrays of error message ids etc in Amend validation
      D AmIdx           S              3P 0
- 
+
       ** Indicies for arrays used to set up corresponding sequence numbers
       **  for the fields that are in error
      D Ix              S              3P 0
      D Iy              S              3P 0
- 
- 
- 
+
+
+
       ** Overall Transaction status, to be passed to the Message Handler
      D TranStatus      S              1A
- 
+
       ** Module ID, to be passed to the Message Handler
      D ModuleID        S              2A
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
      D Object          S             10A   INZ('SETRADUPC')
      D Lib             S             10A   INZ('*LIBL')
      D ObjType         S              7A
@@ -588,12 +590,12 @@
      D WaitTime        S              6A   INZ('0     ')
      D Dlcobj          S              1A   INZ('Y')
      D Return          S              7A
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
      D CSC011          S              1A                                                      CSC011
      D TRANSDTL        S           5800A                                                      CSC011
      D*PDealNo**       S             18A                                               CSC011 CGL029
@@ -614,7 +616,7 @@
       *                                                                         CSE023
       ** Withholding tax                                                        CSE023
      D DDWTAX          S             15A                                        CSE023
- 
+
       ** Swift 2001 flag                                                                      CSW201
      D CSW201          S              1A                                                      CSW201
                                                                                               CSW201
@@ -669,14 +671,14 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SETRADC017
- 
+
       *                                                                                       CER001
       ** Valid Extended trade in File Format                                                  CER001
       *                                                                                       CER001
@@ -712,9 +714,9 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       /COPY WNCPYSRC,SETRADC001
- 
+
       * Incoming transaction is broken into 500A fields, so that a common CL
       * can be used between this module and the one that read the MQ queue.
       * This module needs to break these 500A fields by loading them into
@@ -734,20 +736,20 @@
      C                   MOVEL     OthrData      OthDData                                    CSF011A
      C                   MOVEL     TranInExt1    TranInExtA                                   CSE045
      C                   MOVEL     TranInExt2    TranInExtB                                   CSE045
- 
+
       ** Generate a timestamp for this transaction
- 
+
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
       * Reset variables gradually updated
- 
+
      C                   EXSR      RESETCYCLE
- 
+
       /COPY WNCPYSRC,SETRADC002
- 
+
       *  Check if valid trade exists for Front Office ID
- 
+
      C                   EXSR      ChkValTrad
       *
       *  If valid trade does exist (even after delay), fail this input
@@ -765,36 +767,36 @@
      C     Idx           IFNE      0                                            CAP013
      C                   GOTO      INVALID                                      CAP013
      C                   END                                                    CAP013
- 
+
       * Reset variables again in case the details have been corrupted
       * by previous chain to valid trades file.
- 
+
      C                   EXSR      RESETCYCLE
- 
+
       /COPY WNCPYSRC,SETRADC003
- 
+
       *  Validate Action Code
- 
+
      C                   EXSR      ValidateAc
       *
       /COPY WNCPYSRC,SETRADC004
- 
+
       *  If error in validation of action code, fail this input
       *
      C     Idx           IFNE      0
      C                   GOTO      INVALID
      C                   END
- 
+
       *  Processing depends upon Action Code
- 
+
      C                   SELECT
- 
+
      C                   WHEN         DDACTN = 'I'
       *  Processing for Inserts
       /COPY WNCPYSRC,SETRADC005
      C                   EXSR      ValidateTr
       /COPY WNCPYSRC,SETRADC006
- 
+
      C                   WHEN         DDACTN = 'A'
      C                             OR DDACTN = 'C'
       *  Processing for Amends or Changes
@@ -818,38 +820,38 @@
       /COPY WNCPYSRC,SETRADC009
      C                   EXSR      ValdateAmd
       /COPY WNCPYSRC,SETRADC010
- 
+
      C                   ENDSL
       *
      C     INVALID       TAG
- 
+
       *  Check for exception error from any program lower in the stack
       *  If error detected, send message to system operator and
       *  return to calling program without updating database or
       *  prompting the database update program
      C                   IN        APDUMP
       /COPY WNCPYSRC,SETRADC011
- 
+
      C     ARERRMOD      IFNE      *BLANK
      C                   EVAL      MQErrlong  = *blank
      C                   MOVEL     ProcErr       MQError
      C                   MOVE      ARERRMOD      MQError          28
      C                   MOVEL     MQError       MQErrlong
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    MQReturn         10
      C                   PARM                    MQErrlong       132
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
- 
+
      C                   MOVEL     ARERRMOD      APRETCODE
      C     *LOCK         IN        APDUMP
      C                   EVAL      ARERRMOD = *BLANK
      C                   OUT       APDUMP
      C                   RETURN
- 
+
      C                   ELSE
- 
+
       *  Processing for Error checking/write to database
       /COPY WNCPYSRC,SETRADC012
       *                                                                                       CER001
@@ -912,7 +914,7 @@
      C                   ENDIF                                                                CER001
      C                   EXSR      CheckWrite
       /COPY WNCPYSRC,SETRADC013
- 
+
       *  If valid, send data queue entry to prompt DB update program
      C     Idx           IFEQ      0
      C                   EVAL      ObjType = '*DTAARA'
@@ -927,25 +929,25 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM      *BLANK        Return
- 
+
      C     Return        IFEQ      *BLANK
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes a check for whether there
       ** are messages on the server/updater data queue, and sends a 'GO'.
       ** message to the data queue if there are not.
      D/COPY ZACPYSRC,DTAQCHK
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SETRADC018
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -955,18 +957,18 @@
       *                                                               *
       *****************************************************************
      C     ChkValTrad    BEGSR
- 
+
       * Check for trade on Valid file
      C     APFOTranID    CHAIN     SEVTRADL0                          99
- 
+
       * If record found...
      C     *IN99         IFEQ      '0'
- 
+
       * ..delay, then repeat check
      C                   CALLB     'ZACDELAY'
- 
+
      C     APFOTranID    CHAIN     SEVTRADL0                          99
- 
+
       * Error if still present
      C     *IN99         IFEQ      '0'
      C                   ADD       1             Idx
@@ -974,7 +976,7 @@
      C                   EVAL      MsgIDArr(Idx) = 'APM0900'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                    CAP013
@@ -1042,11 +1044,11 @@
      C                   MOVEL     '      '      ModeofOp                       CAP013
      C                   ENDIF                                                  CAP013
      C                   ENDIF                                                  CAP013
- 
+
       * Validate action code versus transaction IDs supplied
       * This function will set the Midas trade reference
       * The trade in file format from the SE database is retrieved as well.
- 
+
      C                   RESET                   ReturnCode
      C                   CALLB     'SETRADRTV'
       *
@@ -1103,7 +1105,7 @@
       *
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       **   Move book from file to work field for later checking.                              193462
       *                                                                                       193462
      C                   MOVE      V_TDBK        OLDBK1            2                          193462
@@ -1119,16 +1121,16 @@
       *                                                               *
       *****************************************************************
      C     SetupAmd      BEGSR
- 
+
       * For Amends, put the complete (pre-existing) trade into the Valid
       *  file record - fields in this will be updated during processing
- 
+
      C                   MOVE      TradFilFmt    ValidTrad
      C                   MOVE      TX1AFilFmt    ValidTX1A
      C                   MOVE      TX1BFilFmt    ValidTX1B
- 
+
       * For Amends, convert the trade to screen format
- 
+
      C                   CALLB     'SETRADCVT'
       *
       * INPUTS
@@ -1158,15 +1160,15 @@
      C                   PARM                    CurTrChCm
      C                   PARM                    CurTrSwftA
      C                   PARM                    CurTrSwftB
- 
+
       ** Security Details
       ** Investment Type Details
      C                   PARM                    SECTY
      C                   PARM                    INVTP
- 
+
       ** Nominal Currency Details
      C                   PARM                    NomCcyDts
- 
+
       ** Settlement Currency Details
      C                   PARM                    SetCcyDts
       *
@@ -1182,7 +1184,7 @@
      C**********         PARM                    DDSRPN           20                          CSE016
      C                   PARM                    DDSRNME          41                          CSE016
      C                   PARM                    DDCRNM           20
- 
+
       * Coupon Rate
       * Current Factor
       * Margin Amount
@@ -1197,7 +1199,7 @@
      C                   PARM                    DDTCTR           21
      C                   PARM                    DDWTAX                         CSE023
      C                   PARM                    DDPRICN                                      CAS006
- 
+
       * SCREEN A
       * Destination of Settlement
       * Destination of Confirmation
@@ -1205,7 +1207,7 @@
      C                   PARM                    A_DDROTS         12
      C                   PARM                    A_DDROUC          6
      C                   PARM                    A_DDROTC         12
- 
+
       * SCREEN B
       * Destination of Settlement
       * Destination of Confirmation
@@ -1214,32 +1216,32 @@
      C                   PARM                    B_DDROUC          6
      C                   PARM                    B_DDROTC         12
      C                   PARM                    DDFRNT                                    AR698195B
- 
+
       *  Certain groups of fields on the trade may not be supplied for an
       *  amendment. If none of the fields in each group were supplied
       *  (i.e. all are blank), default the existing database values ...
- 
+
      C                   IF            (TranInExch = *blank)
      C                   EVAL      TranInExch = CurTrExch
      C                   ENDIF
- 
+
      C                   IF            (TranInSett = *blank)
      C                   EVAL      TranInSett = CurTrSett
      C                   ENDIF
- 
+
      C                   IF            (TranInChCm = *blank)
      C                   EVAL      TranInChCm = CurTrChCm
      C                   ENDIF
- 
+
      C                   IF            (TranInSwfA = *blank)
      C                   EVAL      TranInSwfA = CurTrSwftA
      C                   ENDIF
- 
+
      C                   IF            (TranInSwfB = *blank)
      C                   EVAL      TranInSwfB = CurTrSwftB
      C                   ENDIF
- 
- 
+
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1249,9 +1251,9 @@
       *                                                               *
       *****************************************************************
      C     ValidateTr    BEGSR
- 
+
       * Validate Trade Primary details
- 
+
      C                   EXSR      ValdTrPrim
       *
       *  If error in validation, fail this input
@@ -1259,9 +1261,9 @@
      C     Idx           IFNE      0
      C                   GOTO      EValidTr
      C                   END
- 
+
       * Validate Trade Secondary details
- 
+
      C                   EXSR      ValdTrSeco
       *
       *  If error in validation, fail this input
@@ -1281,21 +1283,21 @@
      C                   GOTO      EValidTr                                                   CAS006
      C                   ENDIF                                                                CAS006
      C                   ENDIF                                                                CAS006
- 
+
       * Default Trade Other details
       * (Exchange Rate, Settlement, Charges and Commissions)
       /COPY WNCPYSRC,SETRADC020                                                               CUT009
- 
+
      C                   EXSR      DfltTrOTH
- 
+
       /COPY WNCPYSRC,SETRADC021                                                               CUT009
       * CalcTrCHCM - Calculate Trade Charges/Commissions
- 
+
      C                   EXSR      CalcTrCHCM
- 
+
       * Validate Trade Other details
       * (Exchange Rate, Settlement, Charges and Commissions)
- 
+
      C                   EXSR      ValdTrOTH
                                                                                               233881
       ** CalcTrEuTx - Calculate EU Tax                                                        233881
@@ -1303,9 +1305,9 @@
      C     CGL031        IFEQ      'Y'                                                        233881
      C                   EXSR      CalcTrEUTX                                                 233881
      C                   ENDIF                                                                233881
- 
+
       * CalcTrCVAL - Calculate Trade Countervalue
- 
+
      C                   EXSR      CalcTrCVAL
                                                                                              BUG3145
       ** Additional validations                                                              BUG3145
@@ -1325,9 +1327,9 @@
       * If MT5XX Message Generation are installed,
       *
      C     S01401        IFEQ      'Y'
- 
+
       * Default Trade Extension (SWIFT) 'A' details
- 
+
      C     TranInSwfA    IFEQ      *BLANK
      C     DDACTN        OREQ      'I'                                                        247873
       *                                                                                       247873
@@ -1358,9 +1360,9 @@
                                                                                               210517
      C                   EXSR      SRDfltTrX2A                                                210517
      C                   ENDIF                                                                CSE045
- 
+
       * Validate Trade Extension (SWIFT) 'A' details
- 
+
      C                   EXSR      ValdTrSwfA
                                                                                               CSE045
      C                   IF        CSE045 = 'Y'                                               CSE045
@@ -1397,9 +1399,9 @@
      C     V_DELT        ANDNE     V_DELF
      C     CustClass     OREQ      'D'
      C     V_DELT        ANDNE     V_DELF
- 
+
       * Default Trade Extension (SWIFT) 'B' details
- 
+
      C     TranInSwfB    IFEQ      *BLANK
      C     DDACTN        OREQ      'I'                                                        247873
       *                                                                                       247873
@@ -1431,9 +1433,9 @@
      C**********         EXSR      SRDfltTrX2A                                        210517 243119A
      C                   EXSR      SRDfltTrX2B                                               243119A
      C                   ENDIF                                                                CSE045
- 
+
       * Validate Trade Extension (SWIFT) 'B' details
- 
+
      C                   EXSR      ValdTrSwfB
      C                   IF        CSE045 = 'Y'                                               CSE045
      C                   EXSR      SETPDATA                                                   CSE045
@@ -1455,12 +1457,12 @@
      C     Idx           IFNE      0
      C                   GOTO      EValidTr
      C                   END
- 
+
      C                   END
      C                   END
- 
+
      C                   END
- 
+
      C     EValidTr      ENDSR
       *****************************************************************
       /EJECT
@@ -1470,26 +1472,26 @@
       *                                                               *
       *****************************************************************
      C     ValdTrPrim    BEGSR
- 
+
      C                   CALLB     'SETRADPVAL'
- 
+
       * INPUTS
- 
+
       * Response mode
      C                   PARM                    RespMode          1
- 
+
       ** Trade Primary Details
      C                   PARM                    TranInPrim
       * Custom Extra Data file data                                             CAP004
      C                   PARM                    ExtData                        CAP004
- 
+
       ** Trade settlement currency
      C                   PARM                    DDSETC            3
       *
       ** Default & Validate (Y or N)
      C                   PARM      'Y'           Default           1
      C                   PARM      'Y'           Validate          1
- 
+
       * Output details of original book.                                                      193462
      C                   PARM                    OLDBK1                                       193462
      C                   PARM                    WARNIND                                      193462
@@ -1514,17 +1516,17 @@
      C                   PARM                    PFSESN           10                          CAP067
      C                   PARM                    CallFromVU                                   CAP087
       * OUTPUTS
- 
+
       ** Security Details
       ** Investment Type Details
      C                   PARM                    SECTY
      C                   PARM                    INVTP
- 
+
       * Coupon Rate
       * Current Factor
      C                   PARM                    DDCPNR           13
      C                   PARM                    DDCFCT           12
- 
+
       ** Nominal Currency Details
      C                   PARM                    NomCcyDts
       *
@@ -1535,30 +1537,30 @@
      C                   PARM                    PortDts
       ** Default basket for backup withholding                                  CSE023
      C                   PARM                    PDRBW                          CSE023
- 
+
       ** Trade Primary Details OK inds
      C                   PARM                    OKTrPrim
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       * Valid Trade layout (DS) from/to caller
      C                   PARM                    ValidTrad
                                                                                               CPB002
       * PB Order Number                                                                       CPB002
      C                   PARM                    DDORDE                                       CPB002
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1568,14 +1570,14 @@
       *                                                               *
       *****************************************************************
      C     ValdTrSeco    BEGSR
- 
+
      C                   CALLB     'SETRADSVAL'
- 
+
       * INPUTS
- 
+
       * Response mode
      C                   PARM                    RespMode          1
- 
+
       ** Trade Primary Details
       ** Trade Secondary Details
      C                   PARM                    TranInPrim
@@ -1587,12 +1589,12 @@
       ** Default & Validate (Y or N)
      C                   PARM      'Y'           Default
      C                   PARM      'Y'           Validate
- 
+
       ** Security Details
       ** Investment Type Details
      C                   PARM                    SECTY
      C                   PARM                    INVTP
- 
+
       ** Nominal Currency Details
      C                   PARM                    NomCcyDts
       *
@@ -1611,27 +1613,27 @@
       *
       ** Settlement Currency Details
      C                   PARM                    SetCcyDts
- 
+
       ** Trade Secondary Details OK inds
      C                   PARM                    OKTrSeco
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       * Valid Trade layout (DS) from/to caller
      C                   PARM                    ValidTrad
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1729,22 +1731,22 @@
       *                                                               *
       *****************************************************************
      C     DfltTrOTH     BEGSR
- 
+
       ** EXCHANGE RATE DEFAULTING
- 
+
      C     DDACTN        IFEQ      'I'
      C     DDACTN        OREQ      'C'
      C     DDSETC        ANDNE     SETC
- 
+
      C                   CALLB     'SETEXCHDFT'
- 
+
       * INPUTS
       *
       ** Nominal Currency
       ** Settlement Currency
      C                   PARM                    NMCY              3
      C                   PARM                    DDSETC            3
- 
+
       ** Nominal Currency Details
       ** Settlement Currency Details
      C                   PARM                    NomCcyDts
@@ -1754,29 +1756,29 @@
       ** EMU SE Settlement Ccy Conv.
      C                   PARM                    BKEURO            3
      C                   PARM                    CEU005            1
- 
+
       * OUTPUTS
- 
+
       ** Trade Exchange Rate screen fields
- 
+
      C                   PARM                    TranInExch
- 
+
       ** Trade Exchange Rate file fields
- 
+
      C                   PARM                    V_TDER           13 8
      C                   PARM                    V_TMDI            1
      C                   PARM                    V_TBCR           13 8
- 
+
      C                   END
- 
+
       ** SETTLEMENT INSTRUCTION DEFAULTING
- 
+
      C     DDACTN        IFEQ      'I'
- 
+
      C                   CALLB     'SETSETIDFT'
- 
+
       * INPUTS
- 
+
       ** Booking branch
       ** Incomplete Ind
       ** Trade Type
@@ -1791,22 +1793,22 @@
      C                   PARM                    DDTDMI            1
      C                   PARM                    DDBPBK                                       CSE028
      C                   PARM                    DDMRKT                                       CSE034
- 
+
       ** Investment type (SECTYD)
- 
+
      C                   PARM                    SITP              3
- 
+
       ** Nominal Currency Details
       ** Settlement Currency Details
      C                   PARM                    NomCcyDts
      C                   PARM                    SetCcyDts
- 
+
       ** Customer (Counterparty) Details
       ** ( Note: Customer Participant/Non-participant Indicator 1 and
       **  Customer Participant/Non-participant Indicator 2 are also outputs)
      C                   PARM                    CustDts
- 
- 
+
+
       ** ICD
       ** Depot 1 (Eurclear)
       ** Depot 2 (Cedel)
@@ -1815,28 +1817,28 @@
       *                                                                                       CSE028
       ** MT5xx SSI (Phase 2)                                                                  CSE028
      C                   PARM                    CSE028                                       CSE028
- 
+
       * OUTPUTS
- 
+
       ** Trade Settlement Instructions
- 
+
      C                   PARM                    TranInSett
                                                                                               244115
       ** Set clearance type field from invalid file.                                          244115
      C                   EVAL      DDCLTY = DDCLTY2                                           244115
- 
+
      C                   END
- 
+
       ** CHARGE/COMMISSION DEFAULTING
- 
+
      C     DDACTN        IFEQ      'I'
      C     DDACTN        OREQ      'A'
      C     DDACTN        OREQ      'C'
- 
+
      C                   CALLB     'SETCHCMDFT'
- 
+
       * INPUTS
- 
+
       ** Bulk reference
       ** Incomplete Ind.
       ** Market Centre
@@ -1882,25 +1884,25 @@
      C                   PARM                    S01496            1
      C****************** PARM                    CAP050            1            CPB001
      C                   PARM                    BGN4ST            1            CPB001
- 
+
       * OUTPUTS
- 
+
       ** Commission Rebate %
      C                   PARM                    CMRP              5 3
- 
+
       ** Trade Charges & Commissions screen fields
- 
+
      C                   PARM                    TranInChcm
- 
+
       ** Trade Charges & Commissions file fields
- 
+
      C                   PARM                    V_TBCC            2
      C                   PARM                    V_TCCC            2
      C                   PARM                    V_TCC1            2
      C                   PARM                    V_TCC2            2
- 
+
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1910,14 +1912,14 @@
       *                                                               *
       *****************************************************************
      C     ValdTrOTH     BEGSR
- 
+
      C                   CALLB     'SETRADOVAL'
- 
+
       * INPUTS
- 
+
       * Response mode
      C                   PARM                    RespMode          1
- 
+
       ** Trade Primary Details
       ** Trade Secondary Details
       ** Trade Exchange Rates
@@ -1930,7 +1932,7 @@
      C                   PARM                    TranInChcm
       * Custom Extra Data file data                                             CAP004
      C                   PARM                    ExtData                        CAP004
- 
+
       ** Security Details
       ** Investment Type Details
      C                   PARM                    SECTY
@@ -1938,10 +1940,10 @@
       *
       ** Customer (Counterparty) Details
      C                   PARM                    CustDts
- 
+
       ** Portfolio Details
      C                   PARM                    PortDts
- 
+
       ** Nominal Currency Details
       ** Settlement Currency Details
      C                   PARM                    NomCcyDts
@@ -1957,31 +1959,31 @@
      C                   PARM                    DDMAMT           18
      C                   PARM                    DDSPXR           14
      C                   PARM                    DDSPMD            1
- 
+
       ** Trade Exchange Rates OK inds
       ** Trade Settlement Instructions OK
       ** Trade Charge & Commissions OK inds
      C                   PARM                    OKTrExch
      C                   PARM                    OKTrSett
      C                   PARM                    OKTrChcm
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       * Valid Trade layout (DS) from/to caller
      C                   PARM                    ValidTrad
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2034,7 +2036,7 @@
       *                                                               *
       *****************************************************************
      C     DfltTrSwfA    BEGSR
- 
+
      C                   CALLB     'SETSWFTDFT'
       *
       ** INPUT PARAMETERS :
@@ -2080,7 +2082,7 @@
      C                   PARM                    B_DDROTS         12
      C                   PARM                    B_DDROUC          6
      C                   PARM                    B_DDROTC         12
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2090,7 +2092,7 @@
       *                                                               *
       *****************************************************************
      C     ValdTrSwfA    BEGSR
- 
+
      C                   CALLB     'SETRADEVAL'
       *
       ** INPUTS
@@ -2159,7 +2161,7 @@
       *
       * Valid Trade layout (DS) (Extension file) from/to caller
      C                   PARM                    ValidTX1A
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2169,7 +2171,7 @@
       *                                                               *
       *****************************************************************
      C     DfltTrSwfB    BEGSR
- 
+
      C                   CALLB     'SETSWFTDFT'
       *
       ** INPUT PARAMETERS :
@@ -2215,7 +2217,7 @@
      C                   PARM                    B_DDROTS         12
      C                   PARM                    B_DDROUC          6
      C                   PARM                    B_DDROTC         12
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2225,7 +2227,7 @@
       *                                                               *
       *****************************************************************
      C     ValdTrSwfB    BEGSR
- 
+
      C                   CALLB     'SETRADEVAL'
       *
       ** INPUTS
@@ -2294,7 +2296,7 @@
       *
       * Valid Trade layout (DS) (Extension file) from/to caller
      C                   PARM                    ValidTX1B
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                                  247873
@@ -2484,7 +2486,7 @@
       ** DATA SUBSTITUTION                                                      CAP011
                                                                                 CAP011
      C                   RESET                   ReturnCode                     CAP011
- 
+
       * TRADE PRIMARY DETAILS
      C                   CALLB     'APDTASUBS'                                  CAP011
                                                                                 CAP011
@@ -2498,7 +2500,7 @@
      C                   PARM      CurTrPrim     CurDATA        2000            CAP011
                                                                                 CAP011
      C                   MOVEL     IncDATA       TranInPrim                     CAP011
- 
+
       * TRADE SECONDARY DETAILS
      C                   CALLB     'APDTASUBS'                                  CAP011
                                                                                 CAP011
@@ -2532,7 +2534,7 @@
                                                                                               CAS006
      C                   MOVEL     IncDATA       TranInThir                                   CAS006
      C                   ENDIF                                                                CAS006
- 
+
       * TRADE EXCHANGE RATES
      C                   CALLB     'APDTASUBS'                                  CAP011
                                                                                 CAP011
@@ -2546,7 +2548,7 @@
      C                   PARM      CurTrExch     CurDATA        2000            CAP011
                                                                                 CAP011
      C                   MOVEL     IncDATA       TranInExch                     CAP011
- 
+
       * TRADE SETTLEMENT DETAILS
      C                   CALLB     'APDTASUBS'                                  CAP011
                                                                                 CAP011
@@ -2560,7 +2562,7 @@
      C                   PARM      CurTrSett     CurDATA        2000            CAP011
                                                                                 CAP011
      C                   MOVEL     IncDATA       TranInSett                     CAP011
- 
+
       * TRADE CHARGE/COMMISSIONS
      C                   CALLB     'APDTASUBS'                                  CAP011
                                                                                 CAP011
@@ -2574,7 +2576,7 @@
      C                   PARM      CurTrChCm     CurDATA        2000            CAP011
                                                                                 CAP011
      C                   MOVEL     IncDATA       TranInChCm                     CAP011
- 
+
       * TRADE SWIFT A DETAILS
      C                   CALLB     'APDTASUBS'                                  CAP011
                                                                                 CAP011
@@ -2588,7 +2590,7 @@
      C                   PARM      CurTrSwftA    CurDATA        2000            CAP011
                                                                                 CAP011
      C                   MOVEL     IncDATA       TranInSwfA                     CAP011
- 
+
       * TRADE SWIFT B DETAILS
      C                   CALLB     'APDTASUBS'                                  CAP011
                                                                                 CAP011
@@ -2612,11 +2614,11 @@
       *                                                               *
       *****************************************************************
      C     CalcTrCHCM    BEGSR
- 
+
      C                   CALLB     'SETCHCMCAL'
- 
+
       * INPUTS
- 
+
       ** Trade reference
       ** Security
       ** Trade Type
@@ -2664,13 +2666,13 @@
      C                   PARM                    BVCHRC            3
      C                   PARM                    BVACSD            1
      C                   PARM                    S01446            1
- 
+
       * INPUTS & OUTPUTS
- 
+
       ** Trade Charges & commissions screen fields
- 
+
      C                   PARM                    TranInChcm
- 
+
       ** Trade details
      C                   PARM                    V_TBCA           13 0
      C                   PARM                    V_TCCA           13 0
@@ -2685,7 +2687,7 @@
      C                   PARM                    V_BCMR           13 0
      C                   PARM                    V_CCMR           13 0
      C                   PARM                    V_TXRB           13 0
- 
+
      C                   ENDSR
       *****************************************************************                       233881
       /EJECT                                                                                  233881
@@ -2731,13 +2733,13 @@
       *                                                               *
       *****************************************************************
      C     CalcTrCVAL    BEGSR
- 
+
       ** CALCULATE COUNTERVALUE
- 
+
      C                   CALLB     'SETCVALCAL'
- 
+
       * INPUTS
- 
+
       ** Trade details
      C                   PARM                    V_TDTP            2
      C                   PARM                    V_NOML           11 0
@@ -2758,7 +2760,7 @@
      C                   PARM                    V_TMDI            1
      C                   PARM                    V_SETC            3
      C                   PARM                    V_TDVD            5 0                        200459
- 
+
       ** Security details
      C                   PARM                    PROT              1
      C                   PARM                    SPBS              1
@@ -2766,12 +2768,12 @@
      C                   PARM                    NMCY              3
      C                   PARM                    NMDP              1 0
      C                   PARM                    SESN             10                          200459
- 
+
       ** Nominal Currency Details
       ** Settlement Currency Details
      C                   PARM                    NomCcyDts
      C                   PARM                    SetCcyDts
- 
+
       ** Customer classification
      C                   PARM                    CustClass         1
                                                                                 CSE023
@@ -2787,9 +2789,9 @@
       ** EU Tax                                                                               233881
      C*************      PARM                    EUTX                                   233881234858
      C                   PARM                    V_EUTX                                       234858
- 
+
       * OUTPUTS
- 
+
       * Trade consideration in nominal currency
       * Trade countervalue in nominal currency
       * Withholding tax                                                         CSE023
@@ -2800,7 +2802,7 @@
      C                   PARM                    WHTX                           CSE023
      C                   PARM                    DDTCTR           21
      C                   PARM                    DDWTAX                         CSE023
- 
+
      C                   ENDSR
       *****************************************************************                       CSE045
       /EJECT                                                                                  CSE045
@@ -3251,19 +3253,19 @@
       ** was valid to Amend or Change any of the fields which have been
       ** altered.  Some are never amendable and some are amendable depending
       ** on the Action Code - "A" for Amend, "C" for Change.
- 
+
       ** To determine what fields have changed, the current fields
       ** on file must be converted to a 'screen' format.
- 
+
       ** These fields are then compared with the fields on the input
       ** transaction.
- 
+
       ** Any errors detected by the called procedure take precedence
       ** over any errors found during the validation of the complete
       ** transaction.  The errors from the called procedure are kept
       ** separately and, if any are found, these errors will REPLACE
       ** the normal validation errors.
- 
+
      C                   CALLB     'SETRADAMD'
       *
       * INPUTS
@@ -3346,16 +3348,16 @@
       *
       * Reset of Fields in Error Required (Y/N)
      C                   PARM      'Y'           ResetErrs         1
- 
+
       ** If any errors overwrite previous error information
- 
+
      C                   IF        AmIdx <> 0
      C                   MOVEA     AmMsgIdArr    MsgidArr
      C                   MOVEA     AmFldNamAr    FldNameArr
      C                   MOVEA     AmMsgDtaAr    MsgDtaArr
      C                   Z-ADD     AmIdx         Idx
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3366,7 +3368,7 @@
       *                                                               *
       *****************************************************************
      C     CheckWrite    BEGSR
- 
+
       *  If no errors were found:
       *  - If Action Code is Insert and Trade Reference is not supplied
       *     - set up the trade reference
@@ -3411,13 +3413,13 @@
       ** | or not).  It is shown in the above form for clarity.       |
       ** |                                                            |
       ** +------------------------------------------------------------+
- 
+
      C     Idx           IFEQ      0
- 
+
      C                   IF        DDACTN = 'I'
      C                   EXSR      SETUPTRADR
      C                   ENDIF
- 
+
      C     Idx           IFEQ      0
      C                   EXSR      SETUPVALID
      C                   WRITE     SEVTRADD0
@@ -3475,9 +3477,9 @@
                                                                                               CSE045
      C                   EXSR      CallMsgHdl
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     Idx           IFGT      0
      C                   EXSR      SETUPINVAL
       *                                                                         CAP004
@@ -3531,12 +3533,12 @@
      C                   ENDIF                                                  CAP004
      C                   EXSR      CallMsgHdl
      C                   ENDIF
- 
+
      C                   If        (CSC022 <> 'Y')                                            CSC022
      C                             or (CSC022 = 'Y' and WCommitSkip <> 'Y')                   CSC022
      C                   COMMIT
      C                   EndIf                                                                CSC022
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3547,24 +3549,24 @@
       *                                                               *
       *****************************************************************
      C     RESETCYCLE    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIDArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIdx
- 
+
      C                   RESET                   AmFldNamAr
      C                   RESET                   AmMsgIDArr
      C                   RESET                   AmMsgDtaAr
      C                   RESET                   AmIdx
- 
+
      C                   RESET                   FldNoArr
- 
+
      C                   CLEAR                   CurTrPrim
      C                   CLEAR                   CurTrSeco
      C                   CLEAR                   CurTrThir                                    CAS006
@@ -3573,7 +3575,7 @@
      C                   CLEAR                   CurTrChcm
      C                   CLEAR                   CurTrSwftA
      C                   CLEAR                   CurTrSwftB
- 
+
      C                   MOVE      *ALL'Y'       OKTrPrim
      C                   MOVE      *ALL'Y'       OKTrSeco
      C                   MOVE      *ALL'Y'       OKTrThir                                     CAS006
@@ -3581,7 +3583,7 @@
      C                   MOVE      *ALL'Y'       OKTrSett
      C                   MOVE      *ALL'Y'       OKTrChcm
      C                   MOVE      *ALL'Y'       OKTrSwft
- 
+
      C                   CLEAR                   ValidTrad
      C                   CLEAR                   ValidTX1A
      C                   CLEAR                   ValidTX1B
@@ -3591,7 +3593,7 @@
       ** Also clear numeric variables                                                         CAP067
       *                                                                                       CAP067
      C                   EXSR      SRCLER                                                     CAP067
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                                  CAP067
@@ -3680,7 +3682,7 @@
       *                                                               *
       *****************************************************************
      C     SETUPINVAL    BEGSR
- 
+
       * Include Header fields that need to be o/p to the Invalid files
      C                   EVAL      DDFOtranID = APFOTranID
      C                   EVAL      DDFOAsocID = APFOAsocID
@@ -3691,9 +3693,9 @@
      C                   IF        CAP051 = 'Y'                                 CAP051
      C                   EVAL      DDAUTHA    = AUTHA                           CAP051
      C                   ENDIF                                                  CAP051
- 
+
      C                   EVAL      TranStatus = 'F'
- 
+
       /COPY WNCPYSRC,SETRADC014
      C                   ENDSR
       *****************************************************************
@@ -3704,10 +3706,10 @@
       *                                                               *
       *****************************************************************
      C     SETUPTRADR    BEGSR
- 
+
      C                   IF           DDTDRF = *blanks
      C                             OR DDTDRF = *zeros
- 
+
      C                   RESET                   ReturnCode
      C                   CALLB     'ZATRNRTV'
      C                   PARM      *BLANKS       ReturnCode
@@ -3715,19 +3717,19 @@
      C                   PARM      'T'           TRTY              1
      C                   PARM                    DDTDRF
      C                   PARM      *ZERO         V_TDRF
- 
+
      C     ReturnCode    IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDTDRF'
      C                   EVAL      MsgIDArr(Idx) = 'ZATRNRTV'
      C                   ENDIF
- 
+
       ** If trade reference was entered, put it in the file field
      C                   ELSE
      C                   MOVE      DDTDRF        V_TDRF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                                  210517
@@ -3814,7 +3816,7 @@
       *                                                               *
       *****************************************************************
      C     SETUPVALID    BEGSR
- 
+
       * For Deletes & Authorises, put the complete (pre-existing) trade
       *  into the Valid file record
      C                   IF           DDACTN = 'D'
@@ -3824,10 +3826,10 @@
      C                   MOVE      TX1AFilFmt    ValidTX1A
      C                   MOVE      TX1BFilFmt    ValidTX1B
      C                   ENDIF
- 
+
       * Set Valid file field(s) that are needed for all Action Codes
      C                   EVAL      V_CHTP = DDACTN
- 
+
       * Include Header fields that need to be o/p to the Valid file
      C                   EVAL      V_FRNT = APFOTranID
      C                   EVAL      V_AFRT = APFOAsocID
@@ -3838,9 +3840,9 @@
      C                   IF        CAP051 = 'Y'                                 CAP051
      C                   EVAL      V_AUTH = AUTHA                               CAP051
      C                   ENDIF                                                  CAP051
- 
+
      C                   EVAL      TranStatus = 'S'
- 
+
       /COPY WNCPYSRC,SETRADC015
      C                   ENDSR
       *****************************************************************
@@ -3851,30 +3853,30 @@
       *                                                               *
       *****************************************************************
      C     CallMsgHdl    BEGSR
- 
+
       ** Set up an array of sequence numbers that correspond to the fields
       **  with errors
- 
+
      C                   Z-ADD     1             Ix
      C                   DO        ArrayMax
- 
+
      C     FldNameArr(Ix)IFNE      *BLANKS
- 
+
      C                   Z-ADD     1             Iy
      C     FldNameArr(Ix)LOOKUP    FieldArr(Iy)                           20
      C                   EVAL      FldNoArr(Ix) = FldSeqArr(Iy)
- 
+
      C                   ELSE
- 
+
      C                   LEAVE
- 
+
      C                   ENDIF
- 
+
      C                   ADD       1             Ix
      C                   ENDDO
- 
+
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'ZAMSGHNDLE'
       ** Return code (10A, returned to this procedure)
      C                   PARM                    ReturnCode
@@ -3920,7 +3922,7 @@
      C                   PARM                    MsgFArray
       ** Whether or not to clear the program message queue (1A)
      C                   PARM                    ClrPgmMsgQ
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3933,7 +3935,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -3956,19 +3958,19 @@
      C                   PARM                    #ProcPgm
      C                   PARM                    #ProcMod
      C                   PARM                    #ProcName
- 
+
       *  Set up the name of the MSGF from which the message handler will
       *   get the messages
      C                   EVAL      #MsgFile = 'DRSMM'
- 
+
       ** Set up the name of the primary and secomdary message files from
       ** which the message handler will get the messages
      C                   EVAL      #MsgFile     = 'SEUSRMSG'
      C                   EVAL      MsgFArray(1) = 'DRSMM'
- 
+
       *  Set up the Module ID, used to make the Transaction number unique
      C                   EVAL      ModuleID = 'SE'
- 
+
       *
       ** Access Bank details via access program
       *  (database error handling done in access program)
@@ -4198,7 +4200,7 @@
      C                   CALL      'SWIFT98'                            99                    CSE045
      C                   PARM                    SWRTN                                        CSE045
                                                                                               CSE045
- 
+
       ** Check if CSC011 is installed                                                         CSC011
                                                                                               CSC011
      C                   CALLB     'AOSARDR0'                                                 CSC011
@@ -4239,7 +4241,7 @@
                                                                                               CAS006
       ** Set up the name of the server/database updater data queue.
      C                   EVAL      DtaQName = 'APTRADDTQ'
- 
+
       *                                                                                       CSC022
       ** Access Switchable Features File, for CSC022                                          CSC022
       *                                                                                       CSC022
@@ -4351,7 +4353,7 @@
      C                   IF        @RTCD = *BLANKS                                            CER001
      C                   EVAL      ULX008 = 'Y'                                               CER001
      C                   ENDIF                                                                CER001
- 
+
       *                                                                                       CSW210
       ** Check to see if switchable feature CSW210 is on or if date is                        CSW210
       ** equal or greater than 20 November 2010.                                              CSW210

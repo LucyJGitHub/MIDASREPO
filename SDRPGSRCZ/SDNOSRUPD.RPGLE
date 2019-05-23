@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD048898           Date 11Dec17               *
-      *  Prev Amend No. MD038440           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD048898           Date 11Dec17               *
+      *                 MD038440           Date 27Oct17               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 30May14               *
       *                 AR1095725          Date 15Mar13               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD048898 - Files not updating. Correct Parameters            *
       *  MD038440 - Nostro deletion issue. Revised validation process *
       *  MD046248 - Finastra Rebranding                               *

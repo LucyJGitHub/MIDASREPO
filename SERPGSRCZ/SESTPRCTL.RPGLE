@@ -30,15 +30,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSE040  *CREATE    Date 27Mar03               *
+      *                 CSE040  *CREATE    Date 27Mar03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSE040 - Securities Statement Processing                     *
       *                                                               *
@@ -47,33 +49,33 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSEVSTPRPD UF A E             DISK    INFSR(*PSSR)
      F                                     RENAME(SEVSTPRD0:SEVSTPRDD)
      F                                     COMMIT
       ** Valid Statement Production Requests File
- 
+
      FSEISTPRPD UF A E             DISK    INFSR(*PSSR)
      F                                     COMMIT
       ** Invalid Statement Production Requests File
- 
+
      FSEVSTPRL0 IF   E           K DISK    INFSR(*PSSR)
       ** Valid Statement Production Requests by Front Office Id.
- 
+
      FSEVSTPRL1 IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SEVSTPRD0:SEVSTPRD1)
       ** Valid Statement Production Requests by Alternative Key (partial) and Timestamp
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       /COPY WNCPYSRC,SESTPRC001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **---------------------------------------------------------------
       ** Standard D-specs
       ** ================
@@ -89,7 +91,7 @@
       **    RunBefore  1A (for the PSSR)
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** Program Status Data Structure
       ** =============================
@@ -97,7 +99,7 @@
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
@@ -105,25 +107,25 @@
       ** must be included where this one is used.
      D/COPY ZACPYSRC,PROCPARMS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API *CTL modules.
      D/COPY ZACPYSRC,APICTLARR
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** used in checking whether there are messages on the data queue.
      D/COPY ZACPYSRC,DTAQCHKDCL
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
@@ -135,56 +137,56 @@
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D HeadIn        E DS                  EXTNAME(APHEADPD)
       **Incoming Header
- 
+
      D NewScnIFld    E DS                  EXTNAME(SESTPR1PD)
       ** Incoming Request in screen format - Input/output fields
- 
+
      D NewScnOFld    E DS                  EXTNAME(SESTPR2PD)
       ** Incoming Request in screen format - Output only fields
- 
+
      D ExtData       E DS                  EXTNAME(SESPEXPD)
       ** Incoming Request Extra Data in screen format
- 
+
      D NewSESTPR     E DS                  EXTNAME(SEVSTPRPD)
       ** Valid Statement Production Request layout
- 
+
      D SESTPR        E DS                  EXTNAME(SESTPRPD)
       ** (Current) Statement Production Requests in file format
- 
+
      D CurScnIFld    E DS                  EXTNAME(SESTPR1PD) PREFIX(C_)
       ** (Current) Request in screen format - Input/output fields
- 
+
      D CurScnOFld    E DS                  EXTNAME(SESTPR2PD) PREFIX(C_)
       ** (Current) Request in screen format - Output only fields
- 
+
      D OKStPRFlags   E DS                  EXTNAME(SEESTPRPD)
       ** Error indicators
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
       ** External DS for API ICD
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access programs - short data structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for Access programs - long data structure
- 
+
       ** Split up of the Statement Production Request Reference
      D DDStPRRef       DS
       ** -- Main key (used in SIN function)
@@ -198,38 +200,38 @@
      D     DDStPRRECP                11A
      D     DDStPRFREQ                 1A
      D   DDStPRAltK           14     36A
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Fields (500A) to receive the incoming transaction
      D Trans5001       S            500A
- 
+
       ** Field (500A) to receive the incoming Extra Data
      D ExtData500      S            500A
- 
+
       ** Indicies for arrays used to set up corresponding sequence numbers
       ** for the fields that are in error
      D Ix              S              3P 0
      D Iy              S              3P 0
- 
+
       ** Overall Transaction status, to be passed to the Message Handler
      D TranStatus      S              1A
- 
+
       ** Module ID, to be passed to the Message Handler
      D ModuleID        S              2A
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
      D Object          S             10A   INZ('SESTPRUPC')
      D Lib             S             10A   INZ('*LIBL')
      D ObjType         S              7A   INZ('*DTAARA')
@@ -238,30 +240,30 @@
      D WaitTime        S              6A   INZ('0     ')
      D Dlcobj          S              1A   INZ('Y')
      D Return          S              7A
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
       ** Whether or not to clear the program message queue (this is not
       ** actually used, but is required by the message handler's parameter
       ** list.
      D ClrPgmMsgQ      S              1A   INZ('Y')
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       /COPY WNCPYSRC,SESTPRC002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -269,9 +271,9 @@
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** +----------------------------------------------------------------+
- 
+
       /COPY WNCPYSRC,SESTPRC003
- 
+
       ** Incoming transaction is broken into 500A fields, so that a common CL
       ** can be used between this module and the one that read the MQ queue.
       ** This module needs to break these 500A fields by loading them into
@@ -279,18 +281,18 @@
       *
      C                   MOVEL     Trans5001     NewScnIfld
      C                   MOVEL     Extdata500    Extdata
- 
+
       ** Generate a timestamp for this transaction
       *
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
       ** Reset variables gradually updated
       *
      C                   EXSR      ResetCycle
- 
+
       /COPY WNCPYSRC,SESTPRC004
- 
+
       ** Check if valid Statement Production Request details exists (Front Office Id.)
       *
      C                   EXSR      ChkValFrnt
@@ -300,7 +302,7 @@
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       ** Check if valid Request details exists (Midas Reference)
       *
      C                   EXSR      ChkValMids
@@ -310,26 +312,26 @@
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       ** Reset variables again in case the details have been corrupted
       ** by previous chain to valid request details file.
       *
      C                   EXSR      ResetCycle
- 
+
       /COPY WNCPYSRC,SESTPRC005
- 
+
       ** Validate Action Code
       *
      C                   EXSR      ValAction
- 
+
       /COPY WNCPYSRC,SESTPRC006
- 
+
       ** If error in validation of action code, fail this input
       *
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       ** Processing depends upon Action Code
       *
      C                   SELECT
@@ -367,7 +369,7 @@
       /COPY WNCPYSRC,SESTPRC011
       *
      C                   ENDSL
- 
+
      C     INVALID       TAG
       *
       ** Check for exception error from any program lower in the stack
@@ -376,9 +378,9 @@
       ** prompting the database update program
       *
      C                   IN        APDUMP
- 
+
       /COPY WNCPYSRC,SESTPRC012
- 
+
  B1  C                   IF        ARERRMOD <> *BLANK
      C                   EVAL      MQErrLong = 'Error in module ' + ARERRMOD
       *
@@ -433,9 +435,9 @@
  E2  C                   ENDIF
       *
  E1  C                   ENDIF
- 
+
       /COPY WNCPYSRC,SESTPRC015
- 
+
      C                   RETURN
       *
       ********************************************************************

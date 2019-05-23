@@ -31,12 +31,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CSE075             Date 17Nov05               *
       *                 CSE071             Date 19Jul05               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -477,7 +479,7 @@
       ** character from the original transaction.
       *
      C                   IF        GHSUBS <> *BLANK
- 
+
      C     GHSUBS        SCAN      NwTS1ScnFmt                            99
      C                   IF        *IN99
      C                   MOVE      'Y'           WSubDE1
@@ -490,7 +492,7 @@
      C                   IF        WSubDE1 = 'Y'
      C                   EXSR      SrDtaSubs
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       /COPY WNCPYSRC,SETRSMC009
@@ -513,32 +515,32 @@
       /COPY WNCPYSRC,SETRSMC011
       *
      C                   IF        ARErrMod <> *BLANK
- 
+
      C                   EVAL      PMQErrLong = *BLANK
      C                   MOVEL     WProcErr      WMQError
      C                   MOVE      ARErrMod      WMQError
      C                   MOVEL     WMQError      PMQErrLong
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    PMQReturn
      C                   PARM                    PMQErrLong
      C                   PARM                    PDummyMsgId
      C                   PARM                    PDummyMsgF
- 
+
      C                   MOVEL     ARErrMod      APRetCode
      C     *LOCK         IN        APDUMP
      C                   EVAL      ARErrMod = *BLANK
      C                   OUT       APDUMP
      C                   RETURN
- 
+
      C                   ELSE
       *
       ** Processing for error checking/write to database.
       *
       /COPY WNCPYSRC,SETRSMC012
- 
+
      C                   EXSR      SrCheckWrite
- 
+
       /COPY WNCPYSRC,SETRSMC013
       *
       ** If valid, send data queue entry to prompt DB update program.
@@ -558,7 +560,7 @@
      C                   PARM                    PWaitTime
      C                   PARM                    PDlcObj
      C                   PARM      *BLANK        PReturn
- 
+
      C                   IF        PReturn = *BLANK
       *
       ** Check if any messages are already on the data queue.
@@ -569,13 +571,13 @@
       ** message to the data queue if there are not.
       *
       /COPY ZACPYSRC,DTAQCHK
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -602,12 +604,12 @@
       ** Run delay program if record found.
       *
      C     APFOTRANID    CHAIN     SEVTRSML0                          01
- 
+
      C                   IF        RecNotFnd = False
       *
       ** Run delay program, then repeat chain.
      C                   CALLB     'ZACDELAY'
- 
+
      C     APFOTRANID    CHAIN     SEVTRSML0                          01
       *
       ** Error if front office Id is still present.
@@ -616,9 +618,9 @@
      C                   EVAL      FldNameArr(IDx) = 'DDTRDR'
      C                   EVAL      MsgIDArr(IDx)   = 'APM0900'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -641,7 +643,7 @@
      C                   IF        PErrorFlag = 'N'
      C                   Z-ADD     PDaynoOut     KMVDT
      C                   ENDIF
- 
+
      C                   ELSE
      C                   Z-ADD     99999         KMVDT
      C                   ENDIF
@@ -651,12 +653,12 @@
       ** Run delay program if record not found.
       *
      C     KeyTRSM       CHAIN     SEVTRSML1                          01
- 
+
      C                   IF        RecNotFnd = False
       *
       ** Run delay program, then repeat chain.
      C                   CALLB     'ZACDELAY'
- 
+
      C     KeyTRSM       CHAIN     SEVTRSML1                          01
       *
       ** Error if midas back office reference is still present.
@@ -665,9 +667,9 @@
      C                   EVAL      FldNameArr(IDx) = 'DDTRDR'
      C                   EVAL      MsgIDArr(IDx) = 'APM0900'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -689,7 +691,7 @@
      C                   IF        DDACTN = 'I'
      C                   EVAL      PMode = '*FRONT'
      C                   ELSE
- 
+
      C                   IF        DDTRDR = *BLANK
      C                             AND DDMVDT = *BLANK
      C                             AND DDFSET = *BLANK
@@ -698,7 +700,7 @@
      C                   ELSE
      C                   EVAL      PMode = *BLANKS
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Validate key fields
@@ -792,13 +794,13 @@
       ** Externally described DS for Security details
      C                   PARM                    PSectyd
       *
- 
+
       ** For the rest of the processing, set Mode of Operation
       ** to '*FRONT' for the other modules to process the
       ** transaction as coming from an external system.
       *
      C                   MOVEL     '*FRONT'      PMode
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -809,9 +811,9 @@
       *                                                               *
       *****************************************************************
      C     SrValDetails  BEGSR
- 
+
      C                   CLEAR                   NwTSFilFmt
- 
+
       ** Validate entries made on the screen.
      C                   CALLB     'SETRSMVAL'
       *                             =========
@@ -887,7 +889,7 @@
       *                                                               *
       *****************************************************************
      C     SrCvtTRSM     BEGSR
- 
+
      C                   CALLB     'SETRSMCVT'
       *                             =========
       ** INPUT
@@ -968,7 +970,7 @@
      C                   IF        WSUBDE1 = 'Y'
      C                   CLEAR                   PIncData
      C                   CLEAR                   PCurData
- 
+
      C                   CALLB     'APDTASUBS'
       *                             =========
       ** Return code
@@ -982,10 +984,10 @@
       *
       ** Current data
      C                   PARM      CrTS1ScnFmt   PCurData
- 
+
      C                   MOVEL     PIncData      NwTS1ScnFmt
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1048,7 +1050,7 @@
      C                   WRITE     SEVTRSMD0
      C                   EXSR      SRMsgHdl
      C                   ENDIF
- 
+
      C     IDx           IFGT      0
      C                   EXSR      SrSetInvalid
       *
@@ -1056,12 +1058,12 @@
      C     APRPRLOCN     IFEQ      'B'
      C                   WRITE     SEITRSMD0
      C                   ENDIF
- 
+
      C                   EXSR      SrMsgHdl
      C                   ENDIF
- 
+
      C                   COMMIT
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1280,9 +1282,9 @@
       ** fields with errors.
       *
      C                   Z-ADD     1             W1
- 
+
      C                   DO        ArrayMax
- 
+
      C                   IF        FldNameArr(W1) <> *BLANKS
      C                   Z-ADD     1             W2
      C     FldNameArr(W1)LOOKUP    FieldArr(W2)                           02
@@ -1290,14 +1292,14 @@
      C                   ELSE
      C                   LEAVE
      C                   ENDIF
- 
+
      C                   ADD       1             W1
- 
+
      C                   ENDDO
- 
+
      C                   EVAL      PTranID = DDTRDR + DDMVDT + DDFSET +
      C                                       DDREVE
- 
+
      C                   CALLB     'ZAMSGHNDLE'
       *
       ** Return code (10A, returned to this procedure)
@@ -1365,7 +1367,7 @@
       *
       ** Whether or not clear the program message queue (1A)
      C                   PARM                    PClrPgmMsgQ
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1376,28 +1378,28 @@
       *                                                               *
       *****************************************************************
      C     SrResetFld    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIdArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   IDx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIdArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIDx
- 
+
      C                   RESET                   AMFldNamAr
      C                   RESET                   AMMsgIdArr
      C                   RESET                   AMMsgDtaAr
      C                   RESET                   AMIDx
- 
+
      C                   RESET                   FldNoArr
- 
+
      C                   MOVE      *ALL'Y'       SEETRSM
- 
+
      C                   CLEAR                   CrTS1ScnFmt
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1408,20 +1410,20 @@
       *                                                               *
       *****************************************************************
      C     SrAOCurr      BEGSR
- 
+
      C                   CallB     'AOCURRR0'
      C                   Parm      *BLANKS       PRtCd
      C                   Parm      '*KEY   '     POptn
      C                   Parm                    PCyCd
      C     SDCURR        Parm      SDCURR        DSSDY
- 
+
      C                   If        PRtCd <> *BLANKS
      C                   Eval      DBKey = PCyCd
      C                   Eval      DBFile = 'SDCURRPD'
      C                   Z-Add     1             DBASE
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1432,7 +1434,7 @@
       *                                                               *
       *****************************************************************
      C     SrZconv       Begsr
- 
+
      C                   CallB     'ZCONV'
      C                   Parm                    ZAMTCI           15 0
      C                   Parm                    ZEXCH            13 8
@@ -1542,7 +1544,7 @@
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CSE007'      PSarD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRtcd = *BLANKS
      C                   MOVEL     'Y'           CSE007
      C                   ELSE

@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD049746           Date 15Mar18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD049746           Date 15Mar18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD035243           Date 29Jul15               *
       *                 AR596191           Date 19Aug14               *
       *                 AR971184A          Date 22Jun12               *
@@ -123,6 +124,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD049746 - Settlement details is not defaulted when Charges/ *
       *             Commission fields have values when Trade is       *
       *             inserted via API                                  *

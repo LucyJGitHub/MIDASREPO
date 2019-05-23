@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSF011A            Date 28Nov11               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSF011A            Date 28Nov11               *
       *                 AR580857           Date 21Jul10               *
       *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
       *            (Recompile)                                        *
@@ -90,7 +92,7 @@
       *
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -245,7 +247,7 @@
       ** Return
       *
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -265,13 +267,13 @@
       *
      C                   Z-ADD     1             Cx
      C                   Z-ADD     10            Ex
- 
+
      C                   DOU       Cx > 79
- 
+
      C                   IF        WEI(Cx) = 'N' OR WEI(Cx) = 'W'
      C                   EVAL      *IN(Ex) = *ON
      C                   ENDIF
- 
+
      C                   EVAL      Cx = Cx + 1
      C                   EVAL      Ex = Ex + 1
      C                   ENDDO
@@ -280,18 +282,18 @@
       *
      C                   EVAL      Scrn = '1'
      C                   EVAL      Previous = '0'
- 
+
      C                   DOU       (*INKC = *ON) OR
      C                             (*INKE = *ON) OR
      C                             (*INKL = *ON) OR
      C                             (*INKN = *ON)
- 
+
      C                   SELECT
       *
       ** Set up for Display of Screen 1
       *
      C                   WHEN      Scrn = '1'
- 
+
      C                   IF        *INKL = *ON
      C                   IF        Previous = '0'
      C                   LEAVE
@@ -300,18 +302,18 @@
      C                   EVAL      Previous = '1'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        *IN85 = *ON
      C                   EVAL      Scrn = '2'
      C                   EVAL      Previous = '1'
      C                   ENDIF
- 
+
      C
       *
       ** Set up for Display of Screen 2
       *
      C                   WHEN      Scrn = '2'
- 
+
      C                   IF        *INKL = *ON
      C                   IF        Previous = '1'
      C                   EVAL      Scrn = '1'
@@ -323,40 +325,40 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        (*IN84 = *ON) and
      C                             (CSE028 = 'Y')
      C                   EVAL      Scrn = '3'
      C                   EVAL      Previous = '2'
      C                   ENDIF
- 
+
      C                   IF        *IN86 = *ON
      C                   EVAL      Scrn = '1'
      C                   EVAL      Previous = '2'
      C                   ENDIF
- 
+
      C
       *
       ** Set up for Display of Screen 3
       *
      C                   WHEN      Scrn = '3'
- 
+
      C                   IF        *INKL = *ON
      C                   EVAL      Scrn = '2'
      C                   EVAL      Previous = '3'
      C                   ENDIF
- 
+
      C                   IF        *IN88 = *ON
      C                   EVAL      Scrn = '2'
      C                   EVAL      Previous = '3'
      C                   ENDIF
- 
+
      C                   ENDSL
       *
       ** Write Message subfile, details and footer screens.
       *
      C                   WRITE     SETSESDSC0
- 
+
      C                   SELECT
      C                   WHEN      Scrn = '1'
      C                   WRITE     SETSESDSF0
@@ -375,7 +377,7 @@
      C                             (*IN87 <> *ON)
      C                   LEAVE
      C                   ENDIF
- 
+
      C                   WHEN      Scrn = '2'
      C                   WRITE     SETSESDSF1
       *
@@ -393,7 +395,7 @@
      C                             (*IN86 <> *ON)
      C                   LEAVE
      C                   ENDIF
- 
+
      C                   WHEN      Scrn = '3'
      C                   WRITE     SETSESDSF2
       *
@@ -410,9 +412,9 @@
      C                             (*INKN <> *ON) and (*IN88 <> *ON)
      C                   LEAVE
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDDO
       *
       ** Clear message subfile.
@@ -431,9 +433,9 @@
      C                   EVAL      PINKN = *INKN
      C                   EVAL      PINKS = *INKS
      C                   EVAL      PINKT = *INKT
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -443,9 +445,9 @@
       *           initialisation.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -521,7 +523,7 @@
      C                   PARM                    PINKN
      C                   PARM                    PINKS
      C                   PARM                    PINKT
- 
+
      C                   MOVE      PSRPN         SSRPN
       *
       ** Initialise the fixed parameters for ZAMSGHNDLE.
@@ -561,14 +563,14 @@
       *
      C                   CALL      'SWIFT98'                            09
      C                   PARM                    SWRTN
- 
+
      C                   IF        *IN09 = *ON
      C                   EVAL      DBKey = 'SWIFT98'
      C                   EVAL      DBFile = 'ERR CALL'
      C                   Z-ADD     2             DBase
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        SWRTN = 'CSW098 '
      C                   EVAL      *IN09 = *ON
      C                   ELSE
@@ -585,10 +587,10 @@
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    WCUST
      C     SDSECS        PARM      SDSECS        DSSDY
- 
+
      C     BFCLAS        IFEQ      'S'
      C     BFCLAS        OREQ      'D'
- 
+
      C     PWHEN         IFEQ      'A'
      C     PTDTP         IFEQ      'TP'
      C                   EVAL      *IN04 = *ON
@@ -652,7 +654,7 @@
      C                   ELSE
      C                   EVAL      *IN88 = *OFF
      C                   ENDIF
- 
+
      C     CSE028        IFEQ      'Y'
      C                   EVAL      *IN82 = *ON
      C                   ENDIF

@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR580857           Date 21Jul10               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR580857           Date 21Jul10               *
       *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR580857 - QFIN label is erroneous (Recompile)               *
       *  CSW210 - SWIFT 2010 Changes                                  *
@@ -44,12 +46,12 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSEDMES2DF CF   E             WORKSTN
- 
+
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*pssr)
- 
+
       *****************************************************************
       *                                                               *
       * ID F  C  H  L    FUNCTION OF INDICATORS                       *
@@ -89,32 +91,32 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,APICTLARR
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
      D/COPY ZACPYSRC,MSGHNDDCL
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
@@ -126,24 +128,24 @@
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @EI1            S             18A
      D @EI2            S             25A
      D @EI3            S             21A
- 
+
       ** SEDPMV Transaction Details in screen format
      D DPMVScrFld    E DS                  EXTNAME(SEDMWIPD)
- 
+
       ** SEDPMV Transaction Details OK indicators
      D DPMVOkFlags   E DS                  EXTNAME(SEEDMWIPD)
      D***Scr1OkFlags          57     74A                                                      CSW210
@@ -152,12 +154,12 @@
      D   Scr1OkFlags          57     77A                                                      CSW210
      D   Scr2OkFlags          78    101A                                                      CSW210
      D   Scr3OkFlags         102    113A                                                      CSW210
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -209,13 +211,13 @@
      C                   OTHER
      C                   Z-ADD     1             ScrnNbr
      C                   ENDSL
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes processing for the error and
       ** warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP1
       **---------------------------------------------------------------
- 
+
       ** SCREEN SETUP
       ** Fields Protection
       *                                                               >><<==
@@ -325,13 +327,13 @@
      C                   EVAL      @INKT = *INKT
       *
      C                   ENDSR
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the ProcMsgs subroutine
       ** to process error and warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP2
       **---------------------------------------------------------------
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

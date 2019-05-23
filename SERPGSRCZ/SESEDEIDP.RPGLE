@@ -16,17 +16,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
-      *  Prev Amend No. CAP140  *CREATE    Date 17Oct00               *
+      *                 CAP140  *CREATE    Date 17Oct00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP140 - Conversion of SE Security Diary Event inputs into   *
       *           modular structure to use as APIs.                   *
@@ -68,7 +70,7 @@
       *
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -205,7 +207,7 @@
      C                   IF        PINKC = *ON
      C                   EVAL      *INLR = *ON
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -228,13 +230,13 @@
       *
      C                   Z-ADD     1             Cx
      C                   Z-ADD     10            Ex
- 
+
      C                   DOU       Cx > 60
- 
+
      C                   IF        WEI(Cx) = 'N' OR WEI(Cx) = 'W'
      C                   EVAL      *IN(Ex) = *ON
      C                   ENDIF
- 
+
      C                   EVAL      Cx = Cx + 1
      C                   EVAL      Ex = Ex + 1
      C                   ENDDO
@@ -309,7 +311,7 @@
      C                   EVAL      PINKH = *INKH
      C                   EVAL      PINKL = *INKL
      C                   EVAL      PINKP = *INKP
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -330,7 +332,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT

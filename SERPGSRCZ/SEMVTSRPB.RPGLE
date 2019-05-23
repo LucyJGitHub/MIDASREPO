@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD041294           Date 19Sep16               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD041294           Date 19Sep16               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD041294 - Customer extension details is missing in          *
       *             CUSD repair browse                                *
       *  MD046248 - Finastra Rebranding                               *
@@ -43,18 +45,18 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSEMVTSRDF CF   E             WORKSTN INFSR(*PSSR)
      F                                     SFILE(SEMVTSRS0:@@RRN)
       ** Midas SE Movements Status - Browse Invalid Display File
- 
+
      FSEIMVTSL0 UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
       ** Midas SE Movements Status - Invalid by TmSt/FOId
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
       ** Table of field numbers and names (dummy use)
- 
+
       *****************************************************************
       *                                                               *
       * ID F  C  H  L    FUNCTION OF INDICATORS                       *
@@ -78,32 +80,32 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,APICTLARR
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
      D/COPY ZACPYSRC,MSGHNDDCL
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
@@ -115,53 +117,53 @@
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D InvSEMVTS     E DS                  EXTNAME(SEIMVTSPD)
       ** Invalid Movement Status record layout
- 
+
      D SEMVTS        E DS                  EXTNAME(SEMVTSPD)
       ** Movement Status record layout
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
       ** External DS for API ICD
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** Short DS for access programs
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Long DS for access programs
- 
+
      D ZMUSER        E DS                  EXTNAME(ZMUSER) DTAARA(ZMUSER)
       ** Midas ZMUSER Data Area Layout
- 
+
       ** Split up of the Movement Reference
      D DDMvtRef        DS
      D  DDMvtTRRF                     6A
      D  DDMvtTRTY                     1A
      D  DDMvtNTDT                     6A
      D  DDMvtSQNR                     3S 0
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Timestamp
      D @TMST           S               Z
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -180,14 +182,14 @@
       ** Initialization
       *
      C                   EXSR      INIT
- 
+
       ** Build Sub-file and write/read the screen
       *
      C                   IF        @BDSFL = 'Y'
      C                   EXSR      BLDSFL
      C                   EVAL      @BDSFL = *Blank
      C                   ENDIF
- 
+
       ** Process the last user input and/or
       ** Read and validate the next modified Subfile Record
       *
@@ -195,7 +197,7 @@
      C                   EVAL      TimeToGo = 'N'
      C                   EXSR      RDSFLR
      C                   ENDIF
- 
+
       ** Return to the caller at the right moment
       *
      C                   IF        TimeToGo = 'Y'

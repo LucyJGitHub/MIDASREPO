@@ -16,12 +16,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSW037A            Date 02May05               *
       *                 CSD025             Date 11Jan05               *
       *                 CSW037             Date 15Dec04               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSW037A- Additional Field extended to 40 chars (recompile)   *
@@ -47,18 +49,18 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSESTPRBDF CF   E             WORKSTN INFSR(*PSSR)
      F                                     SFILE(SESTPRBS0:@@RRN)
       ** Midas SE Statement Production Requests - Browse Display File
- 
+
      FSESTPRL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SESTPRD0:SESTPRD2)
       ** Midas SE Statement Production Request - Index
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
       ** Table of field numbers and names (dummy use)
- 
+
       *****************************************************************
       *                                                               *
       * ID F  C  H  L    FUNCTION OF INDICATORS                       *
@@ -88,32 +90,32 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,APICTLARR
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
      D/COPY ZACPYSRC,MSGHNDDCL
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
@@ -125,35 +127,35 @@
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SESTPR        E DS                  EXTNAME(SESTPRPD)
       ** Statement Production Request record layout
- 
+
      D SDUSER        E DS                  EXTNAME(MUSERDD)
       ** External DS for User Details
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** External DS for Customer Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** Short DS for access programs
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Long DS for access programs
- 
+
       ** Current screen selection criteria
      D CurrSel         DS
      D   C0CUST
@@ -165,7 +167,7 @@
      D   C0FREQ
      D   C0NSTD
      D   C0CHTP
- 
+
       ** Saved screen selection criteria
      D SavSel          DS
      D   SavCUST                           LIKE(C0CUST)
@@ -177,7 +179,7 @@
      D   SavFREQ                           LIKE(C0FREQ)
      D   SavNSTD                           LIKE(C0NSTD)
      D   SavCHTP                           LIKE(C0CHTP)
- 
+
       ** Split up of the Statement Production Request Reference
      D DDStPRRef       DS
       ** -- Main key (used in SIN function)
@@ -189,12 +191,12 @@
      D  DDSNDR                        3A
      D  DDRECP                       11A
      D  DDFREQ                        1A
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -213,14 +215,14 @@
       ** Initialization
       *
      C                   EXSR      INIT
- 
+
       ** Build Sub-file and write/read the screen
       *
      C                   IF        @BDSFL = 'Y'
      C                   EXSR      BLDSFL
      C                   EVAL      @BDSFL = *Blank
      C                   ENDIF
- 
+
       ** Process the last user input and/or
       ** Read and validate the next modified Subfile Record
       *
@@ -228,7 +230,7 @@
      C                   EVAL      TimeToGo = 'N'
      C                   EXSR      RDSFLR
      C                   ENDIF
- 
+
       ** Return to the caller at the right moment
       *
      C                   IF        TimeToGo = 'Y'

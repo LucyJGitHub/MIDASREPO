@@ -14,12 +14,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSD093  *CREATE    Date 01Apr13               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSD093  *CREATE    Date 01Apr13               *
       *                                                               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD093 - Document Management                                 *
       *                                                               *
@@ -31,17 +33,17 @@
      FSDDCMTDBDFCF   E             WORKSTN
      F                                     SFILE(SDDCMTS1:WWRRN)
      F                                     SFILE(SDDCMTS3:WWRRN)
- 
+
       * Document Management file - by Customer No or Naho Ref  and Code
      FSDDCMTL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       * Document Management file - by Front Offic Id
      FSDDCMTL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDDCMTD0:SDDCMTD2)
- 
+
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*pssr)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -53,12 +55,12 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
@@ -71,7 +73,7 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -79,68 +81,68 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
      D/COPY ZACPYSRC,MSGHNDDCL
       **--------------------------------------------------------------------------------------------
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** EXTERNAL DS FOR BANK DETAILS
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** EXTERNAL DS FOR DOCUMENT CODE DETAILS
      D SDDOCM        E DS                  EXTNAME(SDDOCMPD)
- 
+
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D WCOMM           DS
      D  WCOM1                  1     64
      D  WCOM2                 65    128
      D  WCOM3                129    192
      D  WCOM4                193    256
- 
+
      D DDACTN          S              1
      D DDREFN          S             10
      D DDCSSN          S             10
@@ -164,11 +166,11 @@
      D WWREFF          S             10
      D WWRRN           S              5S 0
      D WWEOF           S              1
- 
+
      D PRTCD           S              7
      D POPTN           S              7
      D PDCCD           S              2
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -187,13 +189,13 @@
       ** Set up the customer reference to be used by the message handler
      C                   EVAL      TranRef = DDREFN
      C                   EVAL      ActionCode = DDACTN
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes processing for the error and
       ** warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP1
       **--------------------------------------------------------------------------------------------
- 
+
       ** Initialization
       *
      C                   EXSR      INIT
@@ -209,13 +211,13 @@
      C                   IF        WkSRef <> 'F'
      C                   EVAL      WkSRef = 'B'
      C                   ENDIF
- 
+
      C     *INKK         DOUEQ     '0'
       *
       ** On F11, initialize position/select fields
       *
      C     *INKK         IFEQ      '1'
- 
+
      C                   EVAL      DFFOID = *BLANK
      C                   EVAL      DFCODE = *BLANK
      C                   EVAL      DFNARR = *BLANK
@@ -225,26 +227,26 @@
      C                   EVAL      DFRQDT = *BLANK
      C                   EVAL      DFREQB = *BLANK
      C                   EVAL      DFEXDT = *BLANK
- 
+
       ** Clear program message queue
      C                   CALL      'ZA0250'
- 
+
      C                   ENDIF
- 
+
      C     WkSRef        CASEQ     'B'           BLDSFL
      C     WkSRef        CASEQ     'F'           BLDSFL2
      C                   ENDCS
- 
+
      C                   END
- 
+
      C                   ENDIF
- 
+
       ** Read Subfile Record
- 
+
      C     PRDSFL        IFEQ      'Y'
      C                   EXSR      RDSFLR
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -473,7 +475,7 @@
      C                   EVAL      *IN97  = *ON
      C                   WRITE     SDDCMTS2
      C                   EVAL       *IN97 = *OFF
- 
+
      C                   IF        DDCODE <> *BLANKS
      C                             AND DDSEQN <> *BLANKS
      C                             AND FldNameArr(1) <> *BLANKS
@@ -608,7 +610,7 @@
      C                   SETON                                        LR
      C                   RETURN
      C                   ENDIF
- 
+
       ** If F5, Refresh screen details
      C                   IF        *INKE = '1'
      C                   EVAL      DFFOID = *BLANK
@@ -623,7 +625,7 @@
      C                   EVAL      PINKE  = '1'
      C                   RETURN
      C                   ENDIF
- 
+
       **  If F9, bypass further processing.
      C                   IF        *INKI = '1'
      C                   EVAL      POPSEL = 'I'
@@ -631,7 +633,7 @@
      C                   SETON                                        LR
      C                   RETURN
      C                   ENDIF
- 
+
      C                   END
       *
       * Set indicator and flag for Midas (back) office customer number key
@@ -707,10 +709,10 @@
      C                   MOVEL     DMSEQN        DDSEQN
      C                   EVAL      DDDREF = DMDREF
      C                   MOVEL     DMCOMM        WCOMM
- 
+
      C                   EXSR      SRSTAT
      C                   EVAL      DDSTAT = WSTAT
- 
+
      C                   EVAL      DDSYST = *BLANKS
      C                   IF        BJRDNB > DMEXDT
      C                             AND DMEXDT > *ZERO
@@ -724,21 +726,21 @@
      C                   EVAL      DDSYST = 'OVERDUE'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      DDRQDT = *BLANKS
      C                   IF        DMRQDT > *ZERO
      C                   EVAL      ZDAYNO = DMRQDT
      C                   EXSR      SRDATE2
      C                   MOVEL     ZDATE         DDRQDT
      C                   ENDIF
- 
+
      C                   EVAL      DDREQB = *BLANKS
      C                   IF        DMREQB > *ZERO
      C                   EVAL      ZDAYNO = DMREQB
      C                   EXSR      SRDATE2
      C                   MOVEL     ZDATE         DDREQB
      C                   ENDIF
- 
+
      C                   EVAL      DDEXDT = *BLANKS
      C                   IF        DMEXDT > *ZERO
      C                   EVAL      ZDAYNO = DMEXDT
@@ -771,9 +773,9 @@
      C     WWEOF         DOUEQ     'Y'
      C     DMCODE        ORNE      *BLANK
      C     WWERR         ANDEQ     *ZERO
- 
+
      C                   Z-ADD     0             WWERR
- 
+
      C                   IF        WkSref = 'B'
       *
       **  Position according to customer number
@@ -794,7 +796,7 @@
       ** Select according to narrative
       *
      C                   EXSR      SRDOCM
- 
+
      C                   IF        DFNARR <> *BLANK
      C                   CALL      'QCLSCAN'
      C                   PARM                    DDNARR
@@ -832,7 +834,7 @@
       ** Select according to document status
       *
      C                   EXSR      SRSTAT
- 
+
      C                   IF        DFSTAT <> *BLANK
      C                   CALL      'QCLSCAN'
      C                   PARM                    WSTAT            12
@@ -848,7 +850,7 @@
      C                   Z-ADD     1             WWERR
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      WSYST = *BLANKS
      C                   IF        BJRDNB > DMEXDT
      C                             AND DMEXDT > *ZERO
@@ -862,7 +864,7 @@
      C                   EVAL      WSYST = 'OVERDUE'
      C                   ENDIF
      C                   ENDIF
- 
+
       *
       ** Select according to system status
       *
@@ -887,7 +889,7 @@
      C                   EVAL      ZDAYNO = DMRQDT
      C                   EXSR      SRDATE2
      C                   MOVEL     ZDATE         WRQDT             6
- 
+
      C                   IF        DFRQDT <> *BLANK
      C                   EVAL      WScan = %SCAN (' ':DFRQDT)
      C                   IF        DFRQDT <> WRQDT
@@ -901,7 +903,7 @@
      C                   EVAL      ZDAYNO = DMREQB
      C                   EXSR      SRDATE2
      C                   MOVEL     ZDATE         WREQB             6
- 
+
      C                   IF        DFREQB <> *BLANK
      C                   EVAL      WScan = %SCAN (' ':DFREQB)
      C                   IF        DFREQB <> WREQB
@@ -915,7 +917,7 @@
      C                   EVAL      ZDAYNO = DMEXDT
      C                   EXSR      SRDATE2
      C                   MOVEL     ZDATE         WEXDT             6
- 
+
      C                   IF        DFEXDT <> *BLANK
      C                   EVAL      WScan = %SCAN (' ':DFEXDT)
      C                   IF        DFEXDT <> WEXDT
@@ -923,7 +925,7 @@
      C                   Z-ADD     1             WWERR
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
       *
      C                   IF        WkSref = 'F'
@@ -947,12 +949,12 @@
      C                   Z-ADD     1             WWERR
      C                   ENDIF
      C                   ENDIF
- 
+
       *
       ** Select according to Document Narrative mask
       *
      C                   EXSR      SRDOCM
- 
+
      C                   IF        DFNARR <> *BLANK
      C                   CALL      'QCLSCAN'
      C                   PARM                    DDNARR
@@ -990,7 +992,7 @@
       ** Select according to document status
       *
      C                   EXSR      SRSTAT
- 
+
      C                   IF        DFSTAT <> *BLANK
      C                   CALL      'QCLSCAN'
      C                   PARM                    WSTAT
@@ -1006,7 +1008,7 @@
      C                   Z-ADD     1             WWERR
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      WSYST = *BLANKS
      C                   IF        BJRDNB > DMEXDT
      C                             AND DMEXDT > *ZERO
@@ -1038,14 +1040,14 @@
      C                   Z-ADD     1             WWERR
      C                   ENDIF
      C                   ENDIF
- 
+
       *
       ** Select according to Requested Date
       *
      C                   EVAL      ZDAYNO = DMRQDT
      C                   EXSR      SRDATE2
      C                   MOVEL     ZDATE         WRQDT             6
- 
+
      C                   IF        DFRQDT <> *BLANK
      C                   EVAL      WScan = %SCAN (' ':DFRQDT)
      C                   IF        DFRQDT <> WRQDT
@@ -1059,7 +1061,7 @@
      C                   EVAL      ZDAYNO = DMREQB
      C                   EXSR      SRDATE2
      C                   MOVEL     ZDATE         WREQB             6
- 
+
      C                   IF        DFREQB <> *BLANK
      C                   EVAL      WScan = %SCAN (' ':DFREQB)
      C                   IF        DFREQB <> WREQB
@@ -1073,7 +1075,7 @@
      C                   EVAL      ZDAYNO = DMEXDT
      C                   EXSR      SRDATE2
      C                   MOVEL     ZDATE         WEXDT             6
- 
+
      C                   IF        DFEXDT <> *BLANK
      C                   EVAL      WScan = %SCAN (' ':DFEXDT)
      C                   IF        DFEXDT <> WEXDT
@@ -1141,7 +1143,7 @@
      C                   ELSE
      C                   EVAL      *IN60 = '0'
      C                   ENDIF
- 
+
      C                   IF        PINMOD = 'E'
      C                   EVAL      DHEADR = 'Document Management +
      C                                      - Enquiry'
@@ -1151,7 +1153,7 @@
      C                                      Maintenance'
      C                   EVAL      *IN61 = '1'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1165,7 +1167,7 @@
       *                                                               *
       *****************************************************************
      C     SRSTAT        BEGSR
- 
+
      C                   EVAL      WSTAT = *BLANKS
      C                   SELECT
      C                   WHEN      DMSTCD = 'A'
@@ -1179,7 +1181,7 @@
      C                   WHEN      DMSTCD = 'Z'
      C                   EVAL      WSTAT  = 'REJECTED'
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1217,13 +1219,13 @@
       *                                                               *
       *****************************************************************
      C     SRDATE2       BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE             6 0
      C                   PARM                    ZADATE            7
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1269,7 +1271,7 @@
       ** Move workstation ID to screen field.
      C                   MOVEL     PsJobName     DDWID
      C                   MOVEL     PsUser        DDUSER
- 
+
      C                   EVAL      DDOPT = *BLANKS
      C                   EVAL      DDCODE = *BLANKS
      C                   EVAL      WkSRef = ' '
@@ -1293,7 +1295,7 @@
      C                   ELSE
      C                   EVAL      DDMRDT = BJMRDT
      C                   ENDIF
- 
+
      C     KCODE         KLIST
      C                   KFLD                    DDREFN
      C                   KFLD                    PINTYP
@@ -1322,7 +1324,7 @@
       ** functions for the message handler, ZAMSGHNDLE.
      D/COPY SDCPYSRC,MSGHNDDATA
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDSR
       *****************************************************************
       *
@@ -1331,7 +1333,7 @@
       ** to process error and warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP2
       **--------------------------------------------------------------------------------------------
- 
+
       *****************************************************************
       ** Program, module and procedure names for database error processing.
       ** =================================================================

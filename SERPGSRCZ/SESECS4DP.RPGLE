@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -223,9 +225,9 @@
      C                   IF        PINKC = *ON
      C                   EVAL      *INLR = *ON
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -323,7 +325,7 @@
      C                   EVAL      PINKL = *INKL
      C                   EVAL      PINKP = *INKP
      C                   EVAL      PINKI = *INKI
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -344,7 +346,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -427,7 +429,7 @@
      C                   PARM                    PINKH
      C                   PARM                    PINKL
      C                   PARM                    PINKP
- 
+
      C                   EVAL      SUSER = PSUser
      C                   EVAL      SWSID = PsJobName
       *

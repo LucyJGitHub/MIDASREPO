@@ -29,15 +29,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSE039  *CREATE    Date 27Feb03               *
+      *                 CSE039  *CREATE    Date 27Feb03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSE039 - Automatic Settlement of Trades                      *
       *                                                               *
@@ -46,33 +48,33 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSEVMVTSPD UF A E             DISK    INFSR(*PSSR)
      F                                     RENAME(SEVMVTSD0:SEVMVTSDD)
      F                                     COMMIT
       ** Valid Movements Status File
- 
+
      FSEIMVTSPD UF A E             DISK    INFSR(*PSSR)
      F                                     COMMIT
       ** Invalid Movements Status File
- 
+
      FSEVMVTSL0 IF   E           K DISK    INFSR(*PSSR)
       ** Valid Movement Status by Front Office Id.
- 
+
      FSEVMVTSL1 IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SEVMVTSD0:SEVMVTSD1)
       ** Valid Movement Status by Movement Key (without sequence) and Timestamp
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       /COPY WNCPYSRC,SEMVTSC001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **---------------------------------------------------------------
       ** Standard D-specs
       ** ================
@@ -88,7 +90,7 @@
       **    RunBefore  1A (for the PSSR)
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** Program Status Data Structure
       ** =============================
@@ -96,7 +98,7 @@
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
@@ -104,25 +106,25 @@
       ** must be included where this one is used.
      D/COPY ZACPYSRC,PROCPARMS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API *CTL modules.
      D/COPY ZACPYSRC,APICTLARR
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** used in checking whether there are messages on the data queue.
      D/COPY ZACPYSRC,DTAQCHKDCL
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
@@ -134,94 +136,94 @@
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D HeadIn        E DS                  EXTNAME(APHEADPD)
       **Incoming Header
- 
+
      D NewScnIFld    E DS                  EXTNAME(SEMVTS1PD)
       ** Incoming Movement in screen format - Input/output fields
- 
+
      D NewScnOFld    E DS                  EXTNAME(SEMVTS2PD)
       ** Incoming Movement in screen format - Output only fields
- 
+
      D ExtData       E DS                  EXTNAME(SEMVEXPD)
       ** Incoming Movement Extra Data in screen format
- 
+
      D NewSEMVTS     E DS                  EXTNAME(SEVMVTSPD)
       ** Valid Movement Status layout
- 
+
      D SEMVTS        E DS                  EXTNAME(SEMVTSPD)
       ** (Current) Movement Status in file format
- 
+
      D CurScnIFld    E DS                  EXTNAME(SEMVTS1PD) PREFIX(C_)
       ** (Current) Movement in screen format - Input/output fields
- 
+
      D CurScnOFld    E DS                  EXTNAME(SEMVTS2PD) PREFIX(C_)
       ** (Current) Movement in screen format - Output only fields
- 
+
      D OKMvtFlags    E DS                  EXTNAME(SEEMVTSPD)
       ** Error indicators
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
       ** External DS for API ICD
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access programs - short data structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for Access programs - long data structure
- 
+
       ** Split up of the Movement Reference
      D DDMvtRef        DS
      D  DDMvtTRRF                     6A
      D  DDMvtTRTY                     1A
      D  DDMvtNTDT                     6A
      D  DDMvtSQNR                     3S 0
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Fields (500A) to receive the incoming transaction
      D Trans5001       S            500A
- 
+
       ** Field (500A) to receive the incoming Extra Data
      D ExtData500      S            500A
- 
+
       ** Indicies for arrays used to set up corresponding sequence numbers
       ** for the fields that are in error
      D Ix              S              3P 0
      D Iy              S              3P 0
- 
+
       ** Overall Transaction status, to be passed to the Message Handler
      D TranStatus      S              1A
- 
+
       ** Module ID, to be passed to the Message Handler
      D ModuleID        S              2A
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
      D Object          S             10A   INZ('SEMVTSUPC')
      D Lib             S             10A   INZ('*LIBL')
      D ObjType         S              7A   INZ('*DTAARA')
@@ -230,30 +232,30 @@
      D WaitTime        S              6A   INZ('0     ')
      D Dlcobj          S              1A   INZ('Y')
      D Return          S              7A
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
       ** Whether or not to clear the program message queue (this is not
       ** actually used, but is required by the message handler's parameter
       ** list.
      D ClrPgmMsgQ      S              1A   INZ('Y')
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       /COPY WNCPYSRC,SEMVTSC002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -261,9 +263,9 @@
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** +----------------------------------------------------------------+
- 
+
       /COPY WNCPYSRC,SEMVTSC003
- 
+
       ** Incoming transaction is broken into 500A fields, so that a common CL
       ** can be used between this module and the one that read the MQ queue.
       ** This module needs to break these 500A fields by loading them into
@@ -271,18 +273,18 @@
       *
      C                   MOVEL     Trans5001     NewScnIfld
      C                   MOVEL     Extdata500    Extdata
- 
+
       ** Generate a timestamp for this transaction
       *
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
       ** Reset variables gradually updated
       *
      C                   EXSR      ResetCycle
- 
+
       /COPY WNCPYSRC,SEMVTSC004
- 
+
       ** Check if valid Movement Status details exists (Front Office Id.)
       *
      C                   EXSR      ChkValFrnt
@@ -292,7 +294,7 @@
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       ** Check if valid Movement Status details exists (Midas Reference)
       *
      C                   EXSR      ChkValMids
@@ -302,26 +304,26 @@
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       ** Reset variables again in case the details have been corrupted
       ** by previous chain to valid Transaction details file.
       *
      C                   EXSR      ResetCycle
- 
+
       /COPY WNCPYSRC,SEMVTSC005
- 
+
       ** Validate Action Code
       *
      C                   EXSR      ValAction
- 
+
       /COPY WNCPYSRC,SEMVTSC006
- 
+
       ** If error in validation of action code, fail this input
       *
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       ** Processing depends upon Action Code
       *
      C                   SELECT
@@ -359,7 +361,7 @@
       /COPY WNCPYSRC,SEMVTSC011
       *
      C                   ENDSL
- 
+
      C     INVALID       TAG
       *
       ** Check for exception error from any program lower in the stack
@@ -368,9 +370,9 @@
       ** prompting the database update program
       *
      C                   IN        APDUMP
- 
+
       /COPY WNCPYSRC,SEMVTSC012
- 
+
  B1  C                   IF        ARERRMOD <> *BLANK
      C                   EVAL      MQErrLong = 'Error in module ' + ARERRMOD
       *
@@ -425,9 +427,9 @@
  E2  C                   ENDIF
       *
  E1  C                   ENDIF
- 
+
       /COPY WNCPYSRC,SEMVTSC015
- 
+
      C                   RETURN
       *
       ********************************************************************

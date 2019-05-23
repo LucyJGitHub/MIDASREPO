@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSF011A            Date 28Nov11               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *               . CSF011A            Date 28Nov11               *
       *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
       *            (Recompile)                                        *
@@ -68,12 +70,12 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSETRADPDF CF   E             WORKSTN
- 
+
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*pssr)
- 
+
       *****************************************************************
       *                                                               *
       * ID F  C  H  L    FUNCTION OF INDICATORS                       *
@@ -106,25 +108,25 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -132,44 +134,44 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
      D/COPY ZACPYSRC,MSGHNDDCL
       **--------------------------------------------------------------------------------------------
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Successful Insert Trade                                                166907
      D                 DS                                                       166907
      D**DDFOTX**               1     40                                                166907 CAP067
@@ -179,32 +181,32 @@
      D @Z0             S              1    DIM(60) CTDATA PERRCD(60)
      D*@NAR*****       S             40    DIM(2) CTDATA PERRCD(1)                            CAP067
      D @NAR            S             70    DIM(3) CTDATA PERRCD(1)                            CAP067
- 
+
      D @EI             S              1    DIM(60)
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
       ** EXTERNAL DS DOR SECURITIES TRADING DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
- 
+
+
      D TrPrim        E DS                  EXTNAME(SETRPRPD)
      D OKTrPrim      E DS                  EXTNAME(SEETRPRPD)
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -254,19 +256,19 @@
      C                   ADD       1             C
      C                   ADD       1             E
      C                   END
- 
- 
+
+
       ** Set up the transaction reference to be used by the message handler
      C                   EVAL      TranRef = DDTDRF
      C                   EVAL      ActionCode = DDACTN
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes processing for the error and
       ** warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP1
       **--------------------------------------------------------------------------------------------
- 
- 
+
+
       * POSITION CURSOR ON ACTION CODE IF IT IS BLANK
       *
      C     DDACTN        COMP      *BLANK                                 68
@@ -370,13 +372,13 @@
      C                   MOVE      *INKP         @INKP
       *
      C                   ENDSR
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the ProcMsgs subroutine
       ** to process error and warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP2
       **--------------------------------------------------------------------------------------------
- 
+
       ********************************************************************
       /EJECT
       *****************************************************************
@@ -518,17 +520,17 @@
      C                   ELSE                                                                 CAP067
      C                   EVAL      *IN86 = *OFF                                               CAP067
      C                   ENDIF                                                                CAP067
- 
- 
+
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line sets up the fixed data for SE *DSP
       ** functions for the message handler, ZAMSGHNDLE.
      D/COPY SECPYSRC,MSGHNDDATA
       **--------------------------------------------------------------------------------------------
- 
- 
+
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

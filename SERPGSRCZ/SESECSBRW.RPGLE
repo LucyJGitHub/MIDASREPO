@@ -17,12 +17,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CSE071             Date 19Jul05               *
       *                 CGL014             Date 20Oct03               *
       *                 CSE037             Date 29Apr02               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSE071 - Multiple Holidays Re Securities (recompile)         *
@@ -141,11 +143,11 @@
       *
       ** Arrays for screen error indicators
      D WZeroise        S              1    DIM(10) CTDATA PERRCD(10)
- 
+
      D KeyLists        DS
      D  SWSESN
      D  SWSRPN
- 
+
      D KeySelect       DS
      D  SWISSR
      D  SWNMCY
@@ -155,7 +157,7 @@
      D  SWISIN
      D  SWT2RF
      D  SWSTAT
- 
+
      D KeySelInd       DS
      D  SelISSR                1      1
      D  SelNMCY                2      2
@@ -177,28 +179,28 @@
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
       *
- 
+
      D PINKC           S              1A
      D PINKL           S              1A
      D PBdSfl          S              1A
      D PRdSfl          S              1A
- 
+
      D BJMRDT          S              7A
      D BJSBRC          S              3A
- 
+
      D PDBRN           S              3A
      D POpSel          S              1A
      D PErrMS          S              7A
      D PSESNSel        S             10A
      D PActn           S              1A
      D PError          S              1P 0
- 
+
      D OptSelected     S              1A
- 
+
      D WPrvOrd         S              1A
      D W_Cnt           S              3P 0
      D W_Rrn           S              5P 0
- 
+
      D*SNISSR***       S              6P 0                                                    CSD027
      D SNISSR          S              6A                                                      CSD027
       *
@@ -233,9 +235,9 @@
       ** Stay in loop while F11 toggle key is used.
       *
      C                   IF        WPrvOrd <> 'F'
- 
+
      C                   DOU       *INKK = *OFF
- 
+
      C                   EXSR      SRBldSfl1
       *
       ** If F11, switch to subfile by front office id.
@@ -243,9 +245,9 @@
      C                   IF        *INKK = *ON
      C                   EXSR      SRBldSfl2
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ELSE
       *
       ** If the subfile by front office identifier was previously
@@ -253,7 +255,7 @@
       ** Stay in loop while F11 toggle key is used.
       *
      C                   DOU       *INKK = *OFF
- 
+
      C                   EXSR      SRBldSfl2
       *
       ** If F11, switch to subfile by security short name.
@@ -261,11 +263,11 @@
      C                   IF        *INKK = *ON
      C                   EXSR      SRBldSfl1
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Read subfile record.
@@ -273,7 +275,7 @@
      C                   IF        PRdSfl = 'Y'
      C                   EXSR      SRRdSfl
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -292,9 +294,9 @@
      C                   EVAL      PErrMs = *BLANKS
      C                   EVAL      POpSel = *BLANKS
      C                   EVAL      PSESNSel = *BLANKS
- 
+
      C                   EVAL      OptSelected = 'N'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -354,9 +356,9 @@
       *
      C                   EVAL      PErrMs = 'SEA0301'
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
      C                   ENDIF
       *
       ** Set on ROLLUP indicator to drive initial loop.
@@ -395,7 +397,7 @@
       ** Read next security.
       *
      C                   EXSR      SRRdSecs
- 
+
      C                   ENDDO
       *
       ** Retrieve time for display.
@@ -447,13 +449,13 @@
       ** Clear message subfile and reset error indicators.
       *
      C                   CALL      'ZA0250'
- 
+
      C                   CLEAR                   MsgIdArr
      C                   CLEAR                   FldNameArr
      C                   MOVEA     WZeroise      *IN(60)
- 
+
      C     SWSESN        SETLL     SECTY
- 
+
      C                   EXSR      SRRdSecs
       *
       ** The key/selection fields refer to a record, set pointer and rebuild
@@ -464,9 +466,9 @@
      C                   EVAL      *IN97 = *ON
      C                   WRITE     SESECSC0
      C                   EVAL      *IN97 = *OFF
- 
+
      C                   ELSE
- 
+
      C                   EVAL      MsgIdArr(1) = 'SEA0301'
      C                   EVAL      FldNameArr(1) = '*ANY'
       *
@@ -474,7 +476,7 @@
       ** warning messages.
       *
       /COPY ZACPYSRC,MSGHNDDSP1
- 
+
      C                   IF        SelISSR = 'N' OR SWISSR <> *BLANKS
      C                   EVAL      *IN61 = *ON
      C                   ENDIF
@@ -499,19 +501,19 @@
      C                   IF        SelSTAT = 'N' OR SWSTAT <> *BLANKS
      C                   EVAL      *IN68 = *ON
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Write message sub-file for error messages.
       *
      C                   WRITE     SESECSC2
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C     ESRBldSfl1    ENDSR
       *****************************************************************
       /EJECT
@@ -609,7 +611,7 @@
       ** Read next security.
       *
      C                   EXSR      SRRdSecs
- 
+
      C                   ENDDO
       *
       ** Retrieve time for display.
@@ -643,7 +645,7 @@
      C                   CLEAR                   KeySelect
      C                   RETURN
      C                   ENDIF
- 
+
      C                   EXSR      SRChkOption
       *
       ** Set record pointer if applicable.
@@ -655,11 +657,11 @@
       ** Clear message subfile and reset error indicators.
       *
      C                   CALL      'ZA0250'
- 
+
      C                   CLEAR                   MsgIdArr
      C                   CLEAR                   FldNameArr
      C                   MOVEA     WZeroise      *IN(60)
- 
+
      C                   SELECT
      C                   WHEN      SWFRNT <> *BLANKS
      C     SWFRNT        SETLL     SECTYL4
@@ -670,17 +672,17 @@
      C                   OTHER
      C     *LOVAL        SETLL     SECTYL4
      C                   ENDSL
- 
+
      C                   EXSR      SRRdSecs
- 
+
      C                   IF        EndOfFile = False
      C                   Z-ADD     0             W_Rrn
      C                   EVAL      *IN97 = *ON
      C                   WRITE     SESECSC1
      C                   EVAL      *IN97 = *OFF
- 
+
      C                   ELSE
- 
+
      C                   EVAL      MsgIdArr(1) = 'SEA0301'
      C                   EVAL      FldNameArr(1) = '*ANY'
       *
@@ -688,7 +690,7 @@
       ** warning messages.
       *
       /COPY ZACPYSRC,MSGHNDDSP1
- 
+
      C                   IF        SelISSR = 'N' OR SWISSR <> *BLANKS
      C                   EVAL      *IN61 = *ON
      C                   ENDIF
@@ -701,15 +703,15 @@
      C                   IF        SelPRTP = 'N' OR SWPRTP <> *BLANKS
      C                   EVAL      *IN64 = *ON
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   WRITE     SESECSC2
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C     ESRBldSfl2    ENDSR
       *****************************************************************
       /EJECT
@@ -725,29 +727,29 @@
       *
      C                   DOU       *IN99 = *ON OR
      C                             SOPTN <> *BLANK
- 
+
      C                   IF        WPrvOrd <> 'F'
      C                   READC     SESECSS0                               99
      C                   ELSE
      C                   READC     SESECSS1                               99
      C                   ENDIF
- 
+
      C                   ENDDO
       *
       ** Return the selected option and security short name.
       *
      C                   IF        *IN99 <> *ON AND
      C                             SOPTN <> *BLANK
- 
+
      C                   IF        SOPTN = 'A' OR SOPTN = 'E' OR SOPTN = 'D'
      C                   EVAL      POpSel = SOPTN
      C                   ELSE
      C                   EVAL      POpSel = 'E'
      C                   ENDIF
- 
+
      C                   EVAL      PSESNSel = SSESN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -757,7 +759,7 @@
       *                                                               *
       *****************************************************************
      C     SRChkAut      BEGSR
- 
+
      C                   CALL      'ZVACTU'
      C                   PARM      'E'           PActn
      C                   PARM      *ZERO         PError
@@ -768,7 +770,7 @@
      C                   EVAL      PErrMs = 'FXM0292'
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -791,7 +793,7 @@
      C                   IF        WPrvOrd = 'B'
      C                   READ      SECTY                                  96
      C                   ELSE
- 
+
      C                   SELECT
      C                   WHEN      SWFRNT <> *BLANKS
      C                   READ      SECTYL4                                96
@@ -802,9 +804,9 @@
      C                   OTHER
      C                   READ      SECTYL4                                96
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   IF        EndOfFile = False
       *
       ** If security read, check whether user can see it.
@@ -815,12 +817,12 @@
      C                   PARM                    PDBRN
      C                   PARM      *ZERO         PError
      C                   ENDIF
- 
+
      C                   IF        PError = 0
       *
       ** Setup status fields for further processing.
      C                   EVAL      SSTAT = *BLANKS
- 
+
      C                   SELECT
      C                   WHEN      RECI = 'D'
      C                   EVAL      SSTAT = 'LIVE      '
@@ -829,9 +831,9 @@
      C                   WHEN      RECI = 'C'
      C                   EVAL      SSTAT = 'CANCELLED '
      C                   ENDSL
- 
+
      C     KInvTyp       CHAIN     INVTP                              95
- 
+
      C                   IF        RecNotFnd = True
      C                   EVAL      DBKey = NMCY + SITP
      C                   EVAL      DBFile = 'INVTPD'
@@ -842,13 +844,13 @@
       ** Check whether record read passes selection criteria.
       *
      C                   EVAL      KeySelInd = *BLANKS
- 
+
      C**********         TESTN                   SWISSR               90                      CSD027
       **********                                                                              CSD027
      C**********         IF        NumericIn = True OR SWISSR = *BLANKS                       CSD027
      C                   MOVEL     SWISSR        SNISSR
      C**********         ENDIF                                                                CSD027
- 
+
      C                   SELECT
      C                   WHEN      SWISSR <> *BLANKS AND SNISSR <> ISSR OR
      C                             NumericIn = False AND SWISSR <> *BLANKS
@@ -868,17 +870,17 @@
      C                   WHEN      SWSTAT <> *BLANKS AND SWSTAT <> SSTAT
      C                   EVAL      SelSTAT = 'N'
      C                   ENDSL
- 
+
      C                   IF        KeySelInd <> *BLANKS
      C                   Z-ADD     1             PError
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -918,7 +920,7 @@
       *
       ** Telekurs.
      C                   EVAL      ST2RF = T2RF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -933,48 +935,48 @@
       ** Read subfile if an option has been selected.
       *
      C                   DOU       *IN99 = '1' OR SOPTN <> *BLANK
- 
+
      C                   IF        WPrvOrd = 'B'
      C                   READC     SESECSS0                               99
      C                   ELSE
      C                   READC     SESECSS1                               99
      C                   ENDIF
- 
+
      C                   ENDDO
       *
       ** Activate SFLNXTCHG for the record to be read in the
       ** get-next-changed operation.
       *
      C     *IN99         IFEQ      '0'
- 
+
      C                   EVAL      *IN93 = '1'
- 
+
      C                   IF        WPrvOrd = 'B'
      C                   UPDATE    SESECSS0
      C                   ELSE
      C                   UPDATE    SESECSS1
      C                   ENDIF
- 
+
      C                   EVAL      *IN93 = '0'
- 
+
      C                   IF        WPrvOrd = 'B'
      C                   WRITE     SESECSC0
      C                   ELSE
      C                   WRITE     SESECSC1
      C                   ENDIF
- 
+
      C                   CLEAR                   SWFRNT
      C                   CLEAR                   KeyLists
      C                   CLEAR                   KeySelect
- 
+
      C                   EVAL      OptSelected = 'Y'
- 
+
      C                   ELSE
- 
+
      C                   EVAL      OptSelected = 'N'
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

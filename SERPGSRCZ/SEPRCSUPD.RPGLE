@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD043345           Date 05Jan17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD043345           Date 05Jan17               *
       *                 AR1092524          Date 12Mar13               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD043345 - Security Prices does not have timestamp when      *
       *             inserted                                          *
@@ -88,18 +90,18 @@
      F                                     INCLUDE(PRICEDF)
      FPRICEA    UF A E             DISK
      F                                     COMMIT
- 
+
      FSEPRICPD  UF A E           K DISK
      F                                     COMMIT
      F                                     INCLUDE(SEPRICD0)
      F                                     PREFIX(P_)
- 
+
      F*********SEPRXTPD  UF A E             DISK                                              189506
      F*************************************COMMIT                                             189506
- 
+
      FEXVALD    UF A E           K DISK    INFSR(EXVLSR)
      F                                     COMMIT
- 
+
      FSDMDFRL0  UF   E           K DISK    INFSR(*PSSR)                                       CAP060
      F                                     COMMIT                                             CAP060
      FSDMDFIL0  UF   E           K DISK    INFSR(*PSSR)                                       CAP060
@@ -117,30 +119,30 @@
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structure.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       ** The following /COPY line includes the definitions for error and                      CAP060
       ** warning message arrays.                                                              CAP060
      D/COPY ZACPYSRC,ERR_ARRAYS                                                               CAP060
       *****************************************************************
- 
+
       ** Timestamp for the transaction                                                        CAP060
      D TimeStamp       S               Z                                                      CAP060
                                                                                               CAP060
@@ -155,30 +157,30 @@
       **  Externally described data structure for valid Price record                          CAP060
      D SEVPRC        E DS                  EXTNAME(SEVPRCSPD)
      D                                     PREFIX(V_)                                         CAP060
- 
+
       **  Externally described data structure for Extra Data Price file
      D SEVPRX        E DS                  EXTNAME(SEVPRXTPD)
- 
+
       **  Externally described data structure for Extel File                                  CAP060
      D SEVEXT        E DS                  EXTNAME(SEVEXVLPD)                                 CAP060
- 
+
       **  Price details file.
      D PRICED        E DS                  EXTNAME(PRICED)
- 
+
      D*PRICEX********E DS                  EXTNAME(SEPRXTPD)                                  189506
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * DATA STRUCTURE FOR BANK DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       * DATA STRUCTURE FOR Midas Module Details
- 
+
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
       * DATA STRUCTURE FOR SECURITIES TRADING DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
                                                                                               CSC011
@@ -194,10 +196,10 @@
       ** Switchable features Definition file                                                  CSC011
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSC011
      D  SCLCD        E                     EXTFLD(LCD)                                        CSC011
- 
+
       ** Before image of price details                                                        CAP060
      D WBFRIMG         S            800A                                                      CAP060
- 
+
      D EXTLFilFmt    E DS                  EXTNAME(EXVALD)                                    CAP060
      D                                     PREFIX(EX)                                         CAP060
                                                                                               CAP060
@@ -205,7 +207,7 @@
       ** ZAMSGTOOPR                                                                           CAP060
      D DummyMsgID      S                   LIKE(#MsgID)                                       CAP060
      D DummyMsgF       S             10A                                                      CAP060
- 
+
      D/COPY WNCPYSRC,SEH00087
       ** +--------------------------------------+                               170262
       ** ¦ Manually included D-specs            ¦                               170262
@@ -245,7 +247,7 @@
      D PRetCode        S              7A                                                      CSC011
      D POption         S              7A                                                      CSC011
      D PKey            S              6A                                                      CSC011
- 
+
      D CSD010          S              1A                                                      CSD010
                                                                                               CSD010
       ** Hedge Accounting Phase B Switchable Feature                                          CAS006
@@ -286,7 +288,7 @@
      C**********         MOVEL     *BLANKS       @PBRA                              CAP060 AR1092524
      C**********         MOVEL     *BLANKS       @PBOK                              CAP060 AR1092524
      C                   MOVEL     V_PRPPRT      @PPRT                                        CAP060
- 
+
      C     BGPFMG        IFEQ      'Y'
      C                   MOVEL     '    '        @PTFR
      C*******************ELSE                                                                 191396
@@ -323,7 +325,7 @@
      C                   EXSR      PRCAMD
      C                   ENDIF
      C                   ENDIF                                                              BUG11512
- 
+
      C                   ENDIF                                                                CAP060
       * ----------Market Data Feed ON  -----------------                                      CAP060
      C                   IF        CAP060F= 'Y'                                               CAP060
@@ -381,7 +383,7 @@
      C                   EVAL      @@RTCD = '*ERROR'                                          CSC011
      C                   ENDIF                                                                CSC011
      C                   ENDIF                                                                CSC011
- 
+
       * EXIT FROM PROGRAM                                                                     CAP060
      C     EXIT          TAG                                                                  CAP060
                                                                                               CAP060
@@ -556,7 +558,7 @@
      C                   PARM                    TimeStamp                                  MD043345
                                                                                             MD043345
      C                   EVAL      PRTMST  = TimeStamp                                      MD043345
- 
+
       * Write new Price record.
       *
      C                   WRITE     PRICEDF
@@ -776,14 +778,14 @@
      C                   EVAL      P_PRFC=*BLANK
      C                   EVAL      P_PPRT=PPRT
      C                   EVAL      P_PTFR=PTFR
- 
+
       *
      C     KSEPRC        CHAIN     SEPRICPD                           97
       *
       * If not found insert new record.
       *
      C     *IN97         IFEQ      '1'
- 
+
      C                   EVAL      P_RECI=RECI
      C                   EVAL      P_PSSN=PSSN
      C                   EVAL      P_PPRT=PPRT
@@ -840,7 +842,7 @@
      C                   EVAL      P_PRCRSK = *ZERO                                           CAS006
      C                   EVAL      P_PRLQPR = *ZERO                                           CAS006
      C                   ENDIF                                                                CAS006
- 
+
      C                   WRITE     SEPRICD0
      C                   ELSE
       *
@@ -1792,7 +1794,7 @@
      C                   KFLD                    @PBOK             2
      C                   KFLD                    @PPRT             2
      C                   KFLD                    @PTFR             4
- 
+
      C     KSEPRC        KLIST
      C                   KFLD                    P_PSSN
      C                   KFLD                    P_PCNM
@@ -1802,7 +1804,7 @@
      C                   KFLD                    P_PRFC            4
      C                   KFLD                    P_PPRT
      C                   KFLD                    P_PTFR
- 
+
      C     KDFRQ         KLIST                                                                CAP060
      C                   KFLD                    @DFRID           32                          CAP060
      C                   KFLD                    @DFIT            20                          CAP060
@@ -1884,7 +1886,7 @@
      C                   EXSR      *PSSR                                                      CSC011
      C                   ENDIF                                                                CSC011
      C                   ENDIF                                                                CSC011
- 
+
       ** Access switchable features file - Collateralised Lending (CSD010)                    CSD010
                                                                                               CSD010
      C                   CALL      'AOSARDR0'                                                 CSD010

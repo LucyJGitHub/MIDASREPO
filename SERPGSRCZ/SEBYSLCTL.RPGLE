@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSF011A            Date 28Nov11               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSF011A            Date 28Nov11               *
       *                 CSW210             Date 04May10               *
       *                 CER059             Date 19Jul10               *
       *                 CER054             Date 07Apr09               *
@@ -54,6 +55,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
       *            (Recompile)                                        *
@@ -95,43 +97,43 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       ** Valid Buy-Sell Trades
      FSEVBYSLPD UF A E             DISK    INFSR(*pssr)
      F                                     PREFIX(V_)
      F                                     COMMIT
- 
+
       ** Valid Trades - Extension file
      FSEVTRX1PD UF A E             DISK    INFSR(*pssr)
      F                                     PREFIX(V_)
      F                                     COMMIT
- 
+
       ** Invalid Buy-Sell Trades
      FSEIBYSLPD UF A E             DISK    INFSR(*pssr)
      F                                     PREFIX(IN_)
      F                                     COMMIT
- 
+
       ** Work File for Buy-Sell Trades
      FSEWBYSLL0 UF A E           K DISK    INFSR(*pssr)
      F                                     PREFIX(W1_)
      F                                     COMMIT
- 
+
       ** Valid Securities Buy-Sell by front office ID
      FSEVBYSLL0 IF   E           K DISK    RENAME(SEVBYSLD0:SEVBYSLCHK)
      F                                     INFSR(*pssr)
- 
+
       ** Valid Buy-sell by Trade reference and timestamp
      FSEVBYSLL1 IF   E           K DISK    RENAME(SEVBYSLD0:SEVBYSLCK1)
      F                                     INFSR(*pssr)
- 
+
       ** Current and Historic Trades file
      FTRADHS    IF   E           K DISK    INFSR(*PSSR)
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SEBYSLC001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -150,70 +152,70 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API *CTL modules.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** used in checking whether there are messages on the data queue.
      D/COPY ZACPYSRC,DTAQCHKDCL
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** String for error messages to the operator
      D ProcErr         C                   CONST('Error in module')
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Data structure to hold incoming header variables
      D HeadIn        E DS                  EXTNAME(APHEADPD)
- 
+
       ** Data structure to hold incoming transaction variables
      D TranInPrim    E DS                  EXTNAME(SETRPRPD)
      D TranInSeco    E DS                  EXTNAME(SETRSEPD)
@@ -226,7 +228,7 @@
      D TranInSwfB    E DS                  EXTNAME(SETRSWPD)
      D                                     PREFIX(B)
      D TranInThir    E DS                  EXTNAME(SETRTHPD)                                  CAS006
- 
+
       ** Data structure to hold work file variables
      D WInValdTr     E DS                  EXTNAME(SEWBYSLPD)
      D                                     PREFIX(W1_)
@@ -234,7 +236,7 @@
      D***W2DETL*                840    888                                             CAS006 CGL029
      DW1DETL                  62    824                                                       CGL029
      DW2DETL                 852    900                                                       CGL029
- 
+
       ** Data structures to hold invalid file variables
      D TInValTrd     E DS                  EXTNAME(SEIBYSLPD)
      D                                     PREFIX(IN_)
@@ -246,7 +248,7 @@
      D                                     PREFIX(TI1)
      D TInValTrd2    E DS                  EXTNAME(SEIBYSLPD)
      D                                     PREFIX(TI2)
- 
+
       ** Data structure to hold current valid trade variables
      D ValidTrad     E DS                  EXTNAME(SEVBYSLPD)
      D                                     PREFIX(V_)
@@ -256,13 +258,13 @@
      D                                     PREFIX(VA_)
      D ValidTX1B     E DS                  EXTNAME(SEVTRX1PD)
      D                                     PREFIX(VB_)
- 
+
       ** Data structures to hold valid trade variables
      D TValdTrad1    E DS                  EXTNAME(SEVBYSLPD)
      D                                     PREFIX(TV1)
      D TValdTrad2    E DS                  EXTNAME(SEVBYSLPD)
      D                                     PREFIX(TV2)
- 
+
       ** Data structures to hold trade extension variables
      D TValdTrX1     E DS                  EXTNAME(SEVTRX1PD)
      D                                     PREFIX(TX1)
@@ -270,14 +272,14 @@
      D                                     PREFIX(TX2)
      D TValdTrX3     E DS                  EXTNAME(SEVTRX1PD)
      D                                     PREFIX(TX3)
- 
+
       ** Data structures to hold trade files variables
      D TradFilFmt    E DS                  EXTNAME(TRADSD)
      D TX1AFilFmt    E DS                  EXTNAME(TRADSDX1)
      D                                     PREFIX(A_)
      D TX1BFilFmt    E DS                  EXTNAME(TRADSDX1)
      D                                     PREFIX(B_)
- 
+
       ** Data structures to hold error indicators
      D OKTrPrim      E DS                  EXTNAME(SEETRPRPD)
      D OKTrSeco      E DS                  EXTNAME(SEETRSEPD)
@@ -287,7 +289,7 @@
      D DDCLTY2OK     E                     EXTFLD(DDCLTYOK)
      D OKTrChcm      E DS                  EXTNAME(SEETRCCPD)
      D OKTrSwft      E DS                  EXTNAME(SEETRSWPD)
- 
+
       ** Data structures to hold security details
      D SECTY         E DS                  EXTNAME(SECTYD)
      D SEC_RECI      E                     EXTFLD(RECI)
@@ -299,7 +301,7 @@
      D SEC_FRNT      E                     EXTFLD(FRNT)
      D SEC_REPA      E                     EXTFLD(REPA)
      D SEC_TMST      E                     EXTFLD(TMST)
- 
+
       ** Data structures to hold investment type details
      D INVTP         E DS                  EXTNAME(INVTPD)
      D INV_RECI      E                     EXTFLD(RECI)
@@ -307,14 +309,14 @@
      D INV_CHTP      E                     EXTFLD(CHTP)
      D INV_TNLU      E                     EXTFLD(TNLU)
      D INV_NDEC      E                     EXTFLD(NDEC)                                       CAS006
- 
+
       * The following /COPY includes the customer details data structure
      D/COPY SECPYSRC,SE_CUSTDT
- 
+
       * The following /COPY includes the currency details data structures
      D/COPY SECPYSRC,SE_CCYDT
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
       *
@@ -346,7 +348,7 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for Access programs - long data structure
       *
- 
+
       ** 24X7 status data area                                                                CSC011
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
                                                                                               CSC011
@@ -363,16 +365,16 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Error message field(s)
      D     Msg1        S                   LIKE(#MsgID)
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Fields (500A) to receive the incoming transaction
      D Trans5001       S            500A
      D Trans5002       S            500A
@@ -382,30 +384,30 @@
      D Trans5006       S            500A
      D Trans5007       S            500A
      D Trans5008       S            500A                                                      CAS006
- 
+
       ** Field (500A) to receive the incoming Extra Data
      D InfData500      S            500A
- 
+
       ** Field (500A) to receive the incoming Extra Data
      D ExtData500      S            500A
- 
+
       ** Index for arrays of error message ids etc in Amend validation
      D AmIdx           S              3P 0
- 
+
       ** Indicies for arrays used to set up corresponding sequence numbers
       **  for the fields that are in error
      D Ix              S              3P 0
      D Iy              S              3P 0
- 
+
       ** Overall Transaction status, to be passed to the Message Handler
      D TranStatus      S              1A
- 
+
       ** Module ID, to be passed to the Message Handler
      D ModuleID        S              2A
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
      D Object          S             10A   INZ('SEBYSLUPC')
      D Lib             S             10A   INZ('*LIBL')
      D ObjType         S              7A
@@ -414,12 +416,12 @@
      D WaitTime        S              6A   INZ('0     ')
      D Dlcobj          S              1A   INZ('Y')
      D Return          S              7A
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
       ** Whether or not to clear the program message queue (this is not
       ** actually used, but is required by the message handler's parameter
       ** list.
@@ -430,10 +432,10 @@
       *
       ** Withholding tax
      D DDWTAX          S             15A
- 
+
       ** Swift 2001 flag
      D CSW201          S              1A
- 
+
      D CSC011          S              1A                                                      CSC011
      D CallFromVU      S              1A   INZ(' ')                                           CAP087
      D TRANSDTL        S           5800A                                                      CSC011
@@ -456,14 +458,14 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SEBYSLC002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -473,14 +475,14 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       /COPY WNCPYSRC,SEBYSLC003
- 
+
       * Incoming transaction is broken into 500A fields, so that a common CL
       * can be used between this module and the one that read the MQ queue.
       * This module needs to break these 500A fields by loading them into
       * the appropriate (externally described) data structure.
- 
+
       *
       ** Incoming string Trans5001 is composed of transaction type(SEBYS1/SEBYS2) and
       ** primary screen of the trade
@@ -571,40 +573,40 @@
       /COPY WNCPYSRC,SEBYSLC008
       *
      C     INVALID       TAG
- 
+
       *  Check for exception error from any program lower in the stack
       *  If error detected, send message to system operator and
       *  return to calling program without updating database or
       *  prompting the database update program
      C                   IN        APDUMP
       /COPY WNCPYSRC,SEBYSLC009
- 
+
      C     ARERRMOD      IFNE      *BLANK
      C                   EVAL      MQErrlong  = *blank
      C                   MOVEL     ProcErr       MQError
      C                   MOVE      ARERRMOD      MQError          28
      C                   MOVEL     MQError       MQErrlong
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    MQReturn         10
      C                   PARM                    MQErrlong       132
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
- 
+
      C                   MOVEL     ARERRMOD      APRETCODE
      C     *LOCK         IN        APDUMP
      C                   EVAL      ARERRMOD = *BLANK
      C                   OUT       APDUMP
      C                   RETURN
- 
+
      C                   ELSE
- 
+
       *  Processing for Error checking/write to database
       /COPY WNCPYSRC,SEBYSLC010
- 
+
      C                   EXSR      SRChkWrite
       /COPY WNCPYSRC,SEBYSLC011
- 
+
       *  If valid, send data queue entry to prompt DB update program
      C     Idx           IFEQ      0
      C                   EVAL      ObjType = '*DTAARA'
@@ -619,16 +621,16 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM      *BLANK        Return
- 
+
      C     Return        IFEQ      *BLANK
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes a check for whether there
       ** are messages on the server/updater data queue, and sends a 'GO'.
       ** message to the data queue if there are not.
      D/COPY ZACPYSRC,DTAQCHK
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
@@ -661,12 +663,12 @@
      C                   ENDIF
       *
      C                   ENDDO
- 
+
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SEBYSLC012
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -675,7 +677,7 @@
       *                                                               *
       *****************************************************************
      C     SRWrWrkFil    BEGSR
- 
+
      C                   MOVEL     DDTRTP        W1_DDTRTP
       *
       ** Setup header for work file then write
@@ -699,7 +701,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -768,7 +770,7 @@
      C                   IF        CAP051 = 'Y'
      C                   EVAL      AUTHA = W1_DDAUTHA
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -783,7 +785,7 @@
       ** If (numeric) Midas Trade Reference supplied
       *
      C                   TESTN                   DDTDRF               9898
- 
+
      C     DDTDRF        IFNE      *BLANKS
      C     *IN98         ANDEQ     '1'
       *
@@ -799,7 +801,7 @@
       ** ..delay, then repeat check
       *
      C                   CALLB     'ZACDELAY'
- 
+
      C     TDRF          CHAIN     SEVBYSLL1                          99
       *
       ** Error if still present
@@ -935,21 +937,21 @@
      C                   GOTO      EValidTr                                                   CAS006
      C                   ENDIF                                                                CAS006
      C                   ENDIF                                                                CAS006
- 
+
       * Default Trade Other details
       * (Exchange Rate, Settlement, Charges and Commissions)
       /COPY WNCPYSRC,SEBYSLC013
- 
+
      C                   EXSR      SRDfltOth
- 
+
       /COPY WNCPYSRC,SEBYSLC014
       * SRCalcChCm - Calculate Trade Charges/Commissions
- 
+
      C                   EXSR      SRCalcChCm
- 
+
       * Validate Trade Other details
       * (Exchange Rate, Settlement, Charges and Commissions)
- 
+
      C                   EXSR      SRValidOth
                                                                                               233881
       * SRCalcEuTx - Calculate EU Tax                                                         233881
@@ -957,9 +959,9 @@
      C                   IF        CGL031 = 'Y'                                               233881
      C                   EXSR      SRCalcEuTx                                                 233881
      C                   ENDIF                                                                233881
- 
+
       * SRCalcCVal - Calculate Trade Countervalue
- 
+
      C                   EXSR      SRCalcCVal
       *
       ** If error in validation, fail this input
@@ -1035,9 +1037,9 @@
       *                                                               *
       *****************************************************************
      C     SRValidPrim   BEGSR
- 
+
      C                   CALLB     'SETRADPVAL'
- 
+
       * INPUTS
       *
       * Response mode
@@ -1127,7 +1129,7 @@
       *
       * PB Order Number
      C                   PARM                    DDORDE
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1203,7 +1205,7 @@
       *
       * Valid Trade layout (DS) from/to caller
      C                   PARM                    ValidTrad
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1526,7 +1528,7 @@
       *
       * Valid Trade layout (DS) from/to caller
      C                   PARM                    ValidTrad
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1536,7 +1538,7 @@
       *                                                               *
       *****************************************************************
      C     SRDfltSwfA    BEGSR
- 
+
      C                   CALLB     'SETSWFTDFT'
       *
       * INPUT PARAMETERS :
@@ -1666,7 +1668,7 @@
       *
       * Valid Trade layout (DS) (Extension file) from/to caller
      C                   PARM                    ValidTX1A
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1676,7 +1678,7 @@
       *                                                               *
       *****************************************************************
      C     SRDfltSwfB    BEGSR
- 
+
      C                   CALLB     'SETSWFTDFT'
       *
       * INPUT PARAMETERS :
@@ -2473,7 +2475,7 @@
      C                   IF        CAP051 = 'Y'
      C                   EVAL      W1_DDAUTHA    = AUTHA
      C                   ENDIF
- 
+
      C                   EVAL      TranStatus = 'F'
       *
       /COPY WNCPYSRC,SEBYSLC016
@@ -2680,7 +2682,7 @@
       *
       * Whether or not to clear the program message queue (1A)
      C                   PARM                    ClrPgmMsgQ
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2694,7 +2696,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * Common header information (DS) from source system
@@ -2872,7 +2874,7 @@
       *
      C                   CALL      'SWIF2001'                           9090
      C                   PARM      *BLANKS       @RTCD
- 
+
      C                   IF        *IN90 = *OFF AND @RTCD = 'CSW2001'
      C                   EVAL      CSW201 = 'Y'
      C                   ELSE

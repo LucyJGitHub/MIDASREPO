@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD037742           Date 03Apr16               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD037742           Date 03Apr16               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037742 - Security diary events - pool factor reversal.     *
       *             Additional fix to allow deletion of matured diary *
@@ -347,9 +349,9 @@
      C     S2CHTP        CASEQ     'A'           SRAmend
      C     S2CHTP        CASEQ     'D'           SRDelete
      C                   ENDCS
- 
+
      C                   ENDIF
- 
+
      C                   IF        RetCodeIn = *BLANKS
       *
       ** Action type is amend, adjust totals.
@@ -360,13 +362,13 @@
       ** event types 'MP' and 'PP'.
       *
      C                   IF        S2SDET = 'MP' OR  S2SDET = 'PP'
- 
+
      C                   EVAL      EndOfFile = False
      C     KSedev        SETGT     SEDEV
- 
+
      C                   DOW       EndOfFile = False
      C     S2SDSN        READE     SEDEV                                  02
- 
+
      C                   IF        EndOfFile = False AND
      C                             RECI <> 'C' AND S2SDET = SDET
       *
@@ -376,7 +378,7 @@
      C                   SUB       WOlSRPT       SDTR
      C                   ADD       S2SRPT        SDTR
      C                   ENDIF
- 
+
      C                   IF        SDET = 'PP'
      C                   SUB       WOlSDPP       SDTA
      C                   ADD       S2SDPP        SDTA
@@ -388,23 +390,23 @@
       *
      C                   EXCEPT    UPDTOT
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDIF
      C                   ENDIF
       *
       ** Fetch Audit record and update if found.  Otherwise, error.
       *
      C     1             CHAIN     SEDEVAF                            01
- 
+
      C                   IF        RecNotFnd = False
- 
+
      C                   SELECT
      C                   WHEN      S2CHTP = 'I'
      C                   EVAL      F1NOIN = F1NOIN + 1
      C                   EVAL      F1NORE = F1NORE + 1
- 
+
      C                   WHEN      S2CHTP = 'A'
       *                                                                                       CSE031
       ** If Amending a Security of Event type 'IR' which has been                             CSE031
@@ -419,24 +421,24 @@
      C                   ELSE                                                                 CSE031
      C                   EVAL      F1NOAM = F1NOAM + 1
      C                   ENDIF                                                                CSE031
- 
+
      C                   WHEN      S2CHTP = 'D'
      C                   EVAL      F1NODE = F1NODE + 1
      C                   ENDSL
- 
+
      C                   EVAL      F1TNLU = PNATN
- 
+
      C                   UPDATE    SEDEVAF
- 
+
      C                   ELSE
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SEDEVA'
      C                   EVAL      DBKEY  = 'AUDIT'
      C                   EVAL      DBASE  =  001
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ENDIF
                                                                                               CSC011
       ** If CSC011 is on and current system is in support system, convert                     CSC011
@@ -455,7 +457,7 @@
      C                   ENDIF                                                                CSC011
                                                                                               CSC011
      C                   ENDIF                                                                CSC011
- 
+
      C                   ENDIF
       *
       ** Return.
@@ -487,10 +489,10 @@
       ** been made yet for partly paid diary events.
       *
      C                   IF        S2SDET = 'PP'
- 
+
      C     S2SDSN        SETGT     SEDEV
      C                   READP     SEDEV                                  02
- 
+
      C                   DOW       EndOfFile = False
       *
       ** Check record is not a cancelled record.
@@ -510,25 +512,25 @@
      C                   EVAL      EndofFile = True
      C                   LEAVE
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   READP     SEDEV                                  02
      C                   ENDDO
- 
+
      C                   ENDIF
       *
       ** Update totals.
       *
      C     KSedev        SETLL     SEDEV
      C                   READP     SEDEV                                  02
- 
+
      C                   DOW       EndOfFile = False
- 
+
      C                   IF        S2SDSN = SDSN
- 
+
      C                   IF        RECI <> 'C'
- 
+
      C                   SELECT
       *
       ** For Partly Paids, add Call Amount to 'To date' figure.
@@ -558,9 +560,9 @@
      C                   Z-ADD     SDTA          WSvSDTA
      C                   Z-ADD     SDTP          WSvSDTP
      C                   LEAVE
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
       *
       ** Exit if not same security.
@@ -569,9 +571,9 @@
      C                   EVAL      EndOfFile = True
      C                   LEAVE
      C                   ENDIF
- 
+
      C                   READP     SEDEV                                  02
- 
+
      C                   ENDDO
       *
       ** If no event was read for Partly Paid event, get 'currently paid
@@ -585,7 +587,7 @@
       ** Add above amounts to totals.
       *
      C                   IF        S2SDET = 'MP'
- 
+
      C                   EVAL      S2SDTR = WSvSDTR + S2SRPT
       *
       ** Set Repayment Method indicator to 'Y' if previously so, or if
@@ -594,14 +596,14 @@
      C                   IF        WSvSRMI = 'Y' OR S2SRPT > *ZERO
      C                   MOVE      'Y'           S2SRMI
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EVAL      S2SDTA = WSvSDTA + S2SDPP
      C                   EVAL      S2SDTP = WSvSDTP + S2SDPC
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -625,11 +627,11 @@
       ** transaction Id).
       *
      C                   EVAL      WType = PType
- 
+
      C                   IF        S2CHTP <> 'I'
      C                   MOVEL     '1'           WType
      C                   ENDIF
- 
+
      C**********         IF        WType = '0'                                                CAP084
      C                   IF        WType = '0'   AND                                          CAP084
       *                                                                                       CAP084
@@ -791,7 +793,7 @@
       ** Interactive mode:
       *
      C                   IF        PType = '1'
- 
+
      C                   IF        CHTMST <> S2TMST
      C                   MOVEL     '*RECUPD'     RetCodeIn
      C                   ENDIF
@@ -799,17 +801,17 @@
       ** Batch mode:
       *
      C                   ELSE
- 
+
      C                   IF        OKACTN = 'N' OR OKSDSN = 'N' OR
      C                             OKSDED = 'N' OR OKSDET = 'N'
      C                   MOVEL     '*RECUPD'     RetCodeIn
      C                   Z-ADD     1             Wc
- 
+
      C     Wc            DOWLE     ArrayMax
      C     FldNameArr(Wc)ANDNE     *BLANKS
      C                   CLEAR                   PDBError
      C                   EVAL      PDBError = MsgIDArr(Wc)
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    PMsgSndRtn
      C                   PARM                    PDBError
@@ -817,11 +819,11 @@
      C                   PARM      *BLANKS       PDummyMsgF
      C                   ADD       1             Wc
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -840,9 +842,9 @@
       ** Error if it already exists.
       *
      C     KSedev        CHAIN     SEDEVDF                            01
- 
+
      C                   IF        RecNotFnd = False
- 
+
      C     *LOCK         IN        LDA
      C                   MOVE      S2SDED        WSDED
      C                   EVAL      DBKEY  = S2SDSN + WSDED + S2SDET
@@ -850,13 +852,13 @@
      C                   EVAL      DBASE  =  002
      C                   OUT       LDA
      C                   EXSR      SRErr
- 
+
      C                   ELSE
       *
       ** Generate Timestamp.
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    PTimestamp
- 
+
      C                   EVAL      S2TMST = PTimestamp
      C                   EVAL      S2LCD  = BJRDNB
      C                   EVAL      S2TNLU = PNATN
@@ -871,7 +873,7 @@
      C                   ELSE                                                                 CSE065
      C                   Z-ADD     *ZEROS        SDAL                                         CSE065
      C                   ENDIF                                                                CSE065
- 
+
      C                   ENDIF
                                                                                               CSC011
       ** If CSC011 is installed, supply a Front Office ID for the                             CSC011
@@ -884,7 +886,7 @@
      C                                    SDET                                                CSC011
      C                   ENDIF                                                                CSC011
      C                   ENDIF                                                                CSC011
- 
+
      C                   WRITE     SEDEVDF                              99
       *
       ** DBError processing when error occurred during write.
@@ -898,7 +900,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -998,7 +1000,7 @@
      C                   EVAL      DBASE  =  004
      C                   OUT       LDA
      C                   EXSR      SRErr
- 
+
      C                   ELSE
       *
       ** If transaction number changes, send error message "The last
@@ -1011,7 +1013,7 @@
       ** Generate Timestamp.
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    PTimestamp
- 
+
      C                   EVAL      S2TMST = PTimestamp
      C                   EVAL      S2LCD  = BJRDNB
      C                   EVAL      S2TNLU = PNATN
@@ -1040,11 +1042,11 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
       *                                                                                       CSE031
  E1  C                   ENDIF                                                                CSE031
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1061,7 +1063,7 @@
       *
      C     S2SDSN        SETLL     POSETDF
      C     S2SDSN        READE     POSETDF                                02
- 
+
      C                   DOW       EndofFile = False
      C                   IF        S2SDED = F2PDUD AND
      C                             S2SDET = F2PEVT AND
@@ -1070,7 +1072,7 @@
      C                   MOVEL     '*RECUPD'     RetCodeIn
      C                   RETURN
      C                   ENDIF
- 
+
      C     S2SDSN        READE     POSETDF                                02
      C                   ENDDO
       *
@@ -1087,7 +1089,7 @@
      C                   EVAL      DBASE  =  006
      C                   OUT       LDA
      C                   EXSR      SRErr
- 
+
      C                   ELSE
       *
       ** If transaction number changes, send error message "The last
@@ -1100,7 +1102,7 @@
       ** Generate Timestamp.
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    PTimestamp
- 
+
      C                   EVAL      S2TMST = PTimestamp
      C                   EVAL      S2LCD  = BJRDNB
      C                   EVAL      S2TNLU = PNATN
@@ -1129,9 +1131,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1142,13 +1144,13 @@
       *                                                               *
       *****************************************************************
      C     SRFmtDat      BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    PDateIn
      C                   PARM                    BJDFIN
      C                   PARM      *ZERO         PDateOut
      C                   PARM      *BLANKS       PADateOut
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1249,18 +1251,18 @@
       *                                                               *
       *****************************************************************
      C     SRErr         BEGSR
- 
+
      C                   EVAL      RetCodeIn = '*ERROR '
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   DUMP
       *
       ** Terminate program.
       *
      C                   RETURN
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1275,7 +1277,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** Input
@@ -1330,7 +1332,7 @@
       ** =================================================================
       ** The following /COPY sets these values.
       /COPY ZACPYSRC,DBFIELDS
- 
+
                                                                                               CSC011
       ** Check if Midas 24x7 Availability is installed.                                       CSC011
      C                   CALLB     'AOSARDR0'                                                 CSC011

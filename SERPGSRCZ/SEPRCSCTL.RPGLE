@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  233235 - Checking of switchable feature CGL031 was not done. *
@@ -78,26 +80,26 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       * Valid Prices Records
      FSEVPRCSPD UF A E             DISK    INFSR(*pssr)
      F                                     COMMIT
- 
+
       * Valid EXTEL fields (written to when CAP060 is on)                                     CAP060
      FSEVEXVLPD UF A E             DISK    INFSR(*pssr)                                       CAP060
      F                                     COMMIT                                             CAP060
- 
+
       * Valid Extra Data Price validation details
      FSEVPRXTPD UF A E             DISK    INFSR(*pssr)
      F                                     COMMIT
- 
+
      FSEVPRCSL1 IF   E           K DISK    RENAME(SEVPRCSD0:SEVPRCSCHK)
      F                                     INFSR(*PSSR)                                       CAP060
      FSEVPRCSL0 IF   E           K DISK    RENAME(SEVPRCSD0:SEVPRCSCH0)                       CAP060
      F                                     INFSR(*PSSR)                                       CAP060
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       * Invalid Transactions
      FSEIPRCSPD UF A E             DISK    INFSR(*pssr)                                       CAP060
      F                                     COMMIT                                             CAP060
@@ -108,60 +110,60 @@
                                                                                               CSC011
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SEPRCSC001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structure.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes definitions for thefields
       ** #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member.
      D/COPY ZACPYSRC,PROCPARMS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API *CTL modules.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** used in checking whether there are messages on the data queue.
      D/COPY ZACPYSRC,DTAQCHKDCL
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -170,7 +172,7 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** String for error messages to the operator
      D ProcErr         C                   CONST('Error in module')
       ** +--------------------------------------+
@@ -180,42 +182,42 @@
                                                                                              BUG2812
      D WCmtJobArr      S             10A   DIM(10)                                           BUG2812
       ** Array for commitment job names                                                      BUG2812
- 
+
       * Incoming Header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
- 
+
       * Incoming Price Record
      D TranIn        E DS                  EXTNAME(SEPRCSPD)
- 
+
       * Valid Price layout
      D ValidPRCS     E DS                  EXTNAME(SEVPRCSPD)
      D                                     PREFIX(V_)                                         CAP060
- 
+
       * Valid Extra Data Price validation details layout
      D ValidPRXT     E DS                  EXTNAME(SEVPRXTPD)
- 
- 
+
+
       * (Current) Price record in File Format
      D PRCSFilFmt    E DS                  EXTNAME(PRICE)
- 
+
       * (Current) EXTEL Price record in File Format
      D*PRXTFilFmt****E DS                  EXTNAME(SEPRXTPD)                                  189506
- 
- 
+
+
       ** Flags to indicate whether Price fields are valid
      D OKFlagsDS     E DS                  EXTNAME(SEEPRCSPD)
- 
- 
+
+
       * Prices Extra Data - File (D/B) format
      D ExtData       E DS                  EXTNAME(SEPREXPD)
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * First DS for Access programs - short data structure
- 
+
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)                                  CAP060
      D** Security Trading Detail                                                              CAP060
                                                                                               CAP060
@@ -247,41 +249,41 @@
      D SCCMTJOB      E DS           256    DTAARA(SCCMTJOB)                                  BUG2812
      D  ComitJob               4    103                                                      BUG2812
       ** Midas SC Jobs handling commitment control data area                                 BUG2812
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Field (500A) to receive the incoming Prices record
      D Trans500        S            500A
- 
+
       ** Field (500A) to receive the incoming Extra Data
      D ExtData500      S            500A
- 
+
       ** Index for arrays of error message ids etc in Amend validation
      D AmIdx           S              3P 0
- 
+
       ** Indicies for arrays used to set up corresponding sequence numbers
       **  for the fields that are in error
      D Ix              S              3P 0
      D Iy              S              3P 0
- 
+
       ** The transaction's status
      D TranStatus      S              1A
- 
+
       ** Module ID, to be passed to the Message Handler
      D ModuleID        S              2A   INZ('SE')
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
       ** Fields for data area locking
      D Object          S             10A   INZ('SEPRCSUPC')
      D Lib             S             10A   INZ('*LIBL')
@@ -291,20 +293,20 @@
      D WaitTime        S              6A   INZ('0     ')
      D Dlcobj          S              1A   INZ('Y')
      D Return          S              7A
- 
+
       ** Parameters and work fields for ZAMSGTOOPR
      D LongError       S            132A
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
       ** Whether or not to clear the program message queue (this is not
       ** actually used, but is required by the message handler's parameter
       ** list.
      D ClrPgmMsgQ      S              1A   INZ('Y')
- 
+
       ** Flags to indicate whether substitution is required in                                CAP060
       ** each of the various parts the transaction                                            CAP060
      D REPPRCS         S              1A   inz('N')                                           CAP060
@@ -327,7 +329,7 @@
      D PRetCode        S              7A                                                      CSC011
      D POption         S              7A                                                      CSC011
      D PKey            S              6A                                                      CSC011
- 
+
      D CSD010          S              1A                                                      CSD010
      D HBDPR           S                   LIKE(PRBDPR)                                       CSD010
      D HOFPR           S                   LIKE(PROFPR)                                       CSD010
@@ -354,49 +356,49 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SEPRCSC002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C     Start         TAG
       ** Note: the above tag is only there to force the first comments in
       ** the C-specs to appear after the D- or I-specs in compiled listings.
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       /COPY WNCPYSRC,SEPRCSC003
- 
+
       * Incoming Price record is in a 500A field, so that a common CLP
       * can be used between this module and the one that read the MQ queue.
       * This module needs to break that 500A by loading it into the
       * appropriate (externally described) data structure.
      C                   MOVEL     Trans500      TranIn
      C                   MOVEL     Extdata500    Extdata
- 
+
       ** Generate a timestamp for this transaction
- 
+
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
       ** Reset variables gradually updated
- 
+
      C                   EXSR      RESETCYCLE
- 
+
       /COPY WNCPYSRC,SEPRCSC004
- 
+
      C                   IF        CAP060F= 'Y'                                               CAP060
                                                                                               CAP060
       *  Check if Price record is valid - front office ID validation                          CAP060
@@ -409,9 +411,9 @@
      C                   GOTO      INVALID                                                    CAP060
      C                   ENDIF                                                                CAP060
      C                   ENDIF                                                                CAP060
- 
+
       *  Check if Price record is valid
- 
+
      C                   EXSR      ChkValPRCS
       *
       *  if valid Prices do exist (even after delay), fail this input
@@ -419,31 +421,31 @@
      C     Idx           IFNE      0
      C                   GOTO      INVALID
      C                   END
- 
+
       * Reset variables again in case the details have been corrupted
       * by previous chain to valid prices file.
- 
+
      C                   EXSR      RESETCYCLE
- 
+
       /COPY WNCPYSRC,SEPRCSC005
- 
+
       *  Validate Action Code
- 
+
      C                   EXSR      ValidateAc
- 
+
       * Call defaulting sub-routine                                                           CAP060
      C                   IF        CAP060F= 'Y'                                               CAP060
      C                   EXSR      SRDFT                                                      CAP060
      C                   ENDIF                                                                CAP060
       *
       /COPY WNCPYSRC,SEPRCSC006
- 
+
       *  If error in validation of action code, fail this input
       *
      C     Idx           IFNE      0
      C                   GOTO      INVALID
      C                   END
- 
+
       * Default in values for EXTEL fields if they have been omitted from the incoming        CAP060
       * message, CAP060 is on and the price type and extel fields are set accordingly         CAP060
      C                   IF        CAP060F= 'Y'                                               CAP060
@@ -468,9 +470,9 @@
      C                   MOVEL     @DDPCEN       DDPCEN                                       CAP060
      C                   ENDIF                                                                CAP060
      C                   ENDIF                                                                CAP060
- 
+
       ** Validate the main details of the transaction
- 
+
       *  Processing depends upon Action Code
                                                                                               CAP060
      C                   SELECT                                                               CAP060
@@ -480,7 +482,7 @@
       *  Processing for Inserts                                                               CAP060
       /COPY WNCPYSRC,SEPRCSC007
      C                   EXSR      ValidateTr
- 
+
       /COPY WNCPYSRC,SEPRCSC008
                                                                                               CAP060
      C                   WHEN         DDACTN = 'A'                                            CAP060
@@ -511,40 +513,40 @@
      C                   ENDSL                                                                CAP060
       *
      C     INVALID       TAG
- 
+
       *  Check for exception error from any program lower in the stack
       *  If error detected, send message to system operator and
       *  return to calling program without updating database or
       ** prompting the database update program (LogError SR
       ** includes a RETURN).
      C                   IN        APDUMP
- 
+
       /COPY WNCPYSRC,SEPRCSC009
- 
+
      C                   IF        ARERRMOD <> *blank
      C                   EXSR      LogError
      C                   ENDIF
- 
+
       *  Processing for Error checking/write to database
       /COPY WNCPYSRC,SEPRCSC010
      C                   EXSR      CheckWrite
- 
+
       /COPY WNCPYSRC,SEPRCSC011
- 
+
       ** If valid, send data queue entry to prompt DB update program
      C                   IF        Idx = 0
      C                   EXSR      SndPrompt
      C                   ENDIF
- 
+
       **--------------------------------------------------------------------------------------------
       ** The return code is set in the following /COPY:
      C/COPY ZACPYSRC,SETRETCDE
       **--------------------------------------------------------------------------------------------
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SEPRCSC012
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************                       CAP060
@@ -583,9 +585,9 @@
       *              for security.                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     ChkValPRCS    BEGSR
- 
+
       * Check for Prices record on Valid file
      C****************** MOVEL     DDPSSN        PRPSSN                                       CAP060
      C****************** MOVEL     DDPPRT        PRPPRT                                       CAP060
@@ -594,15 +596,15 @@
      C                   MOVEL     DDPPRT        V_PRPPRT                                     CAP060
      C                   MOVEL     DDPVDT        V_PRPVDT                                     CAP060
      C     PRCSK1        CHAIN     SEVPRCSL1                          99
- 
+
       * if record found...
      C     *IN99         IFEQ      '0'
- 
+
       * ..delay, then repeat check
      C                   CALLB     'ZACDELAY'
- 
+
      C     PRCSK1        CHAIN     SEVPRCSL1                          99
- 
+
       * Error if still present
      C     *IN99         IFEQ      '0'
      C                   ADD       1             Idx
@@ -610,7 +612,7 @@
      C                   EVAL      MsgIDArr(Idx) = 'APM0900'
      C                   ENDIF
      C                   ENDIF
- 
+
       *
      C                   ENDSR
       *****************************************************************
@@ -673,7 +675,7 @@
       *              Implied action code is always 'I', therefore,    *
       *              simply validate that security exists.            *
       *****************************************************************
- 
+
      C     ValidateAc    BEGSR
      C**Validate*action*code versus security short name supplied.                             CAP060
      C**The*Prices*record in file format from the SE database is                              CAP060
@@ -874,9 +876,9 @@
       * ValidateTr - Routine to validate the main Prices details      *
       *                                                               *
       *****************************************************************
- 
+
      C     ValidateTr    BEGSR
- 
+
      C                   EXSR      SRMVVL                                                     CAP060
      C                   CALLB     'SEPRCSVAL'
       * Response mode (1A), from source system common header
@@ -909,8 +911,8 @@
       ** Taxation on Savings Income                                                           CGL031
                                                                                               CGL031
      C                   PARM                    CGL031                                       CGL031
- 
- 
+
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -919,9 +921,9 @@
       * SndPrompt - Send a message to prompt the database updater     *
       *                                                               *
       *****************************************************************
- 
+
      C     SndPrompt     BEGSR
- 
+
       ** Check If update program active using Allocate Object API
       ** No prompting necessary if program is running
      C                   CLEAR                   Return
@@ -934,20 +936,20 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
      C                   IF        Return = *blank
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes a check for whether there
       ** are messages on the server/updater data queue, and sends a 'GO'.
       ** message to the data queue IF there are not.
      D/COPY ZACPYSRC,DTAQCHK
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -956,9 +958,9 @@
       *    sending of messages/writing to the database                *
       *                                                               *
       *****************************************************************
- 
+
      C     CheckWrite    BEGSR
- 
+
       *  if no errors were found:
       *   - set up additional data
       *   - write a record to the Valid file
@@ -1000,7 +1002,7 @@
       ** | or not).  It is shown in the above form for clarity.       |
       ** |                                                            |
       ** +------------------------------------------------------------+
- 
+
      C     Idx           IFEQ      0
      C                   EXSR      SETUPVALID
      C                   WRITE     SEVPRCSD0
@@ -1011,16 +1013,16 @@
      C                   ENDIF                                                                CAP060
      C                   EXSR      CallMsgHdl
      C                   ENDIF
- 
+
      C     Idx           IFGT      0
      C                   EVAL      TranStatus = 'F'
- 
+
       * When CAP060 is off...                                                                 CAP060
       * N.B. Repair location is front office for Prices.
       * Therefore, do NOT write to invalid files.
       *
       * Execute message handling routine.
- 
+
       * When CAP060 is on ...                                                                 CAP060
       * Repair location will depend on what has been specified on the header                  CAP060
       *                                                                                       CAP060
@@ -1065,15 +1067,15 @@
                                                                                               CAP060
      C                   ENDIF                                                                CAP060
      C                   ENDIF                                                                CAP060
- 
+
      C                   EXSR      CallMsgHdl
      C                   ENDIF
- 
+
      C                   If        (CSC022 <> 'Y')                                           BUG2812
      C                             or (CSC022 = 'Y' and WCommitSkip <> 'Y')                  BUG2812
      C                   COMMIT
      C                   EndIf                                                               BUG2812
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1095,7 +1097,7 @@
      C                   EVAL      TranStatus = 'F'                                           CAP060
                                                                                               CAP060
      C                   ENDSR                                                                CAP060
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1105,32 +1107,32 @@
       *                                                               *
       *****************************************************************
      C     RESETCYCLE    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIDArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIdx
- 
+
      C                   RESET                   AmFldNamAr
      C                   RESET                   AmMsgIDArr
      C                   RESET                   AmMsgDtaAr
      C                   RESET                   AmIdx
- 
+
      C                   RESET                   FldNoArr
- 
+
      C                   MOVE      *ALL'Y'       OKFlagsDS
- 
+
      C                   CLEAR                   ValidPRCS
      C                   CLEAR                   ValidPRXT
- 
+
      C                   CLEAR                   VALIDEXTEL                                   CAP060
      C                   CLEAR                   CURTRPRCS                                    CAP060
- 
+
       * Output only fields                                                                    CAP060
      C                   EVAL      DDCURP = *BLANKS                                           CAP060
      C                   EVAL      DDPSRC = *BLANKS                                           CAP060
@@ -1143,14 +1145,14 @@
       *    Valid file record.                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
- 
+
       * Include Header fields that need to be o/p to the Valid file
      C                   EVAL      PRTMESTMP = TimeStamp
      C                   EVAL      XTTMESTMP = TimeStamp
      C                   EVAL      EXVMESTMP = TimeStamp                                      CAP060
- 
+
       * Set Valid file field(s) that are needed for all Action Codes
      C                   MOVE      'D'           PRRECI                                       CAP060
      C                   MOVE      DDACTN        PRCHTP                                       CAP060
@@ -1206,11 +1208,11 @@
      C                   EVAL      PRFRNT = APFOTranID                                        CAP060
      C                   EVAL      PRAFRT = APFOAsocID                                        CAP060
      C                   EVAL      PRREPA = APRprLocn                                         CAP060
- 
+
      C                   EVAL      TranStatus = 'S'
- 
+
       /COPY WNCPYSRC,SEPRCSC013
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1221,28 +1223,28 @@
       *                                                               *
       *****************************************************************
      C     LogError      BEGSR
- 
+
       ** Set up the message to send to the operator
      C                   CLEAR                   LongError
      C                   RESET                   ReturnCode
      C                   EVAL      LongError = ProcErr + '   ' + ARERRMOD
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    ReturnCode
      C                   PARM                    LongError
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
- 
+
       ** Indicate the failing module to the caller
      C                   EVAL      APRETCODE = ARERRMOD
- 
+
       ** Remove the failing module's details from the dump information
       ** data area.
      C     *LOCK         IN        APDUMP
      C                   CLEAR                   ARERRMOD
      C                   OUT       APDUMP
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1252,33 +1254,33 @@
       *                                                               *
       *****************************************************************
      C     CallMsgHdl    BEGSR
- 
+
       ** Set up an array of sequence numbers that correspond to the fields
       **  with errors
- 
+
      C                   Z-ADD     1             Ix
      C                   DO        ArrayMax
- 
+
      C     FldNameArr(Ix)IFNE      *BLANKS
- 
+
      C                   Z-ADD     1             Iy
      C     FldNameArr(Ix)LOOKUP    FieldArr(Iy)                           20
      C                   EVAL      FldNoArr(Ix) = FldSeqArr(Iy)
- 
+
      C                   ELSE
- 
+
      C                   LEAVE
- 
+
      C                   ENDIF
- 
+
      C                   ADD       1             Ix
      C                   ENDDO
- 
+
      C                   RESET                   ReturnCode
- 
+
      C                   MOVE      *BLANKS       CCY6A
      C                   MOVEL     DDPSSN        CCY6A             6
- 
+
      C                   CALLB     'ZAMSGHNDLE'
       ** Return code (10A, returned to this procedure)
      C                   PARM                    ReturnCode
@@ -1325,7 +1327,7 @@
      C                   PARM                    MsgFArray
       ** Whether or not to clear the program message queue (1A)
      C                   PARM                    ClrPgmMsgQ
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1368,7 +1370,7 @@
      C                   PARM                    HOFPR                                        CSD010
      C                   PARM                    HCLPR                                        CSD010
      C                   PARM                    CSD010                                       CSD010
- 
+
      C                   EVAL      DDCURP = @DDCURP                                           CAP060
       *                                                                                       CAP060
       ** Substitute the data for the various parts of the transaction,                        CAP060
@@ -1517,7 +1519,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -1528,9 +1530,9 @@
      C                   PARM                    #ProcPgm
      C                   PARM                    #ProcMod
      C                   PARM                    #ProcName
- 
+
       ** Key list for SEVPRCSL1
- 
+
      C*****PRCSK1********KLIST
      C*******************KFLD                    PRPSSN                                       CAP060
      C*******************KFLD                    PRPPRT                                       CAP060
@@ -1539,26 +1541,26 @@
      C                   KFLD                    V_PRPSSN                                     CAP060
      C                   KFLD                    V_PRPPRT                                     CAP060
      C                   KFLD                    V_PRPVDT                                     CAP060
- 
+
       ***Key*list*for*SEVPRXTL1                                                               189506
                                                                                               189506
      C*****PRXTK*********KLIST                                                                189506
      C*******************KFLD                    XTSESN                                       189506
      C*******************KFLD                    XTPVDT                                       189506
- 
+
       *
       *  Set up the name of the MSGF from which the message handler will
       *   get the messages
      C                   EVAL      #MsgFile = 'DRSMM'
- 
+
       ** Access Bank details via access program
       *  (database error handling done in access program)
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
- 
+
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
@@ -1714,10 +1716,10 @@
      C                   PARM      '*DBERR '     @RTCD             7                          CAP060
      C                   PARM      '*FIRST '     @OPTN             7                          CAP060
      C     SDSTRD        PARM      SDSTRD        DSSDY                                        CAP060
- 
+
       ** Set up the name of the server/database updater data queue.
      C                   EVAL      DtaQName = 'APPRCSDTQ'
- 
+
       *                                                                                      BUG2812
       ** Access Switchable Features File, for CSC022                                         BUG2812
       *                                                                                      BUG2812
@@ -1758,7 +1760,7 @@
       *                                                                                      BUG2812
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SEPRCSC014
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

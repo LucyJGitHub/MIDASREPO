@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 AR971184A          Date 13Jun12               *
@@ -95,6 +96,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -185,7 +187,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
      FSEVDPMVL1 IF   E           K DISK    RENAME(SEVDPMVD0:SEVDPMVCK1)
      F                                     INFSR(*PSSR)
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
@@ -199,13 +201,13 @@
                                                                                             BUG10476
      FSEMKC     IF   E           K DISK                                                     BUG10476
       ** Midas SE Market Centres                                                            BUG10476
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       ** Standard D-specs
       ** ================
       **                                    handler)
@@ -218,54 +220,54 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API CTL & VU modules.
      D/COPY ZACPYSRC,APICTLARR
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -273,19 +275,19 @@
                                                                                               CSC022
      D WCmtJobArr      S             10A   DIM(10)                                            CSC022
       ** Array for commitment job names                                                       CSC022
- 
+
       ** Incoming header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
      D TransIn       E DS                  EXTNAME(SEDMWIPD)
      D DDDEPOT       E                     EXTFLD(DDDPID)
      D DDDATE        E                     EXTFLD(DDDPMD)
- 
+
       ** Incoming transaction in screen format
      D TranInDPMV    E DS                  EXTNAME(SEDMIDPD)
      D                                     PREFIX(IN_)
      D TranInDMES    E DS                  EXTNAME(SEDMESPD)
      D                                     PREFIX(IN_)
- 
+
       ** Valid file layout
      D ValidDPMV     E DS                  EXTNAME(SEVDPMVPD)
      D                                     PREFIX(V_)
@@ -298,16 +300,16 @@
       ** Extended Depot Movements File                                                        CER001
       *                                                                                       CER001
      D SVRCD         E DS                  EXTNAME(SEDPX1PD)                                  CER001
- 
+
      D OKFlagsDS     E DS                  EXTNAME(SEEDMWIPD)
      D DDDEPOTOk     E                     EXTFLD(DDDPIDOk)
      D DDDATEOk      E                     EXTFLD(DDDPMDOk)
- 
+
       ** Current transaction record in file format
      D DPMVFilFmt    E DS                  EXTNAME(DPTMVD)
      D DPMVX1Fmt     E DS                  EXTNAME(DPTMVDX1)
      D DPMVX2Fmt     E DS                  EXTNAME(DPTMVDX2)
- 
+
       ** Current transaction in screen format
      D CurWholeScn   E DS                  EXTNAME(SEDMWIPD)
      D                                     PREFIX(W_)
@@ -317,11 +319,11 @@
      D                                     PREFIX(@)
      D CurScnFld     E DS                  EXTNAME(SEDMESPD) PREFIX(C_)
       ** Current Extension & Extended Settlement fields in screen format
- 
+
      D InwScnFld     E DS                  EXTNAME(SEDMESPD) PREFIX(I_)
       ** Initial Extension & Extended Settlement fields in screen format
- 
- 
+
+
       ** Extra data in file format
      D ExtData       E DS                  EXTNAME(SEDMEXPD)
       *                                                                                      BUG9089
@@ -332,60 +334,60 @@
       ** Extra data in file format (Regional)                                                 CER001
       *                                                                                       CER001
      D RegData       E DS                  EXTNAME(SEDMRXPD)                                  CER001
- 
+
       ** The following /COPY includes the customer details data structure
      D/COPY SECPYSRC,SE_CUSTDT
       ** The following /COPY includes the currency details data structures
      D/COPY SECPYSRC,SE_CCYDT
- 
+
       ** Security Details
      D*SECTY******** E DS                  EXTNAME(SECTYD)                                   BUG2392
      D SECTYX        E DS                  EXTNAME(SECTYD)                                   BUG2392
      D                                     PREFIX(SEC)
- 
+
       ** External DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for API ICD
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
- 
+
       ** External DS for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
- 
+
      D SDSECS        E DS                  EXTNAME(SDSECSPD)
       ** External DS for Security Customer details
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D  QQDFA1       E                     EXTFLD(QQDFAC)                                     CGL029
       ** External DS for Branch Details
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** EXTERNAL DS FOR CUSTOMER DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
       ** First DS for access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** DS for Access Objects - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** 24X7 status data area
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
- 
+
       ** SD status data area
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
- 
+
       ** Additional entry parameter for Midas Compliance Watch
      D PMCWL           DS          9999
- 
+
       ** Country of treaty (Not use for Depot Movement)
      D PDRBW           S              2A
       *
       ** Withholding tax (Not use for Depot Movement)
      D DDWTAX          S             15A
- 
+
       ** DS for ZMUSER details
      D ZMUSER          DS            17
      D  PUSRID                 1     10
@@ -408,39 +410,39 @@
      D  #1DPMV                17     18                                                       CER001
      D  #1FOTR                19     38                                                       CER001
      D  #1TMST                39     64Z                                                      CER001
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0 INZ(0)
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0 INZ(0)
- 
+
       ** Array used to move right Swift Id.
      D ROU             S              1    DIM(12)
- 
+
       ** Fields (500A) to receive the incoming transaction
      D Trans500        S            500A
      D Ext500          S            500A
      D DPMVOth500      S            500A                                                     BUG9089
      D RegData500      S            500A                                                      CER001
- 
+
       ** Field (500A) to receive the incoming Extended settlement
      D OthrData        S           4755A
- 
+
       ** Entry parameters
      D UpdateYN        S              1A
      D Buffer          S           6000A
      D APIRetc         S              1A
- 
+
       ** Mode = '*FRONT' (Front Office Transaction Interface)
       ** Mode = '      ' (Not Front Office Transaction Interface)
      D ModeofOp        S              6A
- 
+
      D CallProg        S             10A   INZ('       ')
      D DPMVType        S              2A
      D*DDSPXR***       S             14A                                                      CER001
@@ -450,15 +452,15 @@
      D PortCusInd      S              1A
      D PBInd           S              1A
      D PBFieldInd      S              1A
- 
+
      D IncDATA         S           2000A
      D CurDATA         S           2000A
- 
+
      D SubsChar        S              1A
- 
+
      D Module          S              2A
      D TranType        S              1A
- 
+
      D PRtCd           S              7A   INZ(*BLANK)
      D POptn           S              7A   INZ(*BLANK)
      D PSard           S              6A   INZ(*BLANK)
@@ -495,11 +497,11 @@
      D FldNamXAr       S             10A   DIM(XArrayMax)                                     CAP087
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)                        CAP087
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)                      CAP087
- 
+
       * Timestamp for the transaction
      D WTimeStamp      S               Z
      D WorkTime        S             26A
- 
+
       *
       ** Switchable features
      D CSW003          S              1A
@@ -543,18 +545,18 @@
                                                                                               CAP087
                                                                                               CER001
      D @@FIND          S              1A                                                      CER001
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -582,55 +584,55 @@
      C**********                                %SUBST(WorkTime:9:2) +               CAP087 AR971184
      C**********                                %SUBST(WorkTime:12:2) +              CAP087 AR971184
      C**********                                %SUBST(WorkTime:15:9)                CAP087 AR971184
- 
+
       ** Incoming transaction is broken into 500A fields, so that a common CL
       ** can be used between this module and the one that read the MQ queue.
       ** This module needs to break these 500A fields by loading them into
       ** the appropriate (externally described) data structure.
- 
+
      C                   MOVEL     Trans500      TranInDPMV
      C                   MOVEL     DPMVOth500    DPMVOth                                     BUG9089
      C                   MOVEL     RegData500    RegData                                      CER001
      C                   MOVEL     OthrData      TranInDMES
      C                   EVAL      TransIn = TranInDPMV + TranInDMES
- 
+
       ** Reset variables gradually updated
- 
+
      C                   EXSR      ResetCycle
- 
+
       ** Validate action code
- 
+
      C                   EXSR      ValidateAc
- 
+
       ** If error in validation of action code, fail this input
- 
+
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       *  Check if valid depot movement already exist for Midas Trade Ref
- 
+
      C                   EXSR      ChkValMiTR
- 
+
       ** Processing depends upon action code
- 
+
      C                   SELECT
- 
+
       ** Processing for inserts
       ** ======================
- 
+
      C                   WHEN      DDACTN = 'I'
      C                   EXSR      ValidateTr
- 
+
       ** Processing for amends or changes
       ** ================================
- 
+
      C                   WHEN      DDACTN = 'A'
      C***********                  OR DDACTN = 'D'                                          BUG10915
      C                   EXSR      ConvertDPMV
      C                   EXSR      ChkDtaSubs
      C                   EXSR      ValidateTr
- 
+
       ** Processing for deletions                                                           BUG10915
       ** ========================                                                           BUG10915
                                                                                             BUG10915
@@ -642,9 +644,9 @@
      C                   ENDSL
       *
      C     INVALID       TAG
- 
+
       ** Write to database
- 
+
      C                   IF        UpdateYN = 'Y' AND
      C                             Idx = 0
      C                   EXSR      SetUpValid
@@ -663,10 +665,10 @@
      C                   ENDIF                                                                CER001
       *                                                                                       CER001
      C                   ENDIF
- 
+
       ** Workout destination address for settlement to be display on screen
       ** only
- 
+
      C                   IF        DPID <> *BLANKS OR DPOD <> *BLANKS                       AR589037
                                                                                             AR589037
      C     DPMV          IFEQ      'WI'
@@ -700,10 +702,10 @@
      C                   MOVE      DDROUS        WWROU                                      AR589037
      C                   MOVE      DDROTS        WWROT                                      AR589037
      C                   ENDIF                                                              AR589037
- 
+
      C                   MOVE      WWROU         DSROUC
      C                   MOVE      WWROT         DSROTC
- 
+
       ** Calculate Consideration for authorisation limit check
       ** Note : Instead of using error index to condition when to calculate countervalue,     CAP087
       **        use the OK flags instead. This is to enable calculation to proceed even if    CAP087
@@ -723,9 +725,9 @@
      C                   ENDIF
                                                                                             BUG10915
      C                   ENDIF                                                              BUG10915
- 
+
       ** Remerge buffer with all relevant data structures
- 
+
       ** If action is for Update, get the correct record information                         CAP087
       ** from file                                                                           CAP087
      C                   IF        UpdateYN = 'Y'                                            CAP087
@@ -763,11 +765,11 @@
      C**********                            + ExtData + RegData                    BUG10026 BUG10142
      C                                      + RegData + ExtData                    BUG10026 BUG10142
      C                   ENDIF                                                                CAP087
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
       ********************************************************************
       /EJECT
       *****************************************************************
@@ -776,9 +778,9 @@
       *              transaction number supplied                      *
       *                                                               *
       *****************************************************************
- 
+
      C     ValidateAc    BEGSR
- 
+
       * Validate action code versus transaction IDs supplied
       * The Transaction in file format from the SE database is retrieved
       * as well.
@@ -791,56 +793,56 @@
      C                   ELSE
      C                   MOVEL     '      '      ModeofOp
      C                   ENDIF
- 
+
      C                   CALLB     'SEDPMVRTV'
- 
+
      ** Screen Fields
       * Action Code (1A)
       * Depot Movement Reference Number (6A)
       * Booking Branch  (3A)
       * Originating Branch  (3A)
- 
+
      C                   PARM                    DDACTN
      C                   PARM                    DDDPRN
      C                   PARM                    DDDPBA
      C                   PARM                    DDORBR
- 
+
      ** Operation Details
       * Mode of Operation (6A)
       * Response Mode (1A)
       * Front Office ID No. (20A)
       * Depot Movement Type. (2A)
- 
+
      C                   PARM                    ModeofOp
      C                   PARM                    APRespMode
      C                   PARM                    APFOTranId
      C                   PARM                    DPMVType
      C                   PARM                    CallProg
      C                   PARM                    DDDPSS                                       CAP087
- 
+
       ** Returned Parameters
       ** -------------------
       *
       ** Error fields/message IDs/message data (arrays) from/to caller
- 
+
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Error Index (3P 0)
- 
+
      C                   PARM                    Idx
- 
+
       ** Depot movement transaction file Output
- 
+
      C                   PARM                    DPMVFilFmt
- 
+
      ** Ok Indicators
       * Action Code Ok Indicator (1A)
       * Transaction ID number Ok Indicator (1A)
       * Booking Branch Ok indicator (1A)
       * Originating Branch Ok indicator (1A)
- 
+
      C                   PARM                    DDACTNOk
      C                   PARM                    DDDPRNOk
      C                   PARM                    DDDPBAOk
@@ -849,7 +851,7 @@
       ** Retrieve the eventual current database records
       *
      C                   IF        S01401 = 'Y'
- 
+
      C                   CALLB     'SEDMESRTV'
       ** INPUT PARAMETERS
       ** Return Code
@@ -865,11 +867,11 @@
       ** Extension and Extended Settlement details
      C                   PARM                    DPMVX1Fmt
      C                   PARM                    DPMVX2Fmt
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -878,28 +880,28 @@
       *              for the Movement Reference                       *
       *                                                               *
       *****************************************************************
- 
+
      C     ChkValMiTR    BEGSR
- 
+
       * If (numeric) Reference supplied
- 
+
      C                   TESTN                   DDDPRN               9898
- 
+
      C     DDDPRN        IFNE      *BLANKS
      C     *IN98         ANDEQ     '1'
- 
+
       * Check for trade on Valid file
      C                   MOVEL     DDDPRN        DPRN
      C     DPRN          CHAIN     SEVDPMVL1                          99
- 
+
       * If record found...
      C     *IN99         IFEQ      '0'
- 
+
       * ..delay, then repeat check
      C                   CALLB     'ZACDELAY'
- 
+
      C     DPRN          CHAIN     SEVDPMVL1                          99
- 
+
       * Error if still present
      C     *IN99         IFEQ      '0'
      C                   ADD       1             Idx
@@ -907,7 +909,7 @@
      C                   EVAL      MsgIDArr(Idx) = 'APM0900'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
       *
      C                   ENDSR
@@ -919,27 +921,27 @@
       *                screen format                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     ConvertDPMV   BEGSR
- 
+
      C                   RESET                   ReturnCode
      C                   CALLB     'SEDPMVCVT'
- 
+
       ** Input Parameters
       ** ================
- 
+
       ** Return Code
      C                   PARM      *BLANKS       ReturnCode
- 
+
       ** (Current) Depot movement in file format
      C                   PARM                    DPMVFilFmt
- 
+
       ** Output Parameters
       ** =================
- 
+
       ** (Current) Depot movement in screen format
      C                   PARM                    CurTrDPMV
- 
+
       ** Fx Rate
       ** Mul/Div Indicator
      C                   PARM                    DDSPXR
@@ -957,7 +959,7 @@
       ** Convert X1 and X2 record into screen field if S01401 is present
       *
      C                   IF        S01401 = 'Y'
- 
+
      C                   CALLB     'SEDMESCVT'
       ** INPUT PARAMETERS
       ** Return Code
@@ -974,12 +976,12 @@
       ** New fields in screen format (whole API message)
       ** Only the sub-field NewScnFld will be updated
      C                   PARM                    CurWholeScn
- 
+
      C                   MOVE      CurWholeScn   CurTrDMES
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -987,11 +989,11 @@
       *  ChkDtaSubs - Data Substitution Routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     ChkDtaSubs    BEGSR
- 
+
       ** Substitute the data for the various parts of the transaction.
- 
+
      C     GHSUBS        IFNE      *BLANKS
      C     GHSUBS        SCAN      TranInDPMV                             99
      C  N99GHSUBS        SCAN      TranInDMES                             99
@@ -1005,7 +1007,7 @@
      C                   PARM      TranInDPMV    IncDATA
      C                   PARM      CurTrDPMV     CurDATA
      C                   MOVEL     IncDATA       TranInDPMV
- 
+
       ** SWIFT Detail
      C                   RESET                   ReturnCode
      C                   CLEAR                   IncDATA
@@ -1018,12 +1020,12 @@
      C                   MOVEL     IncDATA       TranInDMES
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   CLEAR                   TransIn
      C                   EVAL      TransIn = TranInDPMV + TranInDMES
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       ******************************************************************
@@ -1031,26 +1033,26 @@
       * ValidateTr - Routine to validate the main transaction details  *
       *                                                                *
       ******************************************************************
- 
+
      C     ValidateTr    BEGSR
- 
+
       ** Move Depot movement details retrieved from the Midas
       ** database file into the update file record.  If no
       ** record has been retrieved (i.e. in Insert), fields
       ** contain initial values (zeros and blanks)
- 
+
      C                   MOVEL     DPMVFilFmt    ValidDPMV
- 
+
       ** Validate screen 1 details.
- 
+
      C                   EXSR      ValidateTr1
- 
+
       ** Validate screen 2 details.
- 
+
      C                   EXSR      ValidateTr2
- 
+
       ** Validate SWIFT Message Detail Screen
- 
+
      C                   IF        DDDPSSOk <> 'N' AND DDDPBNOk <> 'N'                      AR586519
      C                             AND DDDEPOTOk <> 'N'                                     AR586519
      C                             AND DDDATEOk <> 'N'                                      AR586519
@@ -1064,9 +1066,9 @@
      C                   IF        ULX602 = 'Y'                                               CER001
      C                   EXSR      ValidateLUX                                                CER001
      C                   ENDIF                                                                CER001
- 
+
      C     EValidTr      ENDSR
- 
+
       *****************************************************************
       /EJECT
       ******************************************************************
@@ -1074,16 +1076,16 @@
       * ValidateTr1 - Validate Screen 1 details                        *
       *                                                                *
       ******************************************************************
- 
+
      C     ValidateTr1   BEGSR
- 
+
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'SEDPMVVAL'
- 
+
       ** Inputs
       ** ======
- 
+
       ** Depot movement Transaction Details
      C**********         PARM                    TranInDPMV                                   FIX001
      C                   PARM                    TransIn                                      FIX001
@@ -1102,30 +1104,30 @@
      C                   PARM      'N'           PortCusInd                                  CAP087
      C                   PARM      'N'           PBInd                                       CAP087
      C                   PARM                    PBFieldInd
- 
+
      C                   PARM                    ValidDPMV
- 
+
       ** Outputs
       ** ======
- 
+
       ** Depot movement Transaction Details OK inds
      C                   PARM                    OKFlagsDS
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
      C                   PARM                    WIdx
      C                   PARM                    CGL031                                       CGL031
- 
+
       ** If the depot movement type is Walk-In, and there are errors or
       ** warning with Depot In or In Date, then need to change the
       ** field ID from DDDPID to DDDPOD and DDDPMD to DDDPDO.
@@ -1161,7 +1163,7 @@
      C                   END
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If type is REPO or DEPOT TRANSFER and there are errors or                            CAP087
       ** warning with IN DEPOT or IN DATE, then need to change the                            CAP087
       ** field ID from DDDPID to DDDPOD and DDDPMD to DDDPDO. Also                            CAP087
@@ -1235,7 +1237,7 @@
      C                   ENDIF                                                                CAP087
                                                                                               CAP087
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       ******************************************************************
@@ -1243,11 +1245,11 @@
       * ValidateTr2 - Validate Screen 2 details                        *
       *                                                                *
       ******************************************************************
- 
+
      C     ValidateTr2   BEGSR
- 
+
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'SEDPMV2VL'
      C                   PARM                    ReturnCode
      C                   PARM                    DDDPNR2
@@ -1263,9 +1265,9 @@
      C                   PARM                    WMsgDtaArr
      C                   PARM                    Idx
      C                   PARM                    WIdx
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1681,38 +1683,38 @@
       *               updated during each run of this program         *
       *                                                               *
       *****************************************************************
- 
+
      C     ResetCycle    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIDArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIdx
- 
+
      C                   CLEAR                   DPMVFilFmt
      C                   CLEAR                   DPMVX1Fmt
      C                   CLEAR                   DPMVX2Fmt
- 
+
      C                   CLEAR                   CurTrDPMV
      C                   CLEAR                   CurTrDMES
- 
+
      C                   MOVE      *ALL'Y'       OKFlagsDS
- 
+
      C                   CLEAR                   ValidDPMV
      C                   CLEAR                   ValidDPX1
      C                   CLEAR                   ValidDPX2
- 
+
      C                   CLEAR                   Buffer
- 
+
       ** Numeric fields within 'ValidDPMV' have to be reset explicitly as
       ** there are long alpha fileds overlapping these which cause the
       ** CLEAR to put blanks in the numeric fields
- 
+
      C**********         Z-ADD     *ZERO         V_DPID                                       CSD027
      C                   EVAL      V_DPID = *BLANKS                                           CSD027
      C                   Z-ADD     *ZERO         V_DPMD
@@ -1739,9 +1741,9 @@
      C                   Z-ADD     *ZERO         V_DMTD
      C**********         Z-ADD     *ZERO         V_CPTY                                       CSD027
      C                   EVAL      V_CPTY = *BLANKS                                           CSD027
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1750,33 +1752,33 @@
       *               valid file record.                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SetUpValid    BEGSR
- 
+
       ** Setup Reference number for insert
- 
+
      C                   IF        DDDPRN = *BLANKS
      C                             AND DDACTN = 'I'
      C                   EXSR      SRGenRefNo
      C                   ENDIF
- 
+
       ** For Delete put the complete (pre-existing) deal
       ** into the Valid file record
- 
+
      C                   IF        DDACTN = 'D'
      C                   MOVEL     DPMVFilFmt    ValidDPMV
      C                   ENDIF
- 
+
       ** Set Valid file field(s) that are needed for all Action Codes
- 
+
       ** Last Change type
       ** Movement Type
- 
+
      C                   EVAL      V_CHTP = DDACTN
      C                   EVAL      V_DPMV = DPMVType
- 
+
       ** Message Header details.
- 
+
       * Do not override header fields from existing transaction.                              244537
                                                                                               244537
      C**********         IF        DDACTN = 'I'                                     244537 AR971184A
@@ -1786,9 +1788,9 @@
      C                   EVAL      V_DMAFRT = APFOASOCID                                    AR971184
                                                                                               244537
      C                   ENDIF                                                                244537
- 
+
       ** Keys for X1 and X2 files
- 
+
      C                   EVAL      V_VDPDPSS = V_DPSS
      C                   EVAL      V_VDPDPRN = V_DPRN
      C                   EVAL      V_VDPWHEN = 'S'
@@ -1796,7 +1798,7 @@
      C                   EVAL      V_VD2DPSS = V_DPSS
      C                   EVAL      V_VD2DPRN = V_DPRN
      C                   EVAL      V_VD2WHEN = 'S'
- 
+
       * Restore Timestamp from the original record                                           BUG1569
      C                   IF        DDACTN <> 'I'                                             BUG1569
      C                             AND @TimeStamp <> *BLANKS                                 BUG4728
@@ -1804,7 +1806,7 @@
      C                   ENDIF                                                               BUG1569
       *                                                                                      BUG1569
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1812,11 +1814,11 @@
       *  UpdateDB - Update database                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     UpdateDB      BEGSR
- 
+
       ** Update files
- 
+
      C                   RESET                   ReturnCode
      C                   CALLB     'SEDPMVUPD'
      C                   PARM                    ReturnCode
@@ -1825,17 +1827,17 @@
      C                   PARM                    V_NOTM            7
      C                   PARM                    V_MSGK           40
      C                   PARM                    CGL031                                       CGL031
- 
+
       ** If no error on update, then also update extended settlement
       ** records
- 
+
      C                   IF        ReturnCode = *BLANKS
      C                   CALLB     'SEDMESUPD'
      C                   PARM                    ReturnCode
      C                   PARM                    ValidDPX1
      C                   PARM                    ValidDPX2
      C                   PARM                    WProcDate
- 
+
      C                   ENDIF
      C                   EVAL      V_VDPWHEN = 'M'                                          BUG20870
      C                   EVAL      V_VD2WHEN = 'M'                                          AR596674
@@ -1848,10 +1850,10 @@
      C                   PARM                    WProcDate                                  BUG20870
                                                                                             BUG20870
      C                   ENDIF                                                              BUG20870
- 
+
       ** If errors occurred on update, rollback uncommitted file
       ** changes.
- 
+
      C                   IF        ReturnCode <> *BLANKS and
      C                             ReturnCode <> '*RECUPD'
      C                   MOVEL     '0'           APIRetc
@@ -1879,18 +1881,18 @@
      C                   EndIf                                                                CSC022
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If update not done due to record being updated by another
       ** workstation send message to screen.
- 
+
      C                   IF        ReturnCode = '*RECUPD'
      C                   Z-ADD     1             Idx
      C                   EVAL      FldNameArr(Idx) = '*ANY'
      C                   EVAL      MsgIdArr(Idx) = 'MMM1067'
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1902,31 +1904,31 @@
       * Calls: ZATRNRTV                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRGenRefNo    BEGSR
- 
+
      C                   CALLB     'ZATRNRTV'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM      'SE'          Module
      C                   PARM      'D'           TranType
      C                   PARM                    DDDPRN
      C                   PARM      *ZERO         V_DPRN
- 
+
       ** Database Error
- 
+
      C     RetCodeOut    IFNE      *BLANK
      C                   MOVEL     'ZATRNRTV'    DBFILE
      C                   MOVEL     '001'         DBASE
      C                   MOVEL     DDDPRN        DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     RetCodeOut    IFEQ      *BLANK
      C                   EVAL      DDDPRN = V_DPRN
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1935,7 +1937,7 @@
       *                                                               *
       *****************************************************************
      C     CalcTrCVAL    BEGSR
- 
+
       ** INITIALISE UN-USED FIELDS
      C                   EVAL      V_RALL = 0
      C                   EVAL      V_ITRA = 0
@@ -1961,9 +1963,9 @@
      C                   ELSE
      C                   EVAL      V_TDVD = V_DPDO
      C                   ENDIF
- 
+
       * Access Investment Type details
- 
+
      C     KLINVT        CHAIN     INVTPDF                            99
       *
       * DATABASE ERROR
@@ -1975,12 +1977,12 @@
      C                   MOVEL     '002'         DBASE
      C                   EXSR      *PSSR
      C                   END
- 
+
       * Get nominal currency details
- 
+
      C                   MOVE      SECNMCY       @AJCD
      C                   EXSR      ACSCURR
- 
+
      C                   MOVEL     A6SPRT        NomCcySPRT
      C                   Z-ADD     A6NBDP        NomCcyDec
      C                   MOVEL     A6MDIN        NomCcyMDIN
@@ -1988,15 +1990,15 @@
      C                   MOVEL     A6SWCY        NomCcySWCY
      C                   MOVEL     A6CDFN        NomCcyCDFN
      C                   MOVEL     A6ECDN        NomCcyECDN
- 
+
      C                   EXSR      ACSCUST
- 
+
       ** CALCULATE COUNTERVALUE
- 
+
      C                   CALLB     'SETCVALCAL'
- 
+
       * INPUTS
- 
+
       ** Trade details
      C                   PARM                    V_TDTP            2
      C                   PARM                    V_DPNA
@@ -2017,7 +2019,7 @@
      C                   PARM                    V_TMDI            1
      C                   PARM                    SECNMCY
      C                   PARM                    V_TDVD            5 0
- 
+
       ** Security details
      C                   PARM                    PROT              1
      C                   PARM                    SECSPBS
@@ -2025,29 +2027,29 @@
      C                   PARM                    SECNMCY
      C                   PARM                    SECNMDP
      C                   PARM                    SECSESN
- 
+
       ** Nominal Currency Details
       ** Settlement Currency Details
      C                   PARM                    NomCcyDts
      C                   PARM                    NomCcyDts
- 
+
       ** Customer classification
      C                   PARM                    CustClass         1
- 
+
       ** Country of treaty from PF/SECTYD
      C                   PARM                    SECCRTT
- 
+
       ** Default basket for backup withholding
      C                   PARM                    PDRBW
- 
+
       ** Value date
      C                   PARM                    V_TDVD
                                                                                               237063
       ** EU Tax                                                                               237063
      C                   PARM                    PEUTX                                        237063
- 
+
       * OUTPUTS
- 
+
       * Trade consideration in nominal currency
       * Trade countervalue in nominal currency
       * Withholding tax
@@ -2058,7 +2060,7 @@
      C                   PARM                    WHTX             13 0
      C                   PARM                    DDTCTR           21
      C                   PARM                    DDWTAX
- 
+
      C                   ENDSR
       *****************************************************************                       CSE045
       /EJECT                                                                                  CAP087
@@ -2275,9 +2277,9 @@
      C                   MOVEA     ROU           WWROT
      C                   END
      C                   END
- 
+
      C                   ELSE
- 
+
      C                   MOVEL     *BLANKS       WWROU
      C                   MOVEL     *BLANKS       WWROT
       *
@@ -2290,7 +2292,7 @@
       * ACSCURR - ACCESS CURRENCY DETAILS                             *
       *****************************************************************
      C     ACSCURR       BEGSR
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD             7                           S0111
      C                   PARM      '*KEY   '     @OPTN             7                           S0111
@@ -2305,7 +2307,7 @@
      C                   MOVEL     '003'         DBASE
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2313,10 +2315,10 @@
       * ACSCUST - ACCESS CUSTOMER DETAILS                             *
       *****************************************************************
      C     ACSCUST       BEGSR
- 
+
      C                   MOVEL     *BLANK        @KEY1
      C                   MOVEL     V_DPBN        @KEY1
- 
+
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANK        @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
@@ -2332,7 +2334,7 @@
      C                   MOVEL     '004'         DBASE
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   CALL      'AOSECSR0'                                                  S0111
      C                   PARM                    @RTCD             7                           S0111
      C                   PARM      '*KEY   '     @OPTN             7                           S0111
@@ -2355,9 +2357,9 @@
      C                   EVAL      FldNameArr(Idx) = 'DDDPBN'                                BUG8849
      C                   EVAL      MsgIDArr(Idx) = 'MMA0197'                                 BUG8849
      C                   ENDIF                                                               BUG8849
- 
+
      C                   MOVE      BFCLAS        CustClass                                     S0111
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                                BUG20870
@@ -2400,14 +2402,14 @@
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       ** Transaction information
      C                   PARM                    Trans500
      C                   PARM                    OthrData
@@ -2433,19 +2435,19 @@
      C                   PARM                    APIRetc
      C                   PARM                    @TimeStamp       26                         BUG1569
      C                   PARM                    AAuth             1                        BUG22147
- 
+
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
- 
+
      C                   EVAL      MsgFArray(1) = 'SEUSRMSG'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
      C                   EVAL      MsgFArray(3) = 'MEMSG'                                   AR589197
       *
      C                   MOVE      *ALL'Y'       OKFlagsDS
- 
+
       ** Access bank details via access program
       ** (database error handling done in access program)
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     PRtCd
      C                   PARM      '*FIRST '     POptn
@@ -2453,9 +2455,9 @@
       *                                                                                       CAP087
       ** Retrieve Date Format                                                                 CAP087
      C                   EVAL      DateFmtInd = BJDFIN                                        CAP087
- 
+
       ** Access Switchable Features File, for CSW003                   ves
- 
+
      C                   MOVE      'N'           CSW003
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
@@ -2465,9 +2467,9 @@
      C     PRTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CSW003
      C                   ENDIF
- 
+
       ** Access Switchable Features File, CSE028                       ves
- 
+
      C                   MOVE      'N'           CSE028
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
@@ -2504,9 +2506,9 @@
      C                   MOVE      'Y'           CSE033
      C                   MOVE      'Y'           CSE029
      C                   ENDIF
- 
+
       ** Access Switchable Features File, CSE022                       ves
- 
+
      C                   MOVE      'N'           CSE022
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
@@ -2531,31 +2533,31 @@
      C                   ELSE
      C                   EVAL      S01401 = 'N'
      C                   ENDIF
- 
+
       ** Check if CSC011 is installed
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CSC011'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   MOVE      'Y'           CSC011
      C                   IN        SC24X7
      C                   IN        SDSTAT
- 
+
       ** If 24X7 Midas availability is installed and support system is
       ** active, used processing date from dataarea SC24X7 as the
       ** rundate.
- 
+
      C                   IF        CSC011 = 'Y' AND
      C                             S1SUPP = LIBR
      C                   EVAL      WProcDate = S1DATE
      C                   ELSE
      C                   EVAL      WProcDate = BJRDNB
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      CSC011 = 'N'
      C                   IF        PRTCD <> '*NRF'
@@ -2576,12 +2578,12 @@
      C     SWRTN         IFEQ      'CSW098 '
      C                   MOVE      'Y'           CSW098
      C                   ENDIF
- 
+
       ** Check if CSW201 - Swift 2001 Standards Update is installed
- 
+
      C                   CALL      'SWIF2001'                           9090
      C                   PARM      *BLANKS       @RTCD
- 
+
      C                   IF        *IN90 = *OFF AND @RTCD = 'CSW2001'
      C                   EVAL      CSW201 = 'Y'
      C                   ELSE
@@ -2630,9 +2632,9 @@
      C                   IF        @RtCd = *Blanks                                            CSW210
      C                   MOVE      'Y'           CFT004                                       CSW210
      C                   ENDIF                                                                CSW210
- 
+
       ** Access API ICD via access program
- 
+
      C                   CALLB     'AOAPIR0'
      C                   PARM      '*DBERR '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
@@ -2736,7 +2738,7 @@
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    WTimeStamp
      C                   MOVE      WTimeStamp    WorkTime
- 
+
       **********                                                                             BUG7029
       ***Retrieve*ZMUSER*details.                                                            BUG7029
       **********                                                                             BUG7029
@@ -2746,7 +2748,7 @@
       ***Set*Front*Office*ID*=*User*ID                                                       BUG7029
      C**********         EVAL      APFOTranID = %SUBST(PUSRID:1:3) +                         BUG7029
      C**********                                %SUBST(WorkTime:3:17)                        BUG7029
- 
+
      C*
      C* Define key list for file INVTP
      C*

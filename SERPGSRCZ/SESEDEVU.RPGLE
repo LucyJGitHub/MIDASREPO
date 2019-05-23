@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD037742           Date 01Apr16               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD037742           Date 01Apr16               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037742 - Security diary events - pool factor reversal.     *
       *             Patterned after 260331 changes in SESEDESIN.      *
@@ -147,43 +149,43 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
       /COPY ZACPYSRC,STD_D_SPEC
       *
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
       /COPY ZACPYSRC,PSDS
       *
       ** The following /COPY line includes definition  for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
       /COPY ZACPYSRC,PROCPARMS
       *
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
- 
+
       /COPY ZACPYSRC,ERR_ARRAYS
       *
       ** The following /COPY line includes the definitions for arrays
       ** specific to API *CTL modules.
- 
+
       /COPY ZACPYSRC,APICTLARR
       *
       ** The following /COPY line includes the definitions for fields
       ** used in checking whether there are messages on the data queue.
- 
+
       /COPY ZACPYSRC,DTAQCHKDCL
       *
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -192,12 +194,12 @@
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       *
       ** Message header details
      D PHeadIn       E DS                  EXTNAME(APHEADPD)
@@ -265,17 +267,17 @@
      D  RecNotFnd             01     01
       * Array to hold Commitment Job Names
      D CmtJobNArr      S             10A   DIM(10)
- 
+
       ** Commitment Control Data Area
      D SCCMTJOB      E DS                  EXTNAME(SCCMTJOB) DTAARA(SCCMTJOB)
      D  wComitJob              4    103
- 
+
       *
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       *
       ** Index for arrays of error messages
      D IDx             S              3P 0
@@ -402,7 +404,7 @@
       ** Work variables for CSC022
      D CSC022          S              1A   INZ('N')
      D wCommitSkip     S              1A   INZ('N')
- 
+
       *
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
@@ -516,7 +518,7 @@
       ** the replacement character must be replaced with the corresponding
       ** character from the original transaction.
      C                   IF        GHSUBS <> *BLANK
- 
+
      C     GHSUBS        SCAN      SedeScnFmt                             99
      C                   IF        *IN99
      C                   MOVE      'Y'           WSubDE1
@@ -528,7 +530,7 @@
      C                   IF        WSubDE1 = 'Y'
      C                   EXSR      SRDtaSubs
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       /COPY WNCPYSRC,SESEDEC012
@@ -551,7 +553,7 @@
      C                   ENDSL
       *
      C     INVALID       TAG
- 
+
       *
       **Write to database
      C     UpdateYN      IFEQ      'Y'
@@ -561,14 +563,14 @@
      C                   EXSR      UpdateDB
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   SETON                                        LR
      C     OKSDSN        IFEQ      'Y'
      C     OKSDED        ANDEQ     'Y'
      C     OKSDET        ANDEQ     'Y'
      C                   EVAL      OKFLDS = 'Y'
      C                   ENDIF
- 
+
       *
       **Remerge buffer with all relevant data structures
      C*************      EVAL      Buffer = SedeScnFmt +PPROT + RMFL                         BUG4258
@@ -603,12 +605,12 @@
      C                   PARM      *ZERO         PDaynoOut
      C                   PARM                    BJDFIN
      C                   PARM      *BLANK        PErrorFlag
- 
+
      C                   Z-ADD     PDaynoOut     WEvtDno
      C                   ELSE
      C                   Z-ADD     99999         WEvtDno
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -624,7 +626,7 @@
       *****************************************************************
      C     SRValAction   BEGSR
      C                   EVAL      PMode = *BLANKS
- 
+
      C                   EVAL      WRDAY = BJRDNB
       *
       ** If CSC011 is present and CTL is still running in the support
@@ -633,12 +635,12 @@
      C                   IF        (CSC011 = 'Y') AND (S1SUPP = LIBR)
      C                   EVAL      WRDAY = S1DATE
      C                   ENDIF
- 
+
      C                   CALLB     'SESEDERTV'
       *                             =========
       ** INPUT
       ** =====
- 
+
       *
       ** Retun Code
      C                   PARM      *BLANKS       RetCodeOut
@@ -669,7 +671,7 @@
       *
       ** STANDING DATA
       ** =============
- 
+
       *
       ** SDBANK - Single Branch Code
      C                   PARM                    BJSBRC
@@ -688,7 +690,7 @@
       *
       ** SWITCHABLE FEATURES
       ** ===================
- 
+
       *
       ** SE Transaction Enhancement
      C                   PARM                    CSE010
@@ -704,7 +706,7 @@
       *
       ** OUTPUT
       ** ======
- 
+
       *
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
@@ -748,7 +750,7 @@
       *
       ** Redisplay screen
      C                   PARM      *BLANK        PReDsp
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -781,7 +783,7 @@
       *
       ** Validate screen 1 details.
      C                   EXSR      SRVScrn1
- 
+
      C     EValDetails   ENDSR
       *
       *****************************************************************
@@ -792,7 +794,7 @@
       *                                                               *
       *****************************************************************
      C     SRDefault1    BEGSR
- 
+
      C                   CALLB     'SESEDE1DT'
       *
       ** INPUT
@@ -851,7 +853,7 @@
      C                   PARM                    DDSEXR
                                                                                               CSE065
      C                   PARM                    DDMATY                                       CSE065
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -862,7 +864,7 @@
       *                                                               *
       *****************************************************************
      C     SRVScrn1      BEGSR
- 
+
      C                   CALLB     'SESEDE1VL'
       *
       ** INPUT
@@ -919,7 +921,7 @@
       *
       ** Dividend Payments Base on EX-Date
      C                   PARM                    S01510
- 
+
       ** Hedge Accounting Phase B
      C                   PARM                    CAS006
                                                                                               CSE072
@@ -960,7 +962,7 @@
       *
       ** Redisplay screen
      C                   PARM      *BLANK        PReDsp
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -972,7 +974,7 @@
       *                                                               *
       *****************************************************************
      C     SRCvtSeDE     BEGSR
- 
+
      C                   CALLB     'SESEDECVT'
       *                             =========
       ** INPUT
@@ -1010,7 +1012,7 @@
       *
       ** Dividend payments
      C                   PARM                    S01510
- 
+
       ** Hedge Accounting Phase B
      C                   PARM                    CAS006
       *
@@ -1027,7 +1029,7 @@
       ** SE Diary events screen details from incoming transaction
       ** - screen format
      C                   PARM                    Sede1ScnFmt
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1045,7 +1047,7 @@
      C                   IF        WSUBDE1 = 'Y'
      C                   CLEAR                   PIncData
      C                   CLEAR                   PCurData
- 
+
      C                   CALLB     'APDTASUBS'
       *                             =========
       ** Return code
@@ -1059,10 +1061,10 @@
       *
       ** Current data
      C                   PARM      Sede1ScnFmt   PCurData
- 
+
      C                   MOVEL     PIncData      SedeScnFmt
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1087,7 +1089,7 @@
       *                                                               *
       *****************************************************************
      C     SRValAmend    BEGSR
- 
+
      C                   CALLB     'SESEDE1MD'
       *
       ** INPUT
@@ -1127,7 +1129,7 @@
       *
       ** Dividend payments
      C                   PARM                    S01510
- 
+
       ** Hedge Accounting Phase B
      C                   PARM                    CAS006
       *
@@ -1259,7 +1261,7 @@
       * UPDATEDB - Update database                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     UPDATEDB      BEGSR
       *
       ** Update file.
@@ -1313,7 +1315,7 @@
      C                   MOVEL     '0'           APIRetc
      C                   ROLBK
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
      C                   If        (CSC022 <> 'Y')
      C                             or (CSC022 = 'Y' and WCommitSkip <> 'Y')
@@ -1346,7 +1348,7 @@
      C                   PARM                    ZField
      C                   PARM                    ZADec
      C                   EVAL      DDNTCR = ZField
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1356,32 +1358,32 @@
       *                                                               *
       *****************************************************************
      C     SRResetFld    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIdArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   IDx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIdArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIDx
- 
+
      C                   RESET                   AMFldNamAr
      C                   RESET                   AMMsgIdArr
      C                   RESET                   AMMsgDtaAr
      C                   RESET                   AMIDx
- 
+
      C                   RESET                   FldNoArr
- 
+
      C                   MOVE      *ALL'Y'       SEESEDE
- 
+
      C                   CLEAR                   Sede1ScnFmt
- 
+
      C                   ENDSR
       *
       *****************************************************************
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1508,7 +1510,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CSE010 = 'Y'
      C                   ELSE
@@ -1534,7 +1536,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      S01509 = 'Y'
      C                   ELSE
@@ -1560,7 +1562,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      S01510 = 'Y'
      C                   ELSE
@@ -1586,7 +1588,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CSE031 = 'Y'
      C                   ELSE
@@ -1612,7 +1614,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   MOVEL     'Y'           CAS006
      C                   ELSE
@@ -1635,7 +1637,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CSC011 = 'Y'
      C                   IN        SC24X7
@@ -1651,7 +1653,7 @@
      C                   Parm      '*VERIFY'     POPTN
      C                   Parm      'CSC022'      PSARD
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        PRTCD = *BLANKS
       *
      C                   Eval      CSC022 = 'Y'

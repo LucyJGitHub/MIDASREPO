@@ -12,13 +12,14 @@
       *  Function:  This module runs in two modes:                    *
       *             One display a list of customers for selection,    *
       *             the other picks off the selection made.           *
- 
+
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 256564             Date 17Sep08               *
+      *                 256564             Date 17Sep08               *
       *                 249076             Date 03Aug07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  256564 - Recompile due to PF changes done by fix 256330      *
       *  249076 - Enhance error message S270004 to show character     *
@@ -63,19 +65,19 @@
       * Customer file - by Customer Number
      FSDCUSTL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(@BBREBG:CUSDNUM)
- 
+
       * Customer file - by Front Office ID
      FSDCUSDL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDCUSTD0:CUSDSFO)
- 
+
       * Customer file - by Customer Shortname
      FSDCUSTL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(@CUSTD5:CUSDSSN)
- 
- 
+
+
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*pssr)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -87,12 +89,12 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
@@ -105,7 +107,7 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -113,70 +115,70 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
      D/COPY ZACPYSRC,MSGHNDDCL
       **--------------------------------------------------------------------------------------------
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @FTR            S             30    DIM(3) CTDATA PERRCD(1)
- 
+
       ** EXTERNAL DS FOR BANK DETAILS
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for SAR Details                                                        BUG11828
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                BUG11828
                                                                                             BUG11828
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Change in Position/Select, comparison check work fields
      D WKCUST          S              6A
      D WKFODN          S             20A
      D WKCSSN          S             10A
      D WKCRNM          S             20A
      D WKCRTN          S             10A
- 
+
       ** Parameters for calling AOSVALR0 (Midas System Value Access Object)                   CSD027
      D PRetCode        S              7A                                                      CSD027
      D PSysValK1       S             20A                                                      CSD027
@@ -216,7 +218,7 @@
                                                                                             BUG11828
       ** Switchable Features                                                                BUG11828
      D CSD031          S              1A                                                    BUG11828
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -235,13 +237,13 @@
       ** Set up the customer reference to be used by the message handler
      C                   EVAL      TranRef = DDCUSN
      C                   EVAL      ActionCode = DDACTN
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes processing for the error and
       ** warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP1
       **--------------------------------------------------------------------------------------------
- 
+
       ** Initialization
       *
      C                   EXSR      INIT
@@ -293,21 +295,21 @@
      C                   Eval      WKCSSN = SECSSN
      C                   Eval      WKCRNM = SECRNM
      C                   Eval      WKCRTN = SECRTN
- 
+
      C     @RDSFL        IFEQ      'Y'
- 
+
      C                   EXSR      RDSFLR
- 
+
      C                   IF        SECUST <> WKCUST or SEFODN <> WKFODN or
      C                             SECSSN <> WKCSSN or SECRNM <> WKCRNM or
      C                             SECRTN <> WKCRTN
      C                   Eval      KPosSelChg = '1'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************
@@ -473,7 +475,7 @@
       ********************************************************************
       * BLDSFL2 - BUILD SUBFILE by FRONT OFFICE ID.
       ********************************************************************
- 
+
      C     BLDSFL2       BEGSR
       *
       ** Check for user Authority to Browse IF NOT MULTI-BRANCHING
@@ -643,7 +645,7 @@
       ********************************************************************
       * BLDSFL3 - BUILD SUBFILE by MIDAS CUSTOMER SHORTNAME
       ********************************************************************
- 
+
      C     BLDSFL3       BEGSR
       *
       ** Check for user Authority to Browse IF NOT MULTI-BRANCHING
@@ -1326,7 +1328,7 @@
      C                   ENDIF                                                              BUG11828
                                                                                             BUG11828
      C                   ENDIF                                                              BUG11828
- 
+
       * Retrieve System Value 'CustAlphaAllow' & 'CustAlphaSupNumeric'                        CSD027
      C                   Eval      PRetCode = *BLANKS                                         CSD027
      C                   Eval      PSysValK1 = 'CustAlphaAllow'                               CSD027
@@ -1352,14 +1354,14 @@
       *                                                                                       CSD027
      C                   Eval      WCusAlphaAllow  = PSysVal1                                 CSD027
      C                   Eval      WCusAlphaSupNum = PSysVal2                                 CSD027
- 
+
       *
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line sets up the fixed data for SD *DSP
       ** functions for the message handler, ZAMSGHNDLE.
      D/COPY SDCPYSRC,MSGHNDDATA
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDSR
       *****************************************************************
       *
@@ -1368,7 +1370,7 @@
       ** to process error and warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP2
       **--------------------------------------------------------------------------------------------
- 
+
       *****************************************************************
       ** Program, module and procedure names for database error processing.
       ** =================================================================

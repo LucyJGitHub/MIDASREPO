@@ -11,16 +11,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD017             Date 08Nov02               *
+      *                 CSD017             Date 08Nov02               *
       *                 CSD015  *CREATE    Date 14Oct02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD017 - Midas Compliance Watch - Anti-Money Laundering      *
       *  CSD015 - Midas Compliance Watch - Watch List Checking        *
@@ -135,7 +137,7 @@
      C                   EVAL      W1CASR = #1CASR
      C                   EVAL      W1CADB = #1CADB
      C                   EVAL      W1CAUS = #1CAUS
-     C                   EVAL      W1CAPW = #1CAPW
+     C**********         EVAL      W1CAPW = #1CAPW                                            CSD101
      C                   EVAL      W1IND1 = #1IND1
      C                   EVAL      W1IND2 = #1IND2
      C                   EVAL      W1IND3 = #1IND3

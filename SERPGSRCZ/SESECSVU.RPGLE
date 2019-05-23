@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD044880           Date 15Jan18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD044880           Date 15Jan18               *
+      *                 MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 BUG6218            Date 03Jun15               *
@@ -74,6 +75,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
@@ -130,16 +132,16 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       ** Valid securities by security shortname and timestamp
      FSEVSECSL1 IF   E           K DISK    RENAME(SEVSECSD0:SEVSECSCHM)
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
                                                                                               LLN022
      F/COPY WNCPYSRC,SESECSJF01                                                               LLN022
                                                                                              LLN022A
      FBYSECTY0  IF   E           K DISK    INFSR(*pssr)                                      LLN022A
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -158,53 +160,53 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API CTL & VU modules.
      D/COPY ZACPYSRC,APICTLARR
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -233,7 +235,7 @@
                                                                                              LLN022A
      D WCmtJobArr      S             10A   DIM(10)                                            CSC022
       ** Array for commitment job names                                                       CSC022
- 
+
       * Incoming header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
       *
@@ -357,13 +359,13 @@
       *
       ** Externally described DS for currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
      D Indicators      DS                  BASED(IndicatorP)
      D  RecNotFnd             01     01
- 
+
       ** 24x7 Status Dataarea
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
- 
+
       ** SD Data Area
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
       ** DS for Access Objects - short data structure
@@ -371,7 +373,7 @@
       *
       ** DS for Access Objects - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** DS for ZMUSER details
      D ZMUSER          DS            17
      D  PUSRID                 1     10
@@ -443,24 +445,24 @@
      D  L1FOTR                11     30A                                                      CER001
      D  L1ISNO                31     42A                                                      CER001
                                                                                               CER001
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       * Error message field(s)
      D     Msg1        S                   LIKE(#MsgID)
- 
+
       * Index for arrays of error message ids etc in amend validation
      D AmIdx           S              3P 0 INZ(0)
- 
+
       * Index for arrays of error message ids etc
      D Idx             S              3P 0 INZ(0)
- 
+
       * Index for arrays of warning message ids etc
      D WIdx            S              3P 0 INZ(0)
- 
+
       * Fields (500A) to receive the incoming transaction
      D Trans5001       S            500A
      D Trans5002       S            500A
@@ -468,19 +470,19 @@
      D Trans5004       S            500A
      D Trans5005       S            500A                                                      CAS006
      D Trans5006       S            500A                                                      CSE071
- 
+
       * Field (500A) to receive the incoming Extra Data
      D ExtData500      S            500A
      D RegData500      S            500A                                                      CER001
- 
+
       ** Overall Transaction status, to be passed to the message handler
      D PTranStatus     S              1A
- 
+
       * Indices for arrays used to set up corresponding
       * sequence numbers for the fields that are in error
      D Ix              S              3P 0
      D Iy              S              3P 0
- 
+
       * Timestamp for the transaction
      D TimeStamp       S               Z
       *
@@ -556,13 +558,13 @@
      D WSubSE5         S              1A                                                      CAS006
      D WSubSE6         S              1A                                                      CSE071
      D WMQError        S             28A
- 
+
       * Market Data Feed
      D CSD006          S              1A
       *
       * Midas APIs Sec Prices
      D CAP060          S              1A
- 
+
      D TRANSDTL        S           5800A
      D PDealNumber     S             18A
      D PADealNo        S             18A
@@ -595,18 +597,18 @@
      D WFIND1          S              1A                                                      CER001
      D WFIND2          S              1A                                                      CER001
      D WFIND3          S              1A                                                      CER001
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -621,7 +623,7 @@
       *                                                                                      BUG7029
      C     *DTAARA       DEFINE                  ZMUSER                                      BUG7029
      C                   IN        ZMUSER                                                    BUG7029
- 
+
       * Incoming transaction is broken into 500A fields, so that a common CL
       * can be used between this module and the one that read the MQ queue.
       * This module needs to break these 500A fields by loading them into
@@ -639,14 +641,14 @@
      C                   EVAL      SITP = DDSITP                                             BUG9500
      C                   EVAL      NMCY = DDNMCY                                             BUG9500
      C                   ENDIF                                                               BUG9500
- 
+
       * Reset variables gradually updated
      C                   EXSR      RESETCYCLE
       *
       ** Check if valid securities exists for midas security shortname.
       *
      C                   EXSR      SRChkValMTran
- 
+
       * Validate action code
      C                   EXSR      ValidateAc
       *
@@ -672,15 +674,15 @@
      C                   ENDIF                                                               LLN022A
                                                                                              LLN022A
      C                   ENDIF                                                               LLN022A
- 
+
       * Processing depends upon action code
      C                   SELECT
- 
+
       * Processing for inserts
      C                   WHEN         DDACTN = 'I'
      C                   EXSR      SRValDetails
      C/COPY WNCPYSRC,SESECSJC04                                                               LLN022
- 
+
       *                                                                                      LLN022A
       ** If LLN012 on validate BoE details.                                                  LLN022A
       *                                                                                      LLN022A
@@ -731,7 +733,7 @@
      C                   ENDIF                                                               LLN022A
                                                                                              LLN022A
      C                   EXSR      SRValAmend
- 
+
      C                   WHEN      DDACTN = 'D'                                             MD044880
      C                   EXSR      SetupAmd                                                 MD044880
      C                   EVAL      PExtData = CrExtFilFmt                                   MD044880
@@ -739,7 +741,7 @@
      C                   ENDSL
       *
      C     INVALID       TAG
- 
+
       * Write to database
      C     UpdateYN      IFEQ      'Y'
      C     Idx           ANDEQ     0
@@ -752,9 +754,9 @@
      C                   ENDIF                                                                CER001
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   SETON                                        LR
- 
+
       ** If action is for Update, get the correct record information                         BUG5230
       ** from file                                                                           BUG5230
      C                   IF        UpdateYN = 'Y'                                            BUG5230
@@ -795,9 +797,9 @@
      C                                 + PExtData                                            BUG6218
      C                                 + RegData                                            MD044880
      C                   ENDIF                                                               BUG5230
- 
+
      C                   RETURN
- 
+
       ********************************************************************
       /EJECT
       *****************************************************************
@@ -814,12 +816,12 @@
       ** Run delay program if record found.
       *
      C     DDSESN        CHAIN     SEVSECSL1                          01
- 
+
      C                   IF        *IN01 = '0'
       *
       ** Run delay program, then repeat chain.
      C                   CALLB     'ZACDELAY'
- 
+
      C     DDSESN        CHAIN     SEVSECSL1                          01
       *
       ** Error if midas back office reference is still present.
@@ -828,9 +830,9 @@
      C                   EVAL      FldNameArr(IDx) = 'DDSESN'
      C                   EVAL      MsgIDArr(IDx) = 'APM0900'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -923,7 +925,7 @@
       *                                                                                       CER001
      C                   ENDIF                                                                CER001
       *                                                                                       CER001
- 
+
      C     EValDetails   ENDSR
       *
       *****************************************************************
@@ -968,7 +970,7 @@
       *                                                               *
       *****************************************************************
      C     SRDefault1    BEGSR
- 
+
      C                   CALLB     'SESECS1DT'
       *
       ** Securities retrieved from file - file format
@@ -985,7 +987,7 @@
       *
       ** Securities screen 1 details retrieved from file - screen format
      C                   PARM                    NwSE1ScnFmt
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -996,7 +998,7 @@
       *                                                               *
       *****************************************************************
      C     SRVScrn1      BEGSR
- 
+
      C                   CALLB     'SESECS1VL'
       *
       ** INPUT
@@ -1098,7 +1100,7 @@
       *
       ** Redisplay screen indicator
      C                   PARM      *BLANK        PReDsp
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1109,7 +1111,7 @@
       *                                                               *
       *****************************************************************
      C     SRDefault2    BEGSR
- 
+
      C                   CALLB     'SESECS2DT'
       *
       ** Security screen 1 details retrieved from file - screen format
@@ -1147,7 +1149,7 @@
       *
       ** Fields for display only
      C                   PARM                    POutFlds
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1158,7 +1160,7 @@
       *                                                               *
       *****************************************************************
      C     SRVScrn2      BEGSR
- 
+
      C                   CALLB     'SESECS2VL'
       *                             =========
       ** INPUT
@@ -1296,7 +1298,7 @@
       *
       ** Market Name
      C                   PARM                    PMKTN
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1307,7 +1309,7 @@
       *                                                               *
       *****************************************************************
      C     SRVScrn3      BEGSR
- 
+
      C                   CALLB     'SESECS3VL'
       *                             =========
       ** INPUT
@@ -1398,7 +1400,7 @@
       *
       ** Redisplay screen indicator
      C                   PARM      *BLANK        PReDsp
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1409,7 +1411,7 @@
       *                                                               *
       *****************************************************************
      C     SRVScrn4      BEGSR
- 
+
      C                   CALLB     'SESECS4VL'
       *                             =========
       ** INPUT
@@ -1644,7 +1646,7 @@
       *                                                               *
       *****************************************************************
      C     SRCvtSecD     BEGSR
- 
+
      C                   CALLB     'SESECSCVT'
       *                             =========
       ** INPUT
@@ -1752,9 +1754,9 @@
       *
       ** Next Coupon Date
      C                   PARM                    PNCD
- 
+
       ** Linked Maintenance Flag
- 
+
      C                   PARM                    PParmLink
       *                                                                                     MD044880
       ** If LLN012 installed convert BOE fields.                                            MD044880
@@ -1768,7 +1770,7 @@
      C                   PARM                    CrExtFilFmt                                MD044880
                                                                                             MD044880
      C                   ENDIF                                                              MD044880
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1870,12 +1872,12 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       * Transaction information
      C                   PARM                    Trans5001
      C                   PARM                    Trans5002
@@ -1885,7 +1887,7 @@
      C                   PARM                    Trans5006                                    CSE071
      C                   PARM                    RegData500                                   CER001
      C                   PARM                    ExtData500
- 
+
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
@@ -1914,7 +1916,7 @@
      C                   IF        PRTCD = *Blanks                                           LLN022A
      C                   EVAL      LLN012 = 'Y'                                              LLN022A
      C                   ENDIF                                                               LLN022A
- 
+
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'SEUSRMSG'
@@ -1922,7 +1924,7 @@
      C                   EVAL      MsgFArray(3) = 'MEMSG'
      C                   EVAL      MsgFArray(4) = 'WNMSGF'
      C                   EVAL      MsgFArray(5) = 'SDUSRMSG'                                  CRE073
- 
+
       *  Hook to enable non-core message files to be included
      C/COPY WNCPYSRC,SESECSM01
       *
@@ -1939,7 +1941,7 @@
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       * Access API ICD via access program
      C                   CALLB     'AOAPIR0'
      C                   PARM      '*DBERR '     @RTCD
@@ -1996,7 +1998,7 @@
      C                   Z-ADD     4             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CEU017 = 'Y'
      C                   ELSE
@@ -2022,7 +2024,7 @@
      C                   Z-ADD     5             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CEU018 = 'Y'
      C                   ELSE
@@ -2048,7 +2050,7 @@
      C                   Z-ADD     6             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CSE007 = 'Y'
      C                   ELSE
@@ -2074,7 +2076,7 @@
      C                   Z-ADD     7             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CSE011 = 'Y'
      C                   ELSE
@@ -2100,7 +2102,7 @@
      C                   Z-ADD     8             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      S01401 = 'Y'
      C                   ELSE
@@ -2126,7 +2128,7 @@
      C                   Z-ADD     9             DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      S01511 = 'Y'
      C                   ELSE
@@ -2152,7 +2154,7 @@
      C                   Z-ADD     10            DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CSE005 = 'Y'
      C                   ELSE
@@ -2178,7 +2180,7 @@
      C                   Z-ADD     12            DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CSE023 = 'Y'
      C                   ELSE
@@ -2198,7 +2200,7 @@
      C                   ELSE
      C                   MOVEL     'N'           CSD006
      C                   END
- 
+
       *
       ** Access SAR details file to determine if Midas APIs Sec Price
       ** is switched on
@@ -2233,7 +2235,7 @@
      C                   Z-ADD     13            DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CSE031 = 'Y'
      C                   ELSE
@@ -2281,9 +2283,9 @@
      C                   ELSE                                                                 CSE071
      C                   EVAL      CSE071 = 'N'                                               CSE071
      C                   ENDIF                                                                CSE071
- 
+
       ** Check if CSC011 is installed
- 
+
      C                   EVAL      WkDate = BJRDNB
      C                   EVAL      WkNext = BJDNWD
      C                   EVAL      CSC011 = 'N'
@@ -2292,7 +2294,7 @@
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CSC011'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRTCD = *Blanks
      C                   EVAL      CSC011 = 'Y'
      C                   IN        SC24X7
@@ -2328,11 +2330,11 @@
       **********                                                                             BUG7029
      C******DTAARA       DEFINE                  ZMUSER                                      BUG7029
      C**********         IN        ZMUSER                                                    BUG7029
- 
- 
+
+
       *  Hook to enable non-core initial processing to be included
      D/COPY WNCPYSRC,SESECS01
- 
+
       *                                                                                       CSC022
       ** Access Switchable Features File, for CSC022                                          CSC022
       *                                                                                       CSC022
@@ -2501,9 +2503,9 @@
      C     ValidateAc    BEGSR
       *
       * Validate action code versus transaction IDs supplied
- 
+
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'SESECSRTV'
       *                             =========
       ** INPUT
@@ -2567,9 +2569,9 @@
       *
       ** Investment type details
      C                   PARM                    Pinvtp
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2579,10 +2581,10 @@
       *                                                               *
       *****************************************************************
      C     SetupAmd      BEGSR
- 
+
       * For amends, put the complete (pre-existing) transaction into the valid
       * file record - fields in this will be updated during processing
- 
+
      C                   EXSR      SRCvtSecD
       *
       ** Check for the existence of the replacement character; if this is
@@ -2591,21 +2593,21 @@
       ** character from the original transaction.
       *
      C                   IF        GHSUBS <> *BLANK
- 
+
      C     GHSUBS        SCAN      NwSE1ScnFmt                            99
      C                   IF        *IN99
      C                   MOVE      'Y'           WSubSE1
      C                   ELSE
      C                   MOVE      'N'           WSubSE1
      C                   ENDIF
- 
+
      C     GHSUBS        SCAN      NwSE2ScnFmt                            99
      C                   IF        *IN99
      C                   MOVE      'Y'           WSubSE2
      C                   ELSE
      C                   MOVE      'N'           WSubSE2
      C                   ENDIF
- 
+
      C     GHSUBS        SCAN      NwSE3ScnFmt                            99
      C                   IF        *IN99
      C                   MOVE      'Y'           WSubSE3
@@ -2642,9 +2644,9 @@
      C                             OR WSubSE6 = 'Y'                                           CSE071
      C                   EXSR      SRDtaSubs
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       ******************************************************************
       /EJECT
@@ -2661,7 +2663,7 @@
      C                   IF        WSUBSE1 = 'Y'
      C                   CLEAR                   PIncData
      C                   CLEAR                   PCurData
- 
+
      C                   CALLB     'APDTASUBS'
       *                             =========
       ** Return code
@@ -2675,14 +2677,14 @@
       *
       ** Current data
      C                   PARM      CrSE1ScnFmt   PCurData
- 
+
      C                   MOVEL     PIncData      NwSE1ScnFmt
      C                   ENDIF
- 
+
      C                   IF        WSUBSE2 = 'Y'
      C                   CLEAR                   PIncData
      C                   CLEAR                   PCurData
- 
+
      C                   CALLB     'APDTASUBS'
       *                             =========
       ** Return code
@@ -2696,14 +2698,14 @@
       *
       ** Current data
      C                   PARM      CrSE2ScnFmt   PCurData
- 
+
      C                   MOVEL     PIncData      NwSE2ScnFmt
      C                   ENDIF
- 
+
      C                   IF        WSUBSE3 = 'Y'
      C                   CLEAR                   PIncData
      C                   CLEAR                   PCurData
- 
+
      C                   CALLB     'APDTASUBS'
       *                             =========
       ** Return code
@@ -2717,10 +2719,10 @@
       *
       ** Current data
      C                   PARM      CrSE3ScnFmt   PCurData
- 
+
      C                   MOVEL     PIncData      NwSE3ScnFmt
      C                   ENDIF
- 
+
      C                   IF        WSUBSE4 = 'Y'                                              CAS006
      C                   CLEAR                   PIncData                                     CAS006
      C                   CLEAR                   PCurData                                     CAS006
@@ -2808,7 +2810,7 @@
       *                                                               *
       *****************************************************************
      C     SRValAmend    BEGSR
- 
+
      C                   CALLB     'SESECS1MD'
       *                             =========
       ** INPUT
@@ -2871,7 +2873,7 @@
       *
       ** OK Amendments field
      C                   PARM                    PAmendOK
- 
+
       *
       ** Private Banking
       *
@@ -2999,7 +3001,7 @@
                                                                                               CAS006
       ** Amend OK Flag                                                                        CAS006
      C                   PARM                    PAmendOK                                     CAS006
- 
+
      C                   CALLB     'SESECS3MD'
       *
       ** INPUT
@@ -3051,7 +3053,7 @@
       *
       ** OK Amendments field
      C                   PARM                    PAmendOK
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -3063,37 +3065,37 @@
       *                                                               *
       *****************************************************************
      C     RESETCYCLE    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIDArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIdx
- 
+
      C                   RESET                   AmFldNamAr
      C                   RESET                   AmMsgIDArr
      C                   RESET                   AmMsgDtaAr
      C                   RESET                   AmIdx
- 
- 
+
+
      C                   RESET                   FldNoArr
- 
+
      C                   MOVE      *ALL'Y'       SEESEC1
      C                   MOVE      *ALL'Y'       SEESEC2
      C                   MOVE      *ALL'Y'       SEESEC3
      C                   MOVE      *ALL'Y'       SEESEC4
- 
+
      C                   CLEAR                   CrSE1ScnFmt
      C                   CLEAR                   CrSE2ScnFmt
      C                   CLEAR                   CrSE3ScnFmt
      C                   CLEAR                   CrSE4ScnFmt
- 
+
      C                   CLEAR                   NwSEFilFmt
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3103,7 +3105,7 @@
       *              valid file record.                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
       *
       ** Security shortname
@@ -3211,7 +3213,7 @@
      C                   IF        S1ISSD = *ZEROS
      C                   Z-ADD     S1ITLD        S1ISSD
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Action is insert/amend.
@@ -3296,7 +3298,7 @@
      C                   ENDIF                                                               BUG1569
       *                                                                                      BUG1569
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3304,12 +3306,12 @@
       * UPDATEDB - Update database                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     UPDATEDB      BEGSR
       *
       * Update
      C                   RESET                   ReturnCode
- 
+
       * Insert correct parameters for this UPD function
       *
      C                   CALLB     'SESECSUPD'
@@ -3328,7 +3330,7 @@
      C                   PARM                    CSE037                                       222373
      C                   PARM                    CSE071                                       CSE071
      C/COPY WNCPYSRC,SESECSJC03                                                               LLN022
- 
+
       *                                                                                      LLN022A
       ** If LLN012 on update BoE details                                                     LLN022A
       *                                                                                      LLN022A
@@ -3357,14 +3359,14 @@
       *
       * If update not done due to record being updated by another
       * workstation send message to screen.
- 
+
      C     ReturnCode    IFEQ      '*RECUPD'
      C                   MOVEL     '*ANY'        FldNameArr(1)
- 
+
      C                   MOVEL     'SEW3004'     MsgIdArr(1)
- 
+
      C                   EndIf
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

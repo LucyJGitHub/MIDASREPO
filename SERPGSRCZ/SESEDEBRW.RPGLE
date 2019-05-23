@@ -18,12 +18,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CGL031             Date 05Jul04               *
       *                 CSE071             Date 19Jul05               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CGL031 - Taxation of Savings Income (Recompile)              *
@@ -278,9 +280,9 @@
       *
       ** Validate key entry.
      C                   EXSR      SRVKeyIn
- 
+
      C                   EXSR      SRBldSfl
- 
+
      C                   ENDIF
       *
       ** Read subfile record.
@@ -288,7 +290,7 @@
      C                   IF        PRdSfl = 'Y'
      C                   EXSR      SRRdSfl
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -303,13 +305,13 @@
       ** Validate event date entered.
       *
      C                   IF        SWSDED <> *BLANKS
- 
+
      C                   IF        SWSDED = *ALL'9'
      C                   Z-ADD     99999         KSDEDN
      C                   ELSE
- 
+
      C                   TESTN                   SWSDED               90
- 
+
      C                   IF        NumericI1 = False
      C                   EVAL      PErrorFlag = 'Y'
      C                   ELSE
@@ -335,51 +337,51 @@
       ** warning messages.
       *
       /COPY ZACPYSRC,MSGHNDDSP1
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      KSDSN = SWSDSN
      C                   EVAL      KSDET = SWSDET
      C                   EVAL      WOrderOf = *BLANKS
- 
+
      C                   SELECT
- 
+
      C                   WHEN      KeyLists = *BLANKS
      C                   EVAL      WOrderOf = 'SDT'
- 
+
      C                   WHEN      SWSDSN <> *BLANKS AND SWSDED <> *BLANKS
      C                             AND SWSDET <> *BLANKS
      C                   EVAL      WOrderOf = 'SDT'
- 
+
      C                   WHEN      SWSDSN <> *BLANKS AND SWSDED = *BLANKS
      C                             AND SWSDET = *BLANKS
      C                   EVAL      WOrderOf = 'SDT'
      C                   EVAL      KSDEDN = *LOVAL
      C                   EVAL      KSDET = *LOVAL
- 
+
      C                   WHEN      SWSDSN <> *BLANKS AND SWSDED <> *BLANKS
      C                             AND SWSDET = *BLANKS
      C                   EVAL      WOrderOf = 'SDT'
      C                   EVAL      KSDET = *LOVAL
- 
+
      C                   WHEN      SWSDSN <> *BLANKS AND SWSDET <> *BLANKS
      C                   EVAL      WOrderOf = 'STD'
- 
+
      C                   WHEN      SWSDED <> *BLANKS AND SWSDET <> *BLANKS
      C                   EVAL      WOrderOf = 'DTS'
- 
+
      C                   WHEN      SWSDED <> *BLANKS
      C                   EVAL      WOrderOf = 'DST'
- 
+
      C                   WHEN      SWSDET <> *BLANKS
      C                   EVAL      WOrderOf = 'TSD'
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -396,36 +398,36 @@
       ** Stay in loop while toggle key (F11) is used.
       *
      C                   IF        WPrvOrd <> 'F'
- 
+
      C                   DOU       *INKK = *OFF
- 
+
      C                   EXSR      SRBldSfl1
       *
       ** If F11, switch to subfile by front office id.
      C                   IF        *INKK = *ON
      C                   EXSR      SRBldSfl2
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ELSE
       *
       ** If the subfile by front office identifier was previously
       ** being run, then build subfile keyed on front office id.
       ** Stay in loop while toggle key (F11) is used.
      C                   DOU       *INKK = *OFF
- 
+
      C                   EXSR      SRBldSfl2
       *
       ** If F11, switch to subfile by security short name.
      C                   IF        *INKK = *ON
      C                   EXSR      SRBldSfl1
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -494,9 +496,9 @@
       ** made.'.
      C                   EVAL      PErrMs = 'SEA0354'
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
      C                   ENDIF
       *
       ** Set on ROLLUP indicator to drive initial loop.
@@ -576,12 +578,12 @@
      C                   CLEAR                   MsgIdArr
      C                   CLEAR                   FldNameArr
      C                   EVAL      *IN61 = *OFF
- 
+
      C                   EVAL      KeyFrmBRW = 'Y'
       *
       ** Validate entry on event date.
      C                   EXSR      SRVKeyIn
- 
+
      C                   SELECT
      C                   WHEN      WOrderOf = 'SDT'
      C     KSedev        SETLL     SEDEVL3
@@ -594,7 +596,7 @@
      C                   WHEN      WOrderOf = 'STD'
      C     KSedev8       SETLL     SEDEVL8
      C                   ENDSL
- 
+
      C                   EXSR      SRRdSedev
       *
       ** The key/selection fields refer to a record, set pointer and rebuild
@@ -605,9 +607,9 @@
      C                   EVAL      *IN97 = *ON
      C                   WRITE     SESEDEBRC0
      C                   EVAL      *IN97 = *OFF
- 
+
      C                   ELSE
- 
+
      C                   EVAL      MsgIdArr(1) = 'SEA0354'
      C                   EVAL      FldNameArr(1) = '*ANY'
       *
@@ -621,13 +623,13 @@
       ** Write message sub-file for error messages.
       *
      C                   WRITE     SESEDEBRC2
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C     ESRBldSfl1    ENDSR
       *
       *****************************************************************
@@ -700,9 +702,9 @@
       ** made.'.
      C                   EVAL      PErrMs = 'SEA0354'
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
      C                   ENDIF
       *
       ** Set on ROLLUP indicator to drive initial loop.
@@ -764,7 +766,7 @@
      C                   EVAL      *IN61 = *OFF
      C                   RETURN
      C                   ENDIF
- 
+
      C                   EXSR      SRChkOption
       *
       ** Set record pointer if applicable.
@@ -778,12 +780,12 @@
      C                   CLEAR                   MsgIdArr
      C                   CLEAR                   FldNameArr
      C                   EVAL      *IN61 = *OFF
- 
+
      C                   EVAL      KeyFrmBRW = 'Y'
       *
       ** Validate entry on event date.
      C                   EXSR      SRVKeyIn
- 
+
      C                   SELECT
      C                   WHEN      SWFRNT <> *BLANKS
      C     SWFRNT        SETLL     SEDEVL2
@@ -800,17 +802,17 @@
      C                   OTHER
      C     *LOVAL        SETLL     SEDEVL2
      C                   ENDSL
- 
+
      C                   EXSR      SRRdSedev
- 
+
      C                   IF        EndOfFile = False
      C                   Z-ADD     0             W_Rrn
      C                   EVAL      *IN97 = *ON
      C                   WRITE     SESEDEBRC1
      C                   EVAL      *IN97 = *OFF
- 
+
      C                   ELSE
- 
+
      C                   EVAL      MsgIdArr(1) = 'SEA0354'
      C                   EVAL      FldNameArr(1) = '*ANY'
       *
@@ -820,13 +822,13 @@
       /COPY ZACPYSRC,MSGHNDDSP1
       *
      C                   ENDIF
- 
+
      C                   WRITE     SESEDEBRC2
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C     ESRBldSfl2    ENDSR
       *
       *****************************************************************
@@ -843,13 +845,13 @@
       *
      C                   DOU       *IN99 = *ON OR
      C                             SOPTN <> *BLANK
- 
+
      C                   IF        WPrvOrd <> 'F'
      C                   READC     SESEDEBRS0                             99
      C                   ELSE
      C                   READC     SESEDEBRS1                             99
      C                   ENDIF
- 
+
      C                   ENDDO
       *
       ** Return the selected option and security short name, Event date
@@ -857,19 +859,19 @@
       *
      C                   IF        *IN99 <> *ON AND
      C                             SOPTN <> *BLANK
- 
+
      C                   IF        SOPTN = 'A' OR SOPTN = 'E' OR SOPTN = 'D'
      C                   EVAL      POpSel = SOPTN
      C                   ELSE
      C                   EVAL      POpSel = 'E'
      C                   ENDIF
- 
+
      C                   EVAL      PSDSNSel = SSDSN
      C                   EVAL      PSDEDSel = SSDED
      C                   EVAL      PSDETSel = SSDET
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -884,20 +886,20 @@
       ** Read subfile if an option has been selected.
       *
      C                   DOU       *IN99 = *ON OR SOPTN <> *BLANK
- 
+
      C                   IF        WPrvOrd = 'B'
      C                   READC     SESEDEBRS0                             99
      C                   ELSE
      C                   READC     SESEDEBRS1                             99
      C                   ENDIF
- 
+
      C                   ENDDO
       *
       ** Activate SFLNXTCHG for the record to be read in the
       ** get-next-changed operation.
       *
      C                   IF        *IN99 = *OFF
- 
+
      C                   EVAL      *IN93 = *ON
      C                   IF        WPrvOrd = 'B'
      C                   UPDATE    SESEDEBRS0
@@ -905,24 +907,24 @@
      C                   UPDATE    SESEDEBRS1
      C                   ENDIF
      C                   EVAL      *IN93 = *OFF
- 
+
      C                   IF        WPrvOrd = 'B'
      C                   WRITE     SESEDEBRC0
      C                   ELSE
      C                   WRITE     SESEDEBRC1
      C                   ENDIF
- 
+
      C                   CLEAR                   SWFRNT
      C                   CLEAR                   KeyLists
- 
+
      C                   EVAL      OptSelected = 'Y'
- 
+
      C                   ELSE
- 
+
      C                   EVAL      OptSelected = 'N'
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -932,7 +934,7 @@
       *                                                               *
       *****************************************************************
      C     SRChkAut      BEGSR
- 
+
      C                   CALL      'ZVACTU'
      C                   PARM      'E'           PActn
      C                   PARM      *ZERO         PError
@@ -943,7 +945,7 @@
      C                   EVAL      PErrMs = 'FXM0292'
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -965,7 +967,7 @@
       ** Read the file by back office or front office key.
       *
      C                   IF        WPrvOrd = 'B'
- 
+
      C                   SELECT
      C                   WHEN      WOrderOf = 'SDT'
      C                   READ      SEDEVL3                                96
@@ -978,9 +980,9 @@
      C                   WHEN      WOrderOf = 'STD'
      C                   READ      SEDEVL8                                96
      C                   ENDSL
- 
+
      C                   ELSE
- 
+
      C                   SELECT
      C                   WHEN      SWFRNT <> *BLANKS
      C                   READ      SEDEVL2                                96
@@ -997,9 +999,9 @@
      C                   OTHER
      C                   READ      SEDEVL2                                96
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   IF        EndOfFile = False
       *
       ** If a diary event was read, check whether user can see it.
@@ -1009,12 +1011,12 @@
      C                   PARM                    PDBRN
      C                   PARM      *ZERO         PError
      C                   ENDIF
- 
+
      C                   IF        PError = 0
       *
       ** Setup status fields for further processing.
      C                   EVAL      SSTAT = *BLANKS
- 
+
      C                   SELECT
      C                   WHEN      RECI = 'D'
      C                   EVAL      SSTAT = 'LIVE      '
@@ -1041,15 +1043,15 @@
      C                   ELSE
      C                   EVAL      SPROT = PROT
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1087,7 +1089,7 @@
      C                   ELSE
      C                   MOVEL     *BLANKS       SLCD
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1098,13 +1100,13 @@
       *                                                               *
       *****************************************************************
      C     SRCvtDat      BEGSR
- 
+
      C                   CALLB     'ZDATE1'
      C                   PARM                    PDateAIn
      C                   PARM      *ZERO         PDaynoOut
      C                   PARM                    BJDFIN
      C                   PARM      *BLANK        PErrorFlag
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1115,13 +1117,13 @@
       *                                                               *
       *****************************************************************
      C     SRFmtDat      BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    PDateNIn
      C                   PARM                    BJDFIN
      C                   PARM      *ZERO         PDateOut
      C                   PARM      *BLANKS       PADateOut
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1142,7 +1144,7 @@
      C                   EVAL      PSDSNSel = *BLANKS
      C                   EVAL      PSDEDSel = *BLANKS
      C                   EVAL      PSDETSel = *BLANKS
- 
+
      C                   EVAL      OptSelected = 'N'
      C                   EVAL      KeyFrmBRW = 'N'
       *
@@ -1151,7 +1153,7 @@
      C                   CLEAR                   MsgIdArr
      C                   CLEAR                   FldNameArr
      C                   WRITE     SESEDEBRC2
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -1172,7 +1174,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -1227,7 +1229,7 @@
       ** KL = Command key 12 = Cancel
      C                   PARM                    PINKC
      C                   PARM                    PINKL
- 
+
      C                   EVAL      SUSER = PsUser
      C                   EVAL      SWSID = PsJobName
       *
@@ -1262,22 +1264,22 @@
      C                   KFLD                    KSDSN
      C                   KFLD                    KSDEDN
      C                   KFLD                    KSDET
- 
+
      C     KSedev5       KLIST
      C                   KFLD                    KSDEDN
      C                   KFLD                    KSDSN
      C                   KFLD                    KSDET
- 
+
      C     KSedev6       KLIST
      C                   KFLD                    KSDET
      C                   KFLD                    KSDSN
      C                   KFLD                    KSDEDN
- 
+
      C     KSedev7       KLIST
      C                   KFLD                    KSDEDN
      C                   KFLD                    KSDET
      C                   KFLD                    KSDSN
- 
+
      C     KSedev8       KLIST
      C                   KFLD                    KSDSN
      C                   KFLD                    KSDET
@@ -1287,7 +1289,7 @@
       ** =================================================================
       ** The following /COPY sets these values.
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *
       *****************************************************************

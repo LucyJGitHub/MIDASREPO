@@ -11,10 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CRE026             Date 24May06               *
+      *                 CRE026             Date 24May06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 BUG9328            Date 01Dec05               *
       *                 227577             Date 26Jun04               *
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking                                    *
       *  BUG9328 - Record could not be added.  Rectify subr SRAMEND.  *

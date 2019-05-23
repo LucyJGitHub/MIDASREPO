@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR586118           Date 03Aug10               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR586118           Date 03Aug10               *
       *                 AR580857           Date 21Jul10               *
       *                 AR325362           Date 26May10               *
       *                 CSW210             Date 04May10               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR586118 - Place of Clearing, Place of Settlement and QFIN   *
       *           not populated from SEST (Recompile).                *
@@ -127,17 +129,17 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSESWFPDF  CF   E             WORKSTN INFSR(*PSSR)
- 
+
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -145,7 +147,7 @@
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       ** Standard D-specs
       ** ================
       **
@@ -158,54 +160,54 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
- 
+
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
       ** The following /COPY includes the MM standard declares:
- 
+
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
- 
+
      D/COPY ZACPYSRC,MSGHNDDCL
- 
+
       ** The following /COPY line declares the arrays for processing that
       ** take place in the *CTL modules.
- 
+
      D/COPY ZACPYSRC,APICTLARR
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D*@EI******       S              1    DIM(25)                                            CSW210
      D*@Z0******       S              1    DIM(25) CTDATA PERRCD(25)                          CSW210
      D @EI             S              1    DIM(30)                                            CSW210
@@ -213,9 +215,9 @@
      D @IM             S             12    DIM(9)
      D @SA             S             20    DIM(9)
      D WIMDArr         S             12    DIM(9)
- 
+
       ** DS for Validation of Intermediary
- 
+
      D WInterMEd       DS
      D #0IMMD1                 1     12
      D #0IMMD2                13     24
@@ -226,9 +228,9 @@
      D #0IMMD7                73     84
      D #0IMMD8                85     96
      D #0IMMD9                97    108
- 
+
       ** DS for Validation of Safekeeping Account
- 
+
      D WSafeAcct       DS
      D #0IMSA1                 1     20
      D #0IMSA2                21     40
@@ -239,9 +241,9 @@
      D #0IMSA7               121    140
      D #0IMSA8               141    160
      D #0IMSA9               161    180
- 
+
       ** DS for Entry Parameter of Intermediary
- 
+
      D PInterMed       DS
      D PIMMD1                  1     12
      D PIMMD2                 13     24
@@ -252,9 +254,9 @@
      D PIMMD7                 73     84
      D PIMMD8                 85     96
      D PIMMD9                 97    108
- 
+
       ** DS for Entry Parameter of Safekeeping Account
- 
+
      D PSafeAcct       DS
      D PIMSA1                  1     20
      D PIMSA2                 21     40
@@ -265,15 +267,15 @@
      D PIMSA7                121    140
      D PIMSA8                141    160
      D PIMSA9                161    180
- 
+
       ** DS for Narrative for Cash Parties
- 
+
      D PNarrCash       DS
      D PNarrCash1              1     35
      D PNarrCash2             36     70
- 
+
       ** DS for Error Flags - Intermediary
- 
+
      D OkSCRN          DS
      D OkIMD1                  1      1
      D OkIMS1                  2      2
@@ -303,59 +305,59 @@
      D OkINVE                 24     24                                                       CSW210
      D OkNAC1                 25     25                                                       CSW210
      D OkNAC2                 26     26                                                       CSW210
- 
+
      D PRegDetail      DS                                                                     CSW210
      D PRegDet1                1     35                                                       CSW210
      D PRegDet2               36     70                                                       CSW210
                                                                                               CSW210
       ** Bank details
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Customer details
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** BIC Directory
- 
+
      D MEBICD        E DS                  EXTNAME(MEBICDPD)
- 
+
       ** Counterparty Details
- 
+
      DSDCNST         E DS                  EXTNAME(SDCNSTPD)
                                                                                             AR325362
       ** Switchable Feature                                                                 AR325362
                                                                                             AR325362
      DSCSARD         E DS                  EXTNAME(SCSARDPD)                                AR325362
- 
+
       ** First Data Structure for Access Objects
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second Data Structure for Access Objects
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Entry Parameters
- 
+
      DPActn            S              1A
      DPPlaceSet        S             12A
      DPInvestor        S             10A                                                      CSW210
      DPQualiFin        S             10A                                                      CSW210
      DPPlaceClr        S             10A                                                      CSW210
- 
+
       ** Parameters for SDCUSTPD
- 
+
      DPKEY1            S             10A
      DPKYST            S              7A
- 
+
       ** Variable used for validation
- 
+
      DIdx              S              3P 0
      DWFldNum          S              1A
      DWCLAS            S              1A
@@ -368,9 +370,9 @@
      DWWNAL1           S              1A
      DWWNAL2           S              1A
      DWWSKAL           S              1A
- 
+
       ** Parameters for ME1400
- 
+
      DPBICR            S              7A
      DPCSID8           S              8A
      DPCSID4           S              4A
@@ -378,9 +380,9 @@
      DPBICC            S              1A
      DPBICS            S              1A
      DPBICI            S              1A
- 
+
      DPMode            S              1A
- 
+
      DWCtr             S              3P 0
      DWIMFlg           S              1A
      DWUnqeFlg         S              1A
@@ -404,24 +406,24 @@
      D WWCHID          S                   LIKE(BBCHID)                                       CSW210
      D WWCHSC          S                   LIKE(BBCHSC)                                       CSW210
      D WWBNBI          S                   LIKE(BBBNBI)                                       CSW210
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ *INZSR is executed at program activation.                      ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   EXSR      SRMAIN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -436,26 +438,26 @@
       *        SRRETURN  - Return to Calling Program                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRMAIN        BEGSR
- 
+
      C                   EXSR      SRINIT
      C                   EXSR      SRMOVE
- 
+
      C                   DOW       PMode = 'S'
      C                   EXSR      SRDISPLAY
      C                   ENDDO
- 
+
      C                   IF        PMode = 'U'
      C                   EXSR      SRUPDATE
      C                   ENDIF
- 
+
      C                   IF        PMode = 'R'
      C                   EXSR      SRRETURN
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -467,17 +469,17 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRINIT        BEGSR
- 
+
      C                   EVAL      PMode = 'S'
- 
+
      C                   IF        PActn = 'E' or PActn = 'D'
      C                   EVAL      *IN70 = *ON
      C                   ELSE
      C                   EVAL      *IN70 = *OFF
      C                   ENDIF
- 
+
      C                   EVAL      WPInterMed = *BLANKS
      C                   EVAL      WPPSET = *BLANKS
                                                                                               CSW210
@@ -501,9 +503,9 @@
      C                   EVAL      *IN72 = *OFF                                               CSW210
      C                   ENDIF                                                                CSW210
      C                   ENDIF                                                                CSW210
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -515,65 +517,65 @@
       * Calls: SRVALIDATE - Validate Screen Details                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDISPLAY     BEGSR
- 
+
      C                   MOVEA     OKSCRN        @EI
- 
+
       ** Set screen error indicators according to status of 'OK' flags
- 
+
      C                   Z-ADD     1             C                 2 0
      C                   Z-ADD     20            E                 2 0
- 
+
      C*****C****         DOUGT     22                                                         CSW210
      C     C             DOUGT     27                                                         CSW210
- 
+
      C     @EI(C)        IFEQ      'N'
      C     @EI(C)        OREQ      'W'
      C                   MOVEL     '1'           *IN(E)
      C                   ENDIF
- 
+
      C                   ADD       1             C
      C                   ADD       1             E
- 
+
      C                   ENDDO
- 
+
       ** The following /COPY line includes processing for the error and
       ** warning messages.
- 
+
      C/COPY ZACPYSRC,MSGHNDDSP1
- 
+
      C                   WRITE     SESWFPS0
      C                   EXFMT     SESWFPF0
- 
+
       ** Clear messages from screen message subfile
- 
+
      C                   CALL      'ZA0250'
- 
+
       ** Set screen error indicators off
- 
+
      C                   EVAL      Idx = 0
      C                   MOVEA     @Z0           *IN(20)
      C                   MOVE      *BLANKS       OkSCRN
- 
+
      C                   CLEAR                   MsgIdArr
      C                   CLEAR                   FldNameArr
      C                   CLEAR                   WMsgIdArr
- 
+
      C                   SELECT
- 
+
      C                   WHEN      *INKC = *ON
      C                   EVAL      RetCodeOut = 'SE10000'
      C                   EVAL      PMode = 'R'
- 
+
      C                   WHEN      *INKE = *ON
      C                   EXSR      SRRETRY
      C                   EVAL      PMode = 'S'
- 
+
      C                   WHEN      *INKL = *ON
      C                   EVAL      RetCodeOut = 'SE10001'
      C                   EVAL      PMode = 'R'
- 
+
      C                   WHEN      *IN75 = *ON
      C                   EVAL      RetCodeOut = 'SE10029'
      C                   IF        PActn <> 'E'                                               CSW210
@@ -581,14 +583,14 @@
      C                   ELSE                                                                 CSW210
      C                   EVAL      PMode = 'R'                                                CSW210
      C                   ENDIF                                                                CSW210
- 
+
      C                   OTHER
      C                   EXSR      SRVALIDATE
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -600,11 +602,11 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRVALIDATE    BEGSR
- 
+
       ** Perform validation
- 
+
      C                   EXSR      SRINTM
      C                   EXSR      SRSAFE
      C                   EXSR      SRPSET
@@ -617,9 +619,9 @@
      C                   EXSR      SRINVE                                                     CSW210
      C**********         EXSR      SRNAC1                                                     199797
      C**********         EXSR      SRNAC2                                                     199797
- 
+
       ** If no errors found, update file else redisplay screen
- 
+
      C                   IF        Idx = 0  AND
      C                             WInterMed = WPInterMed AND
      C                             #0PSET = WPPSET
@@ -627,9 +629,9 @@
      C                   ELSE
      C                   EVAL      PMode = 'S'
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -641,15 +643,15 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRINTM        BEGSR
- 
+
      C                   EVAL      WERROR = 'N'
      C                   EVAL      WImFlg = 'Y'
      C                   CLEAR                   WIMDArr
- 
+
       ** Previous Intermediary field should not be blank
- 
+
      C                   IF        #0IMMD1 = *BLANKS and #0IMMD2 <> *BLANKS
      C                   EVAL      OkIMD1 = 'N'
      C                   EVAL      Idx = Idx + 1
@@ -657,7 +659,7 @@
      C                   EVAL      FldNameArr(Idx) = '#0IMMD1'
      C                   EVAL      WERROR = 'Y'
      C                   ENDIF
- 
+
      C                   IF        #0IMMD2 = *BLANKS and #0IMMD3 <> *BLANKS and
      C                             WERROR <> 'Y'
      C                   EVAL      OkIMD2 = 'N'
@@ -666,7 +668,7 @@
      C                   EVAL      FldNameArr(Idx) = '#0IMMD2'
      C                   EVAL      WERROR = 'Y'
      C                   ENDIF
- 
+
      C                   IF        #0IMMD3 = *BLANKS and #0IMMD4 <> *BLANKS and
      C                             WERROR <> 'Y'
      C                   EVAL      OkIMD3 = 'N'
@@ -675,7 +677,7 @@
      C                   EVAL      FldNameArr(Idx) = '#0IMMD3'
      C                   EVAL      WERROR = 'Y'
      C                   ENDIF
- 
+
      C                   IF        #0IMMD4 = *BLANKS and #0IMMD5 <> *BLANKS and
      C                             WERROR <> 'Y'
      C                   EVAL      OkIMD4 = 'N'
@@ -684,7 +686,7 @@
      C                   EVAL      FldNameArr(Idx) = '#0IMMD4'
      C                   EVAL      WERROR = 'Y'
      C                   ENDIF
- 
+
      C                   IF        #0IMMD5 = *BLANKS and #0IMMD6 <> *BLANKS and
      C                             WERROR <> 'Y'
      C                   EVAL      OkIMD5 = 'N'
@@ -693,7 +695,7 @@
      C                   EVAL      FldNameArr(Idx) = '#0IMMD5'
      C                   EVAL      WERROR = 'Y'
      C                   ENDIF
- 
+
      C                   IF        #0IMMD6 = *BLANKS and #0IMMD7 <> *BLANKS and
      C                             WERROR <> 'Y'
      C                   EVAL      OkIMD6 = 'N'
@@ -702,7 +704,7 @@
      C                   EVAL      FldNameArr(Idx) = '#0IMMD6'
      C                   EVAL      WERROR = 'Y'
      C                   ENDIF
- 
+
      C                   IF        #0IMMD7 = *BLANKS and #0IMMD8 <> *BLANKS and
      C                             WERROR <> 'Y'
      C                   EVAL      OkIMD7 = 'N'
@@ -711,7 +713,7 @@
      C                   EVAL      FldNameArr(Idx) = '#0IMMD7'
      C                   EVAL      WERROR = 'Y'
      C                   ENDIF
- 
+
      C**********         IF        #0IMMD8 = *BLANKS and #0IMMD9 <> *BLANKS and               209934
      C**********                   WERROR <> 'Y'                                              209934
      C**********         EVAL      OkIMD8 = 'N'                                               209934
@@ -720,39 +722,39 @@
      C**********         EVAL      FldNameArr(Idx) = '#0IMMD8'                                209934
      C**********         EVAL      WERROR = 'Y'                                               209934
      C**********         ENDIF                                                                209934
- 
+
       ** Check if Intermediary is valid customer or BIC code
- 
+
      C                   IF        WERROR = 'N'
- 
+
      C                   MOVEA     WInterMed     @IM
      C                   EVAL      WPInterMed = WInterMed
      C                   Z-ADD     1             X                 2 0
      C                   Z-ADD     1             C
- 
+
      C                   DOW       X < 10
- 
+
      C                   IF        @IM(X) <> *BLANKS
- 
+
      C                   EVAL      WWIMMD = @IM(X)
      C                   EXSR      SRCUST
      C                   IF        JFIMMD <> *BLANKS                                          205141
      C                   EVAL      WWIMMD = JFIMMD                                            205141
      C                   ENDIF                                                                205141
      C                   EVAL      @IM(X) = WWIMMD
- 
+
      C**********         IF        (@RTCD = 'MIN0244' and WCLAS = 'B') or                     199797
      C**********                   (@RTCD = 'MIN0245' and WCLAS = 'B') or                     199797
      C**********                   (@RTCD = 'MIN0246' and WCLAS = 'B') or                     199797
      C**********                   @RTCD <> *BLANKS or WUNqeFlg = 'Y'                         199797
      C                   IF        (PBICR = 'MIN0246' and WCLAS = 'B') or                     199797
      C                             (@RTCD <> *BLANKS) or (WUnqeFlg = 'Y')                     199797
- 
+
      C                   MOVE      X             WFldNum
      C     '#0IMMD'      CAT       WFldNum       WFIELD
- 
+
       ** Select OK flag to set to 'N'
- 
+
      C                   SELECT
      C                   WHEN      C = 1
      C                   EVAL      OkIMD1 = 'N'
@@ -773,7 +775,7 @@
      C                   WHEN      C = 17
      C                   EVAL      OkIMD9 = 'N'
      C                   ENDSL
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   IF        WUnqeFlg = 'Y'
      C                   EVAL      MsgIdArr(Idx) = 'SE10038'
@@ -781,21 +783,21 @@
      C                   EVAL      MsgIdArr(Idx) = 'SE10026'
      C                   ENDIF
      C                   EVAL      FldNameArr(Idx) = WFIELD
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ADD       2             C
      C                   ADD       1             X
- 
+
      C                   ENDDO
- 
+
      C                   MOVEA     @IM           WInterMed
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -807,13 +809,13 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSAFE        BEGSR
- 
+
      C                   EVAL      WERROR = 'N'
- 
+
       ** Corresponding Intermediary field should not be blank
- 
+
      C                   IF        #0IMSA1 <> *BLANKS and #0IMMD1 = *BLANKS
      C                   EVAL      OkIMS1 = 'N'
      C                   EVAL      Idx = Idx + 1
@@ -821,7 +823,7 @@
      C                   EVAL      FldNameArr(Idx) = '#0IMSA1'
      C                   EVAL      WERROR = 'Y'
      C                   ENDIF
- 
+
      C                   IF        #0IMSA2 <> *BLANKS and #0IMMD2 = *BLANKS
      C                   EVAL      OkIMS2 = 'N'
      C                   EVAL      Idx = Idx + 1
@@ -829,7 +831,7 @@
      C                   EVAL      FldNameArr(Idx) = '#0IMSA2'
      C                   EVAL      WERROR = 'Y'
      C                   ENDIF
- 
+
      C                   IF        #0IMSA3 <> *BLANKS and #0IMMD3 = *BLANKS
      C                   EVAL      OkIMS3 = 'N'
      C                   EVAL      Idx = Idx + 1
@@ -837,7 +839,7 @@
      C                   EVAL      FldNameArr(Idx) = '#0IMSA3'
      C                   EVAL      WERROR = 'Y'
      C                   ENDIF
- 
+
      C                   IF        #0IMSA4 <> *BLANKS and #0IMMD4 = *BLANKS
      C                   EVAL      OkIMS4 = 'N'
      C                   EVAL      Idx = Idx + 1
@@ -845,7 +847,7 @@
      C                   EVAL      FldNameArr(Idx) = '#0IMSA4'
      C                   EVAL      WERROR = 'Y'
      C                   ENDIF
- 
+
      C                   IF        #0IMSA5 <> *BLANKS and #0IMMD5 = *BLANKS
      C                   EVAL      OkIMS5 = 'N'
      C                   EVAL      Idx = Idx + 1
@@ -853,7 +855,7 @@
      C                   EVAL      FldNameArr(Idx) = '#0IMSA5'
      C                   EVAL      WERROR = 'Y'
      C                   ENDIF
- 
+
      C                   IF        #0IMSA6 <> *BLANKS and #0IMMD6 = *BLANKS
      C                   EVAL      OkIMS6 = 'N'
      C                   EVAL      Idx = Idx + 1
@@ -861,7 +863,7 @@
      C                   EVAL      FldNameArr(Idx) = '#0IMSA6'
      C                   EVAL      WERROR = 'Y'
      C                   ENDIF
- 
+
      C                   IF        #0IMSA7 <> *BLANKS and #0IMMD7 = *BLANKS
      C                   EVAL      OkIMS7 = 'N'
      C                   EVAL      Idx = Idx + 1
@@ -869,7 +871,7 @@
      C                   EVAL      FldNameArr(Idx) = '#0IMSA7'
      C                   EVAL      WERROR = 'Y'
      C                   ENDIF
- 
+
      C                   IF        #0IMSA8 <> *BLANKS and #0IMMD8 = *BLANKS
      C                   EVAL      OkIMS8 = 'N'
      C                   EVAL      Idx = Idx + 1
@@ -877,7 +879,7 @@
      C                   EVAL      FldNameArr(Idx) = '#0IMSA8'
      C                   EVAL      WERROR = 'Y'
      C                   ENDIF
- 
+
      C                   IF        #0IMSA9 <> *BLANKS and #0IMMD9 = *BLANKS
      C                   EVAL      OkIMS9 = 'N'
      C                   EVAL      Idx = Idx + 1
@@ -885,7 +887,7 @@
      C                   EVAL      FldNameArr(Idx) = '#0IMSA9'
      C                   EVAL      WERROR = 'Y'
      C                   ENDIF
- 
+
      C**********         IF        WERROR = 'N'                                               199797
       **********                                                                              199797
      C**********         MOVEA     WSafeAcct     @SA                                          199797
@@ -962,9 +964,9 @@
      C**********         ENDDO                                                                199797
       **********                                                                              199797
      C**********         ENDIF                                                                199797
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -976,35 +978,35 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRPSET        BEGSR
- 
+
      C                   EVAL      WImFlg = 'Y'
      C                   IF        #0PSET <> *BLANKS
- 
+
      C                   EVAL      WWIMMD = #0PSET
      C                   EVAL      WPPSET = #0PSET
      C                   EXSR      SRCUST
      C                   EVAL      #0PSET = WWIMMD
- 
+
      C**********         IF        (@RTCD = 'MIN0244' and WCLAS = 'B') or                     199797
      C**********                   (@RTCD = 'MIN0245' and WCLAS = 'B') or                     199797
      C**********                   (@RTCD = 'MIN0246' and WCLAS = 'B') or                     199797
      C**********                   @RTCD <> *BLANKS                                           199797
      C                   IF        (PBICR = 'MIN0246' and WCLAS = 'B') or                     199797
      C                             (@RTCD <> *BLANKS)                                         199797
- 
+
      C                   EVAL      OkPSET = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      MsgIdArr(Idx) = 'SE10031'
      C                   EVAL      FldNameArr(Idx) = #0PSET
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1016,25 +1018,25 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNAC1        BEGSR
- 
+
      C                   IF        #0NAC1 <> *BLANKS
- 
+
      C                   MOVEL     #0NAC1        WWNAL1
      C                   MOVE      #0NAC1        WWLI34
- 
+
      C                   IF        WWNAL1 = '/' and WWLI34 = *BLANKS
      C                   EVAL      OkNAC1 = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      MsgIdArr(Idx) = 'SEW5263'
      C                   EVAL      FldNameArr(Idx) = '#0NAC1'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1046,63 +1048,63 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRNAC2        BEGSR
- 
+
      C                   IF        #0NAC2 <> *BLANKS
- 
+
      C                   IF        #0NAC1 = *BLANKS
      C                   EVAL      OkNAC2 = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      MsgIdArr(Idx) = 'SEW5255'
      C                   EVAL      FldNameArr(Idx) = '#0NAC2'
      C                   ENDIF
- 
+
      C                   MOVEL     #0NAC2        WWNAL2
- 
+
      C                   IF        WWNAL1 <> '/' and WWNAL2 = '/'
      C                   EVAL      OkNAC2 = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      MsgIdArr(Idx) = 'SEW5256'
      C                   EVAL      FldNameArr(Idx) = '#0NAC2'
      C                   ENDIF
- 
+
      C                   MOVEL     #0NAC2        WWLI02
- 
+
      C                   IF        WWNAL1 = '/' and WWLI02 <> '//'
      C                   EVAL      OkNAC2 = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      MsgIdArr(Idx) = 'SEW5214'
      C                   EVAL      FldNameArr(Idx) = '#0NAC2'
      C                   ENDIF
- 
+
      C                   IF        WWNAL2 = '/' and WWLI02 <> '//'
      C                   EVAL      OkNAC2 = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      MsgIdArr(Idx) = 'SEW5257'
      C                   EVAL      FldNameArr(Idx) = '#0NAC2'
      C                   ENDIF
- 
+
      C                   MOVE      #0NAC2        WWLI33
- 
+
      C                   IF        WWLI02 = '//' and WWLI33 = *BLANKS
      C                   EVAL      OkNAC2 = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      MsgIdArr(Idx) = 'SEW5213'
      C                   EVAL      FldNameArr(Idx) = '#0NAC2'
      C                   ENDIF
- 
+
      C                   IF        #0NAC2 = #0NAC1
      C                   EVAL      OkNAC2 = 'N'
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      MsgIdArr(Idx) = 'SEW5258'
      C                   EVAL      FldNameArr(Idx) = '#0NAC2'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1114,31 +1116,31 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCUST        BEGSR
- 
+
      C                   EVAL      WCLAS = 'C'
      C                   EVAL      PKEY1 = WWIMMD
      C                   EVAL      WUnqeFlg = 'N'
      C                   EVAL      JFIMMD = *BLANKS                                           205141
- 
+
      C                   CALLB     'AOCUSTR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    PKEY1
      C                   PARM                    PKYST
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
       ** If Return code is not blank then check if entry is a valid BIC code
- 
+
      C                   IF        @RTCD <> *BLANKS
- 
+
      C                   MOVEL     WWIMMD        PCSID8
      C                   MOVE      WWIMMD        PCSID4
      C                   MOVEL     PCSID4        PCSID3
- 
+
      C                   EVAL      WCLAS = 'B'
- 
+
      C                   CALL      'ME1400'
      C                   PARM      *BLANKS       PBICR
      C                   PARM                    PCSID8
@@ -1149,7 +1151,7 @@
      C                   PARM      *BLANKS       PBICC
      C                   PARM      *BLANKS       PBICS
      C                   PARM      *BLANKS       PBICI
- 
+
      C                   IF        PBICR = *BLANKS                                            199797
      C                             OR PBICR = 'MIN0244' AND                                   205141
      C                             PBICC = 'Y'                                                205141
@@ -1157,39 +1159,39 @@
      C                   ENDIF                                                                199797
                                                                                               199797
      C                   ELSE
- 
+
      C                   EVAL      WWIMMD = BBCUST
      C                   EVAL      JFIMMD = BBCSID                                            205141
- 
+
      C                   ENDIF
- 
+
       ** Check settlement account is unique
- 
+
      C                   IF        WImFlg = 'Y'
- 
+
      C                   EVAL      WCtr = 1
- 
+
      C                   DOW       WCtr <= 9
- 
+
      C                   IF        WIMDArr(WCtr) = *BLANKS
      C                   MOVEL     WWIMMD        WIMDArr(WCtr)
      C                   LEAVE
      C                   ELSE
- 
+
      C                   IF        WIMDArr(WCtr) = WWIMMD
      C                   EVAL      WUnqeFlg = 'Y'
      C                   LEAVE
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      WCtr = WCtr + 1
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
      C/COPY WNCPYSRC,SE1806C052                                                               CSW210
       *****************************************************************                       CSW210
       /EJECT                                                                                  CSW210
@@ -1457,11 +1459,11 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRMOVE        BEGSR
- 
+
       ** Move parameter value to screen
- 
+
      C                   EVAL      #0IMMD1 = PIMMD1
      C                   EVAL      #0IMMD2 = PIMMD2
      C                   EVAL      #0IMMD3 = PIMMD3
@@ -1488,9 +1490,9 @@
      C                   EVAL      #0INVE = PInvestor                                         CSW210
      C                   EVAL      #0QFIN = PQualiFin                                         CSW210
      C                   EVAL      #0PCLR = PPlaceClr                                         CSW210
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1502,11 +1504,11 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRUPDATE      BEGSR
- 
+
       ** Move screen fields to file
- 
+
      C                   EVAL      PIMMD1 = #0IMMD1
      C                   EVAL      PIMMD2 = #0IMMD2
      C                   EVAL      PIMMD3 = #0IMMD3
@@ -1533,11 +1535,11 @@
      C                   EVAL      PInvestor = WWINVE                                         CSW210
      C                   EVAL      PQualiFin = WWQFIN                                         CSW210
      C                   EVAL      PPlaceClr = WWPCLR                                         CSW210
- 
+
      C                   EVAL      PMode = 'R'
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1549,11 +1551,11 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRETRY       BEGSR
- 
+
      C                   IF        PActn = 'I'
- 
+
      C                   EVAL      WInterMed = *BLANKS
      C                   EVAL      WSafeAcct = *BLANKS
      C                   EVAL      #0PSET = *BLANKS
@@ -1564,9 +1566,9 @@
      C                   EVAL      #0INVE = *BLANKS                                           CSW210
      C                   EVAL      #0QFIN = *BLANKS                                           CSW210
      C                   EVAL      #0PCLR = *BLANKS                                           CSW210
- 
+
      C                   ELSE
- 
+
      C                   EVAL      WInterMed = PInterMed
      C                   EVAL      WSafeAcct = PSafeAcct
      C                   EVAL      #0PSET = PPlaceSet
@@ -1577,11 +1579,11 @@
      C                   EVAL      #0INVE = PInvestor                                         CSW210
      C                   EVAL      #0QFIN = PQualiFin                                         CSW210
      C                   EVAL      #0PCLR = PPlaceClr                                         CSW210
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1593,22 +1595,22 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRETURN      BEGSR
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** The following /COPY line includes the ProcMsgs subroutine
       ** to process error and warning messages.
- 
+
      C/COPY ZACPYSRC,MSGHNDDSP2
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1620,9 +1622,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PActn
      C                   PARM                    PInterMed
@@ -1634,16 +1636,16 @@
      C                   PARM                    PInvestor                                    CSW210
      C                   PARM                    PQualiFin                                    CSW210
      C                   PARM                    PPlaceClr                                    CSW210
- 
+
       ** Access Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
- 
+
      C                   IF        @RTCD <> *BLANKS
      C                   MOVEL     'SDBANKPD'    DBFILE
      C                   MOVEL     '001'         DBASE
@@ -1663,53 +1665,53 @@
      C                   IF        @RTCD = *BLANKS                                          AR325362
      C                   MOVE      '1'           *IN50                                      AR325362
      C                   ENDIF                                                              AR325362
- 
+
       ** Move workstation ID to screen field.
- 
+
      C                   MOVEL     PsUser        #0USER
      C                   MOVEL     PsJobName     #0WSID
      C                   MOVEL     BJMRDT        #0RUNA
- 
+
       ** Initialise the fixed parameters for ZAMSGHNDLE.
- 
+
      C                   EVAL      ModuleID     = 'SE'
      C                   EVAL      APRPRLOCN    = 'S'
      C                   EVAL      APCNFVALFO   = 'N'
      C                   EVAL      APRespMode   = 'S'
- 
+
       ** Set up the prime and secondary message files for
       ** finding message IDs.
- 
+
      C                   EVAL      #MsgFile     = 'SEUSRMSG'
      C                   EVAL      MsgFArray(1) = 'DRSMM'
      C                   EVAL      MsgFArray(2) = 'MEMSG'
- 
+
       ** Message subfile control
- 
+
      C                   EVAL      *IN97 = *ON
      C                   EVAL      DDPGMQ = '*'
- 
+
       ** Program, module and procedure names for database error processing
       ** =================================================================
       ** The following /COPY sets these values.
- 
+
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module.
- 
+
      C/COPY ZACPYSRC,PSSR_ILE
- 
+
       ********************************************************************
       /EJECT
       *****************************************************************
- 
+
 **  CPY@
 (c) Finastra International Limited 2001
 ** @Z0

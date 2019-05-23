@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CGL157  *CREATE    Date 17Aug15               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. CGL157  *CREATE    Date 17Aug15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  CGL157 - CRS Reporting                                       *
       *                                                               *
       *****************************************************************

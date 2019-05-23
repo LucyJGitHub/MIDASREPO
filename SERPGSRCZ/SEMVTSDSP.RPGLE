@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR325346           Date 21May10               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR325346           Date 21May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR325346 - DVP/RVP should not appear                         *
       *  CSE039 - Automatic Settlement of Trades                      *
@@ -33,12 +35,12 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSEMVTSDDF CF   E             WORKSTN
- 
+
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*pssr)
- 
+
       *****************************************************************
       *                                                               *
       * ID F  C  H  L    FUNCTION OF INDICATORS                       *
@@ -69,32 +71,32 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,APICTLARR
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
      D/COPY ZACPYSRC,MSGHNDDCL
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
@@ -106,38 +108,38 @@
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @EI             S              1    DIM(12)
      D @Z0             S              1    DIM(12) CTDATA PERRCD(12)
- 
+
       ** SEMVTS Transaction Details in screen format
      D APITrnDets    E DS                  EXTNAME(SEMVTS1PD)
- 
+
       ** SEMVTS Output only Screen Fields
      D OScrnFlds     E DS                  EXTNAME(SEMVTS2PD)
- 
+
       ** SEMVTS Transaction Details OK indicators
      D OKTrnDets     E DS                  EXTNAME(SEEMVTSPD)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       **  Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External DS for switchable features                                                AR325346
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                AR325346
                                                                                             AR325346
@@ -154,20 +156,20 @@
      D   DDNR09                      63A
      D   DDNR10                      63A
      D   DDNR11                      63A
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Pointer to the adress of the complete narrative
      D Pointer1        S               *   INZ(%Addr(DDNARR))
- 
+
       ** Dummy definition of APITrnDets as input parameter, in order to
       ** have APITrnDets being part of the data storage of this module,
       ** to give a valid address for Pointer1
      D DummyTrnDet     S                   LIKE(APITrnDets)
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -218,13 +220,13 @@
      C                   ADD       1             C
      C                   ADD       1             E
      C                   ENDDO
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes processing for the error and
       ** warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP1
       **---------------------------------------------------------------
- 
+
       ** SCREEN SETUP
       ** Processing mode
       *                                                               >><<==
@@ -283,13 +285,13 @@
      C                   EVAL      @INKW = *INKW
       *
      C                   ENDSR
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the ProcMsgs subroutine
       ** to process error and warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP2
       **---------------------------------------------------------------
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

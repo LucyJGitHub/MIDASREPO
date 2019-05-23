@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD020922           Date 26Jun13               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD020922           Date 26Jun13               *
       *                 AR1092084          Date 03Apr13               *
       *                 AR632291           Date 24Aug10               *
       *                 CSW210             Date 04May10               *
@@ -119,6 +120,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD020922 - Serious Midas error encountered when authorising  *
       *             trade. Removed the condition of checking Trade &  *
@@ -281,28 +283,28 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
      FSECTY     IF   E           K DISK
      FINVTP     IF   E           K DISK
      FMUSER     IF   E           K DISK
      FSOBTR     IF   E           K DISK
      F                                     RENAME(TRADSDF:SOBTRSO)
- 
+
      FTRADS     UF A E           K DISK    COMMIT
      FTRADSDY1  UF A E           K DISK    COMMIT
      FTRADSDY2  UF A E           K DISK    COMMIT                                             210517
- 
+
      FTRAUT     IF A E           K DISK    COMMIT
- 
+
      FSETLE     UF   E           K DISK    COMMIT
- 
+
      FBKPOS     UF A E           K DISK    COMMIT
      FBKPHD     IF A E           K DISK    COMMIT
      FCPOSN     UF A E           K DISK    COMMIT
      FUDEPP     UF A E           K DISK    COMMIT
      FCDEPP     UF A E           K DISK    COMMIT
      FBSPOSDL0  UF A E           K DISK    COMMIT                                             CAP067
- 
+
      FSETLEA    UF   E             DISK    COMMIT
      FTRADSA    UF   E             DISK    COMMIT
      FBKPHDA    UF   E             DISK    COMMIT
@@ -310,7 +312,7 @@
      FCPOSNA    UF   E             DISK    COMMIT
      FCDEPPA    UF   E             DISK    COMMIT
      FUDEPPA    UF   E             DISK    COMMIT
- 
+
      FSEPCBD    IF A E           K DISK    COMMIT
      FSEPCCD    IF A E           K DISK    COMMIT
      FSEPCA     UF   E             DISK    COMMIT
@@ -324,7 +326,7 @@
       *                                                                                       CSE039
      FTRADSDY3  IF   E           K DISK                                                       CSE039
       *                                                                                       CSE039
- 
+
      FSDCWHTL1  IF   E           K DISK                                                       CSD015
       ** Compliance Watch Hit List by Function                                                CSD015
                                                                                               CSD015
@@ -344,12 +346,12 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
@@ -361,14 +363,14 @@
      D/COPY ZACPYSRC,ERR_ARRAYS                                                 CAP006
       **------------------------------------------------------------------------CAP006--------------
                                                                                 CAP006
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       ** Timestamp for the transaction                                          CAP006
      D TimeStamp       S               Z                                        CAP006
                                                                                 CAP006
@@ -397,7 +399,7 @@
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID TRADE
      D SEVTRD        E DS                  EXTNAME(SEVTRADPD)
      D                                     PREFIX(A_)
- 
+
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID DEPOT MOVEMENT                        234440
      D SEVDPM        E DS                  EXTNAME(SEVDPMVPD)                                 234440
      D                                     PREFIX(D_)                                         234440
@@ -405,18 +407,18 @@
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR 'BEFORE UPDATE' TRADE
      D B_TRADS       E DS                  EXTNAME(TRADSD)
      D                                     PREFIX(B_)
- 
+
       **  TRADES FILE
      D TRADSF        E DS                  EXTNAME(TRADSD)
- 
- 
+
+
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID TRADE EXTENSION 1
      D SEVTRDX1A     E DS                  EXTNAME(SEVTRX1PD)
      D                                     PREFIX(AA_)
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID TRADE EXTENSION 1
      D SEVTRDX1B     E DS                  EXTNAME(SEVTRX1PD)
      D                                     PREFIX(AB_)
- 
+
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID TRADE EXTENSION 1                     CSE045
      D SEVTRDX2A     E DS                  EXTNAME(SEVTRX2PD)                                 CSE045
      D                                     PREFIX(AA_)                                        CSE045
@@ -426,7 +428,7 @@
                                                                                               CSE045
       **  TRADE EXTENSION 1 FILE
      D TRADSX1F      E DS                  EXTNAME(TRADSDX1)
- 
+
      D A_TradX2      E DS                  EXTNAME(TRADSDX2)                                  210517
      D                                     PREFIX(A_)                                         210517
                                                                                               210517
@@ -434,7 +436,7 @@
      D                                     PREFIX(B_)                                         210517
                                                                                               210517
      D TradX2Rec     E DS                  EXTNAME(TRADSDX2)                                  210517
- 
+
       ** SECURITY FILE
      D SECTYF        E DS                  EXTNAME(SECTYD)
      D SEC_RECI      E                     EXTFLD(RECI)
@@ -448,14 +450,14 @@
      D SEC_TMST      E                     EXTFLD(TMST)                                       CAP137
      D CDArr                 183    230
      D CRArr                 231    242
- 
- 
- 
+
+
+
       **  EXTERNALLY DESCRIBED DATA STRUCTURES FOR TEMPLATE FILES FOR
       **  PROJECTED ACCOUNT MOVEMENTS UPDATES
      D Z#BSTS        E DS                  EXTNAME(Z#BST)
      D Z#ASTS        E DS                  EXTNAME(Z#AST)
- 
+
      D                 DS                                                       CDE001
      D**W#POSID*               1     20                                                CDE001 CGL029
      D  W#POSID                1     26                                                       CGL029
@@ -464,38 +466,38 @@
      D  W#TDBA                15     17                                         CDE001
      D  W#TDMI                19     19                                         CDE001
      D/COPY WNCPYSRC,SETRADDD01
- 
+
       * DATA STRUCTURES FOR USE WITH ACCESS PROGRAMS
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * DATA STRUCTURE FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       * DATA STRUCTURE FOR BANK DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       * DATA STRUCTURE FOR BANK DETAILS
- 
+
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
       * DATA STRUCTURE FOR SECURITIES TRADING DETAILS
- 
+
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
       * DATA STRUCTURE FOR PORTOLIO MANAGEMENT DETAILS
- 
+
      D SDSECS        E DS                  EXTNAME(SDSECSPD)
      D QQACC1        E                     EXTFLD(QQACCD)                                     CGL029
      D BFZONE        E                     EXTFLD(SEZONE)                                    BUG3122
       * DATA STRUCTURE FOR SECURITIES CUSTOMER DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       * DATA STRUCTURE FOR CURRENCY DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
       ** 24X7 status data area                                                                CSC011
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
                                                                                               CSC011
@@ -658,7 +660,7 @@
      I              PTFR                        SEPC_PTFR
      I/COPY WNCPYSRC,SETRADDI01
                                                                                 CAP006
- 
+
       /EJECT
      C*****************************************************************
      C*                                                               *
@@ -685,9 +687,9 @@
      C                   EVAL      DBKEY  = PSUser                                           BUG8260
      C                   EXSR      SRERR                                                     BUG8260
      C                   ENDIF                                                               BUG8260
- 
+
       ** INITIALIZE WORK FIELDS
- 
+
      C                   MOVEL     *BLANK        Z#BSTS
      C                   MOVEL     *BLANK        Z#ASTS
      C                   Z-ADD     0             NMDP                                         208195
@@ -700,11 +702,11 @@
      C                   ELSE                                                   CAP051
      C                   MOVE      SAVAUTH       BVAUTH                         CAP051
      C                   ENDIF                                                  CAP051
- 
+
       ** Get customer and security details
- 
+
      C                   EXSR      GETCSSED
- 
+
       ** Ensure transaction has not been updated by another workstation         CAP006
       ** - if so, bypass updating and return to calling program.                CAP006
      C                   EXSR      CHKOTHUPD                                    CAP006
@@ -714,7 +716,7 @@
      C                   END                                                    CAP006
                                                                                 CAP006
       ** INSERT, AMEND, CHANGE, DELETE, APPROVE OR AUTHORIZE THE TRADE
- 
+
      C     A_CHTP        CASEQ     'I'           INSERT
      C     A_CHTP        CASEQ     'A'           AMEND
      C     A_CHTP        CASEQ     'C'           CHANGE
@@ -729,11 +731,11 @@
      C                             WSysVal01 = 'Y'                                            CRE020
      C                   EXSR      SRIdxTrn                                                   CRE020
      C                   ENDIF                                                                CRE020
- 
+
       ** UPDATE TRADE EXTENSION 1 A & B RECORD
       ** (B RECORD ONLY IF PORTFOLIO CUSTOMER)
       ** (         AND IF MT5XX PHASE II IS ON)                                 154562
- 
+
      C     S01401        IFEQ      'Y'
      C                   EXSR      UTRADSX1A
      C     CustClass     IFEQ      'S'
@@ -749,43 +751,43 @@
      C                   EXSR      SrMovement                                                 CSE039
      C                   ENDIF                                                                CSE039
       *                                                                                       CSE039
- 
+
       ** If action is insert, amend, change or delete ...
- 
+
      C     A_CHTP        IFEQ      'I'
      C     A_CHTP        OREQ      'A'
      C     A_CHTP        OREQ      'C'
      C     A_CHTP        OREQ      'D'
      C     A_CHTP        OREQ      'Y'                                                        230335
      C     B_LCD         ANDNE     BJRDNB                                                     230335
- 
+
       ** and if trade is now complete ...
- 
+
      C     A_TINC        IFEQ      'C'
- 
+
       **  ... update on-line balances
- 
+
      C                   EXSR      ONLNUP
- 
+
       *   ... update book positions
- 
+
      C                   EXSR      WBKPOS
- 
+
       *   ... update client depot positions if portfolio client
- 
+
      C     CustClass     IFEQ      'S'
      C     CustClass     OREQ      'D'
      C                   EXSR      WCPOSN
      C                   END
- 
+
       *   ... update user depot positions
- 
+
      C                   EXSR      WUDEPP
      C                   END
      C                   END
- 
+
       *  If action is not insert and settlement data has changed
- 
+
      C     A_CHTP        IFNE      'I'
      C     TNSN          IFNE      B_TNSN
      C     A_CHTP        ANDEQ     'C'                                                        234927
@@ -798,15 +800,15 @@
      C     RECI          OREQ      'P'                                                        234927
      C     A_CHTP        OREQ      'Y'                                                        234927
      C     B_CHTP        ANDEQ     'D'                                                        234927
- 
+
       *   ... update Trade settlement details
- 
+
      C                   EXSR      WSETTL
      C                   END
      C                   END
- 
+
       *  Write to authorisation file if necessary
- 
+
      C     BVAUTH        IFNE      '00'
       *                                                                         CAP051
       ** If Authorisation level on SE I.C.D. is > 00,                           CAP051
@@ -818,20 +820,20 @@
                                                                                 CAP051
      C                   EXSR      WTRAUT
      C                   END
- 
+
       *  If Profit Centres are used
       *  Write to Profit Centre position files, if new book or customer
       *  position and trade is now complete
- 
+
      C     BKPRCU        IFEQ      'Y'
      C     A_TINC        ANDEQ     'C'
      C                   EXSR      WPRFC
      C                   END
- 
+
       *    Update audit files
- 
+
      C                   EXSR      WAUDIT
- 
+
       ** If 24x7 Midas Availability is installed                                              CSC011
       ** and Support System is active                                                         CSC011
                                                                                               CSC011
@@ -894,7 +896,7 @@
                                                                                               CSC011
       * EXIT FROM PROGRAM
      C     EXIT          TAG                                                    CAP006
- 
+
      C/COPY WNCPYSRC,SETRADDC10
      C                   RETURN
      C****************************************************************
@@ -1051,13 +1053,13 @@
      C*                                                              *
      C****************************************************************
      C     INSERT        BEGSR
- 
+
       ** ACCESS TRADE
- 
+
      C     A_TDRF        CHAIN     TRADSDF                            99
- 
+
       ** DATABASE ERROR
- 
+
      C     *IN99         IFEQ      '0'
      C                   MOVEL     A_TDRF        DBKEY
      C                   MOVEL     'TRADSD'      DBFILE                         ************
@@ -1070,13 +1072,13 @@
      C                   IF        A_LKRF <> *BLANKS                                          CAP067
      C                   EXSR      SHRECK                                                     CAP067
      C                   ENDIF                                                                CAP067
- 
+
       ** INITIALIZE TRADE
- 
+
      C                   CLEAR                   TRADSF
- 
+
       ** UPDATE 'BEFORE' STATUS
- 
+
      C                   MOVEL     TRADSF        Z#BSTS
      C                   MOVEL     TRADSF        B_TRADS
      C                   MOVEL     RECI          PREVREC           1                          179084
@@ -1084,9 +1086,9 @@
      C     B_LCD         ANDNE     BJRDNB                                                     230335
      C                   MOVEL     *BLANK        Z#BSTS                                       230335
      C                   ENDIF                                                                230335
- 
+
       ** SET TRADE FIELDS ON INSERT
- 
+
      C                   EXSR      SETINS
                                                                                               CSC011
       ** If CSC011 is installed, supply a Front Office ID for the                             CSC011
@@ -1111,9 +1113,9 @@
      C                   ENDIF                                                                CSD015
      C                   ENDIF                                                                CSD015
      C                   ENDIF                                                                CSD015
- 
+
       ** WRITE NEW TRADE
- 
+
      C                   WRITE     TRADSDF
                                                                                               CAP067
       ** Write Buy-Sell positions file if required                                            CAP067
@@ -1121,11 +1123,11 @@
      C                   IF        BYESEL = 'Y'                                               CAP067
      C                   WRITE     BSPOSD0                                                    CAP067
      C                   ENDIF                                                                CAP067
- 
+
       ** UPDATE 'AFTER' STATUS
- 
+
      C                   MOVEL     TRADSF        Z#ASTS
- 
+
      C/COPY WNCPYSRC,SETRADDC11
      C                   ENDSR
      C****************************************************************
@@ -1136,30 +1138,30 @@
      C*                                                              *
      C****************************************************************
      C     AMEND         BEGSR
- 
+
       ** ACCESS TRADE
- 
+
      C     A_TDRF        CHAIN     TRADSDF                            99
- 
+
       ** DATABASE ERROR
- 
+
      C     *IN99         IFEQ      '1'
      C                   MOVEL     A_TDRF        DBKEY
      C                   MOVEL     'TRADSD'      DBFILE                         ************
      C                   MOVEL     '002'         DBASE                          * DBERR 002*
      C                   EXSR      SRERR                                        ************
      C                   END
- 
+
       ** UPDATE 'BEFORE' STATUS
- 
+
      C                   MOVEL     TRADSF        Z#BSTS
      C                   MOVEL     TRADSF        B_TRADS
      C                   MOVEL     RECI          PREVREC           1                          179084
- 
+
       ** SET TRADE FIELDS ON AMEND
- 
+
      C                   EXSR      SETAMD
- 
+
       ** If compliance watch is installed, and entry watch list checking                      CSD015
       ** is being applied, perform compliance watch processing                                CSD015
                                                                                               CSD015
@@ -1184,11 +1186,11 @@
      C                   ENDIF                                                                CSD015
                                                                                               CSD015
       ** UPDATE RECORD
- 
+
      C                   UPDATE    TRADSDF
- 
+
       ** UPDATE 'AFTER' STATUS
- 
+
      C*****B_RECI        IFEQ      'L'                                               230335 BUG20458
      C*****B_RECI        OREQ      'P'                                               230335 BUG20458
      C                   MOVEL     TRADSF        Z#ASTS
@@ -1203,7 +1205,7 @@
      C*                                                              *
      C****************************************************************
      C     CHANGE        BEGSR
- 
+
       ** Access trade using link reference number                                           BUG12938
                                                                                             BUG12938
      C                   EVAL      Wbyesel = 'N'                                            BUG12938
@@ -1215,18 +1217,18 @@
      C                   ENDIF                                                              BUG12938
                                                                                             BUG12938
       ** ACCESS TRADE
- 
+
      C     A_TDRF        CHAIN     TRADSDF                            99
- 
+
       ** DATABASE ERROR
- 
+
      C     *IN99         IFEQ      '1'
      C                   MOVEL     A_TDRF        DBKEY
      C                   MOVEL     'TRADSD'      DBFILE                         ************
      C                   MOVEL     '003'         DBASE                          * DBERR 002*
      C                   EXSR      SRERR                                        ************
      C                   END
- 
+
       ** Setup BSPOSD details before update if trade is Buy-Sell                            BUG12938
                                                                                             BUG12938
      C                   IF        Wbyesel <> *BLANKS                                       BUG12938
@@ -1234,15 +1236,15 @@
      C                   ENDIF                                                              BUG12938
                                                                                             BUG12938
       ** UPDATE 'BEFORE' STATUS
- 
+
      C                   MOVEL     TRADSF        Z#BSTS
      C                   MOVEL     TRADSF        B_TRADS
      C                   MOVEL     RECI          PREVREC           1                          179084
- 
+
       ** SET TRADE FIELDS ON CHANGE
- 
+
      C                   EXSR      SETCHG
- 
+
       ** If compliance watch is installed, and entry watch list checking                      CSD015
       ** is being applied, perform compliance watch processing                                CSD015
                                                                                               CSD015
@@ -1267,11 +1269,11 @@
      C                   ENDIF                                                                CSD015
                                                                                               CSD015
       ** UPDATE RECORD
- 
+
      C                   UPDATE    TRADSDF
- 
+
       ** UPDATE 'AFTER' STATUS
- 
+
      C                   MOVEL     TRADSF        Z#ASTS
       *
      C                   ENDSR
@@ -1283,46 +1285,46 @@
      C*                                                              *
      C****************************************************************
      C     DELETE        BEGSR
- 
+
       ** Get trade's TACI as it was at the start of the day
       ** (in case trade was changed earlier today)
- 
+
      C     A_TDRF        CHAIN     SOBTRSO                            99
      C     *IN99         IFEQ      '0'
      C                   MOVE      TACI          S_TACI            1
      C                   ELSE
      C                   BITOFF    '01234567'    S_TACI
      C                   END
- 
+
       ** ACCESS TRADE
- 
+
      C     A_TDRF        CHAIN     TRADSDF                            99
- 
+
       ** DATABASE ERROR
- 
+
      C     *IN99         IFEQ      '1'
      C                   MOVEL     A_TDRF        DBKEY
      C                   MOVEL     'TRADSD '     DBFILE                         ************
      C                   MOVEL     '004'         DBASE                          * DBERR 003*
      C                   EXSR      SRERR                                        ************
      C                   END
- 
+
       ** UPDATE 'BEFORE' STATUS
- 
+
      C                   MOVEL     TRADSF        Z#BSTS
      C                   MOVEL     TRADSF        B_TRADS
      C                   MOVEL     RECI          PREVREC           1                          179084
- 
+
       ** SET TRADE FIELDS ON DELETE
- 
+
      C                   EXSR      SETDEL
- 
+
       ** UPDATE RECORD
- 
+
      C                   UPDATE    TRADSDF
- 
+
       ** UPDATE 'AFTER' STATUS
- 
+
      C                   MOVEL     TRADSF        Z#ASTS
       *
      C                   ENDSR
@@ -1334,26 +1336,26 @@
      C*                                                               *
      C*****************************************************************
      C     AUTHOR        BEGSR
- 
+
       ** ACCESS TRADE
- 
+
      C     A_TDRF        CHAIN     TRADSDF                            99
- 
+
       ** DATA BASE ERROR
- 
+
      C     *IN99         IFEQ      '1'
      C                   MOVEL     A_TDRF        DBKEY
      C                   MOVEL     'TRADSD  '    DBFILE                         ************
      C                   MOVEL     '005'         DBASE                          * DBERR 003*
      C                   EXSR      SRERR                                        ************
      C                   END
- 
+
       ** UPDATE 'BEFORE' STATUS
- 
+
      C                   MOVEL     TRADSF        Z#BSTS
      C                   MOVEL     TRADSF        B_TRADS
      C                   MOVEL     RECI          PREVREC           1                          179084
- 
+
       ** Store original value of CHTP before changing to 'P'                                  CRE020
                                                                                               CRE020
      C                   IF        CRE020 = 'Y'                                               CRE020
@@ -1361,15 +1363,15 @@
      C                   ENDIF                                                                CRE020
                                                                                               CRE020
       ** SET TRADE FIELDS ON AUTHORIZE
- 
+
      C                   EXSR      SETAUT
- 
+
       ** UPDATE RECORD
- 
+
      C                   UPDATE    TRADSDF
- 
+
       ** UPDATE 'AFTER' STATUS
- 
+
      C                   MOVEL     TRADSF        Z#ASTS
       *
      C                   ENDSR
@@ -1381,26 +1383,26 @@
      C*                                                               *
      C*****************************************************************
      C     APPROV        BEGSR
- 
+
       ** ACCESS TRADE
- 
+
      C     A_TDRF        CHAIN     TRADSDF                            99
- 
+
       ** DATA BASE ERROR
- 
+
      C     *IN99         IFEQ      '1'
      C                   MOVEL     A_TDRF        DBKEY
      C                   MOVEL     'TRADSD  '    DBFILE                         ************
      C                   MOVEL     '006'         DBASE                          * DBERR 003*
      C                   EXSR      SRERR                                        ************
      C                   END
- 
+
       ** UPDATE 'BEFORE' STATUS
- 
+
      C                   MOVEL     TRADSF        Z#BSTS
      C                   MOVEL     TRADSF        B_TRADS
      C                   MOVEL     RECI          PREVREC           1                          179084
- 
+
       ** Store original value of CHTP before changing to 'P'                                  CRE020
                                                                                               CRE020
      C                   IF        CRE020 = 'Y'                                               CRE020
@@ -1408,15 +1410,15 @@
      C                   ENDIF                                                                CRE020
                                                                                               CRE020
       ** SET TRADE FIELDS ON APPROVAL
- 
+
      C                   EXSR      SETAPP
- 
+
       ** UPDATE RECORD
- 
+
      C                   UPDATE    TRADSDF
- 
+
       ** UPDATE 'AFTER' STATUS
- 
+
      C                   MOVEL     TRADSF        Z#ASTS
       *
      C                   ENDSR
@@ -1429,9 +1431,9 @@
      C*****************************************************************
      C     SETINS        BEGSR
      C/COPY WNCPYSRC,SETRADDC14
- 
+
       ** SET TRADE TO CONTENTS OF VALID TRADE RECORD
- 
+
      C                   MOVEL     SEVTRD        TRADSF
       *
       ** Record ID - if no authorization
@@ -1461,21 +1463,21 @@
      C                   MOVE      'D'           RECI
      C                   END
      C                   END
- 
+
       * Nominal currency and nominal decimal places
- 
+
      C                   MOVEL     NMCY          TNMC
      C                   Z-ADD     NMDP          TNMD
- 
+
       * interest adjustment
- 
+
      C     PROT          IFEQ      '6'
      C                   Z-ADD     *ZERO         TINA
      C                   Z-ADD     *ZERO         TINN                                         CAS006
      C                   END
- 
+
       * Related Trade Reference
- 
+
      C                   MOVEL     *BLANK        RTRF
       *
       *  If Bulk Agency Trade : set Agency Trade Indicator
@@ -1497,7 +1499,7 @@
      C                   ELSE
      C                   MOVE      ' '           BCON
      C                   END
- 
+
       * Time of input
      C                   TIME                    TIME
       *
@@ -1509,43 +1511,43 @@
      C                   BITOFF    '01234567'    TACI
      C                   BITOFF    '01234567'    TMSI
      C                   MOVE      'Y'           TCFR
- 
+
      C                   Z-ADD     NOML          TOSN
      C                   Z-ADD     *ZEROS        TNSN
      C                   Z-ADD     *ZEROS        TNSP
- 
+
       * calculate trade settlement value
- 
+
      C                   EXSR      TRDSETV
      C                   Z-ADD     ZAMTCO        TOSV
- 
+
      C                   Z-ADD     *ZEROS        TVSN
      C                   Z-ADD     *ZEROS        TVSP
      C                   Z-ADD     *ZEROS        TDSN
      C                   Z-ADD     *ZEROS        TDSP
      C                   Z-ADD     *ZEROS        TDFS
- 
+
       * Settlement Sequence
- 
+
      C                   Z-ADD     *ZEROS        TSSQ
- 
+
       * Date Made Complete
- 
+
      C     TINC          IFEQ      'C'
      C                   Z-ADD     BJRDNB        TDMC
      C                   ELSE
      C                   Z-ADD     *ZEROS        TDMC
      C                   END
- 
+
       * Original Entry Date
      C                   Z-ADD     BJRDNB        TOED
- 
+
       * Pay/Receive Process Complete
      C                   MOVE      'N'           PRPC
- 
+
       * Last change date
      C                   Z-ADD     BJRDNB        LCD
- 
+
       * Last swift sequence
      C                   Z-ADD     *ZEROS        LSWS
                                                                                               CGL031
@@ -1645,9 +1647,9 @@
      C*                                                               *
      C*****************************************************************
      C     SETAMD        BEGSR
- 
+
       ** Update Screen Origin Fields on Amend/Change
- 
+
      C                   EXSR      UPS_AM_CH
       *
       * Check trade date and value date accounting indicators
@@ -1696,13 +1698,13 @@
       *
      C                   BITOFF    '01234567'    TACI
      C**********         MOVE      'Y'           TCFR                                         245970
- 
+
      C                   Z-ADD     NOML          TOSN
      C                   Z-ADD     *ZEROS        TNSN
      C                   Z-ADD     *ZEROS        TNSP
- 
+
       * calculate trade settlement value
- 
+
      C                   EXSR      TRDSETV
      C                   Z-ADD     ZAMTCO        TOSV
       *
@@ -1711,27 +1713,27 @@
      C                   Z-ADD     *ZEROS        TDSN
      C                   Z-ADD     *ZEROS        TDSP
      C                   Z-ADD     *ZEROS        TDFS
- 
+
       * Settlement Sequence
- 
+
      C                   Z-ADD     *ZEROS        TSSQ
- 
+
       * Pay/Receive Process Complete
      C                   MOVE      'N'           PRPC
      C                   END
- 
+
      C                   MOVE      'Y'           TCFR                                         245970
       *                                                                                       245970
       * Date Made Complete
- 
+
      C     B_TINC        IFEQ      'I'
      C     TINC          ANDEQ     'C'
      C                   Z-ADD     BJRDNB        TDMC
      C                   END
- 
+
       * Last change date
      C                   Z-ADD     BJRDNB        LCD
- 
+
       * Type of last change
      C                   MOVEL     A_CHTP        CHTP
      C/COPY WNCPYSRC,SETRADDC01
@@ -1782,9 +1784,9 @@
      C                   MOVE      'P'           RECI
      C                   END
      C                   END
- 
+
       ** Update Screen Origin Fields on Amend/Change
- 
+
      C                   EXSR      UPS_AM_CH
       *
       * Reset accounting inds
@@ -1793,38 +1795,38 @@
       *
      C                   BITOFF    '01234567'    TACI
      C                   MOVE      'Y'           TCFR
- 
+
      C                   Z-ADD     NOML          TOSN
      C                   Z-ADD     *ZEROS        TNSN
      C                   Z-ADD     *ZEROS        TNSP
- 
+
       * calculate trade settlement value
- 
+
      C                   EXSR      TRDSETV
      C                   Z-ADD     ZAMTCO        TOSV
- 
+
      C                   Z-ADD     *ZEROS        TVSN
      C                   Z-ADD     *ZEROS        TVSP
      C                   Z-ADD     *ZEROS        TDSN
      C                   Z-ADD     *ZEROS        TDSP
      C                   Z-ADD     *ZEROS        TDFS
- 
+
       * Settlement Sequence
      C                   Z-ADD     *ZEROS        TSSQ
- 
+
       * Date Made Complete
- 
+
      C     B_TINC        IFEQ      'I'
      C     TINC          ANDEQ     'C'
      C                   Z-ADD     BJRDNB        TDMC
      C                   END
- 
+
       * Pay/Receive Process Complete
      C                   MOVE      'N'           PRPC
- 
+
       * Last change date
      C                   Z-ADD     BJRDNB        LCD
- 
+
       * Type of last change
      C                   MOVEL     A_CHTP        CHTP
       *                                                                         CAP013
@@ -1835,7 +1837,7 @@
       ** Associated front office transaction ID                                 CAP013
       *                                                                         CAP013
      C                   MOVEL     A_AFRT        AFRT                           CAP013
- 
+
       ** Timestamp                                                              CAP006
      C                   CALLB     'ZAGENTMSTM'                                 CAP006
      C                   PARM                    TimeStamp                      CAP006
@@ -1890,53 +1892,53 @@
      C     TINC          IFEQ      'I'                                                        203470
      C                   MOVE      'C'           RECI                                         203470
      C                   ENDIF                                                                203470
- 
+
       * Reset TACI to as it was at the start of day
- 
+
      C                   MOVE      S_TACI        TACI
- 
+
       * Confirmation required Ind
- 
+
      C                   TESTB     '0'           TMSI                     99
      C     *IN99         IFEQ      '0'
      C                   MOVE      'N'           TCFR
      C                   ELSE
      C                   MOVE      'Y'           TCFR
      C                   END
- 
+
       * Reset settlement data
- 
+
      C                   Z-ADD     NOML          TOSN
      C                   Z-ADD     *ZEROS        TNSN
      C                   Z-ADD     *ZEROS        TNSP
- 
+
       * calculate trade settlement value
- 
+
      C                   EXSR      TRDSETV
      C                   Z-ADD     ZAMTCO        TOSV
- 
+
      C                   Z-ADD     *ZEROS        TVSN
      C                   Z-ADD     *ZEROS        TVSP
      C                   Z-ADD     *ZEROS        TDSN
      C                   Z-ADD     *ZEROS        TDSP
      C                   Z-ADD     *ZEROS        TDFS
- 
+
       * Reset settlement sequence
- 
+
      C                   Z-ADD     *ZEROS        TSSQ
- 
+
       *  If a deletion before pay/receive processing
       *  PRPC is set to Y
- 
+
      C     PRPC          IFEQ      'Y'
      C                   MOVE      'N'           PRPC
      C                   ELSE
      C                   MOVE      'Y'           PRPC
      C                   END
- 
+
       * Last change date
      C                   Z-ADD     BJRDNB        LCD
- 
+
       * Type of last change
      C                   MOVEL     A_CHTP        CHTP
      C/COPY WNCPYSRC,SETRADDC02
@@ -2011,10 +2013,10 @@
       ** Pay/Receive Process Complete                                                         223022
       *                                                                                       223022
      C                   MOVE      'N'           PRPC                                         223022
- 
+
       * Last change date
      C                   Z-ADD     BJRDNB        LCD
- 
+
       * Type of last change
      C                   MOVEL     A_CHTP        CHTP
       *                                                                         CAP013
@@ -2045,10 +2047,10 @@
       ** Pay/Receive Process Complete                                                         223022
       *                                                                                       223022
      C                   MOVE      'N'           PRPC                                         223022
- 
+
       * Last change date
      C                   Z-ADD     BJRDNB        LCD
- 
+
       * Type of last change
      C                   MOVEL     A_CHTP        CHTP
       *                                                                         CAP013
@@ -2059,13 +2061,13 @@
       ** Associated front office transaction ID                                 CAP013
       *                                                                         CAP013
      C                   MOVEL     A_AFRT        AFRT                           CAP013
- 
+
       ** Timestamp                                                              CAP006
      C                   CALLB     'ZAGENTMSTM'                                 CAP006
      C                   PARM                    TimeStamp                      CAP006
                                                                                 CAP006
      C                   EVAL      TMST = TimeStamp                             CAP006
- 
+
      C                   ENDSR
      C*****************************************************************
       /EJECT
@@ -2075,12 +2077,12 @@
      C*                                                               *
      C*****************************************************************
      C     UPS_AM_CH     BEGSR
- 
+
       ** Incomplete Indicator
       ** Security Shortname
      C                   MOVEL     A_TINC        TINC
      C                   MOVEL     A_TDSS        TDSS
- 
+
       ** Counterparty Customer Number
       ** Trade Type
       ** Nominal
@@ -2091,19 +2093,19 @@
      C                   MOVEL     A_NOML        NOML
      C                   MOVEL     A_TPDY        TPDY
      C                   MOVEL     A_TDVD        TDVD
- 
+
       ** Branch code
       ** Originating branch
      C                   MOVEL     A_TDBA        TDBA
      C                   MOVEL     A_ORBR        ORBR
- 
+
       ** Book
       ** Trade Date
       ** Trade Sub-type
      C                   MOVEL     A_TDBK        TDBK
      C                   MOVEL     A_TDDT        TDDT
      C                   MOVEL     A_TSUB        TSUB
- 
+
       ** Link Reference
       ** Market Indicator
       ** Narrative
@@ -2118,7 +2120,7 @@
      C                   MOVEL     A_AIIP        AIIP
      C                   MOVEL     A_TMKC        TMKC
      C                   MOVEL     A_TCAP        TCAP
- 
+
       ** Accrued Indicator
       ** Days Adjustment
       ** Act/Diff indicator
@@ -2131,24 +2133,24 @@
      C                   MOVEL     A_ITRA        ITRA
      C                   MOVEL     A_TINA        TINA
      C                   MOVEL     A_TDCR        TDCR
- 
+
       ** Price
       ** Ex Dividend
       ** Reallowance
      C                   MOVEL     A_PRIC        PRIC
      C                   MOVEL     A_EXDV        EXDV
      C                   MOVEL     A_RALL        RALL
- 
+
       ** Settlement Currency
      C                   MOVEL     A_SETC        SETC
- 
+
       ** Exchange Rate (Nominal to settle)
       ** Multiply/Divide Ind
       ** Base Currency Rate
      C                   MOVEL     A_TDER        TDER
      C                   MOVEL     A_TMDI        TMDI
      C                   MOVEL     A_TBCR        TBCR
- 
+
       ** Settlement Method
       ** Pay From
       ** Pay From Branch
@@ -2162,7 +2164,7 @@
       ** Deliver From
       ** For Account of (Deliver From)
       ** Special Instructions
- 
+
      C                   MOVEL     A_SMTH        SMTH
      C                   MOVEL     A_PYFM        PYFM
      C                   MOVEL     A_PYFA        PYFA
@@ -2176,57 +2178,57 @@
      C                   MOVEL     A_DELF        DELF
      C                   MOVEL     A_DFFA        DFFA
      C                   MOVEL     A_TDSI        TDSI
- 
+
       ** Priority Code
       ** Pay Code
      C                   MOVEL     A_PRYC        PRYC
      C                   MOVEL     A_PCOD        PCOD
- 
+
       ** Broker Commission Code
       ** Broker Commission Amount
      C                   MOVEL     A_TBCC        TBCC
      C                   MOVEL     A_TBCA        TBCA
- 
+
       ** Customer Commission Code
       ** Customer Commission Amt
      C                   MOVEL     A_TCCC        TCCC
      C                   MOVEL     A_TCCA        TCCA
- 
+
       ** Charges Code 1
       ** Charges Amount 1
      C                   MOVEL     A_TCC1        TCC1
      C                   MOVEL     A_TCA1        TCA1
- 
+
       ** Charges Code 2
       ** Charges Amount 2
      C                   MOVEL     A_TCC2        TCC2
      C                   MOVEL     A_TCA2        TCA2
- 
+
       ** Charges Code 3
       ** Charges Amount 3
      C                   MOVEL     A_TCC3        TCC3
      C                   MOVEL     A_TCA3        TCA3
- 
+
       ** Charges Code 4
       ** Charges Amount 4
      C                   MOVEL     A_TCC4        TCC4
      C                   MOVEL     A_TCA4        TCA4
- 
+
       ** Charges Code 5
       ** Charges amount 5
      C                   MOVEL     A_TCC5        TCC5
      C                   MOVEL     A_TCA5        TCA5
- 
+
       ** Charges Code 6
       ** Charges Amount 6
      C                   MOVEL     A_TCC6        TCC6
      C                   MOVEL     A_TCA6        TCA6
- 
+
       ** Charges Code 7
       ** Charges amount 7
      C                   MOVEL     A_TCC7        TCC7
      C                   MOVEL     A_TCA7        TCA7
- 
+
       ** Tax amount
       ** Broker Commission Rebate
       ** Customer Commission Rebate
@@ -2235,28 +2237,28 @@
      C                   MOVEL     A_BCMR        BCMR
      C                   MOVEL     A_CCMR        CCMR
      C                   MOVEL     A_TXRB        TXRB
- 
+
       ** Auto-settle Indicator
      C                   MOVEL     A_AUTS        AUTS
- 
+
       ** Consideration
       ** Countervalue
      C                   MOVEL     A_TCSR        TCSR
      C                   MOVEL     A_TCTR        TCTR
- 
+
       ** Profit Centre - non PCA
      C                   MOVEL     A_PRFC        PRFC
- 
+
       ** Current Factor
      C                   MOVEL     A_TCFC        TCFC
- 
+
       ** Portfolio reference
       ** Exchange Rate (Settle > Port
       ** Spot rate mult/div ind
      C                   MOVEL     A_PTFR        PTFR
      C                   MOVEL     A_SPXR        SPXR
      C                   MOVEL     A_SPMD        SPMD
- 
+
       ** Book Profit Centre
       ** Trans Profit Centre
       ** FX Margin Points
@@ -2296,7 +2298,7 @@
      C                   EVAL      ITRN = A_ITRN                                              CAS006
      C                   EVAL      PRICN = A_PRICN                                            CAS006
      C                   ENDIF                                                                CAS006
- 
+
       * Order Number                                                                          CSE039
      C                   MOVE      A_ORDE        ORDE                                         CSE039
       *                                                                                       CSE039
@@ -3943,10 +3945,10 @@
       * Update all settlement records for the trade
       *
      C                   Z-ADD     *ZEROS        W#SCNT            5 0
- 
+
      C                   MOVE      B_TDBA        SBCA
      C                   MOVE      TDRF          STDR
- 
+
      C     KLSETT        SETLL     SETLEDF
      C     KLSETT        READE     SETLEDF                                44
       *
@@ -3958,28 +3960,28 @@
       *
      C     RECI          IFNE      'C'
      C     RECI          ANDNE     '*'
- 
+
       ** Distinguish between historic and input today
- 
+
      C     RECI          IFEQ      'H'
      C                   MOVE      'X'           CHTP
      C                   ELSE
      C                   MOVE      'D'           CHTP
      C                   END
- 
+
      C     RECI          IFEQ      'D'
      C                   MOVE      '*'           RECI
      C                   ELSE
      C                   MOVE      'C'           RECI
      C                   END
- 
+
      C                   Z-ADD     BJRDNB        LCD
      C                   ADD       1             W#SCNT
      C                   UPDATE    SETLEDF
      C                   END
- 
+
      C     KLSETT        READE     SETLEDF                                44
- 
+
      C                   END
       *
       *  Access SETTL audit record and update
@@ -4388,21 +4390,21 @@
      C*                                                              *
      C****************************************************************
      C     UTRADSX1A     BEGSR
- 
+
      C/COPY WNCPYSRC,SETRADDC03
       ** ACCESS TRADE EXTENSION RECORD
- 
+
      C     CSW003        IFEQ      'Y'                                          154562
      C                   MOVEL     'A'           T1WHEN
      C                   ELSE                                                   154562
      C                   MOVEL     ' '           T1WHEN                         154562
      C                   END                                                    154562
      C     TRADSY1K      CHAIN     TRADSDD1                           99
- 
+
       ** DATABASE ERROR
       ** IF INSERT, BUT RECORD PRESENT ALREADY
       ** OR IF NOT INSERT, BUT NO RECORD FOUND
- 
+
      C     A_CHTP        IFEQ      'I'
      C     *IN99         ANDEQ     '0'
      C     A_CHTP        ORNE      'I'
@@ -4418,9 +4420,9 @@
      C     A_CHTP        IFNE      'I'                                                      BUG21255
      C                   Z-ADD     T1LSWS        SVLSWS            7 0                      BUG21255
      C                   ENDIF                                                              BUG21255
- 
+
       ** Update with details from valid trade extension record
- 
+
      C                   MOVEL     SEVTRDX1A     TRADSX1F
      C     CSE045        IFEQ      'Y'                                                        CSE045
      C     CSW003        IFEQ      'Y'                                                        CSE045
@@ -4450,7 +4452,7 @@
       *** Set Settlement Message Required Flag to 'Y'
       *
      C                   MOVEL     'Y'           T1SCMG
- 
+
                                                                                               CSC011
       ** If CSC011 is installed, supply a Front Office ID for the                             CSC011
       ** transaction even if it originated from SIN module.                                   CSC011
@@ -4462,7 +4464,7 @@
      C                   ENDIF                                                                CSC011
                                                                                               CSC011
       ** UPDATE RECORD
- 
+
      C     *IN99         IFEQ      '1'
      C                   MOVE      'N'           T1CONG
      C                   MOVE      'N'           T1RCDG
@@ -4498,7 +4500,7 @@
      C                   EXSR      UTRADSX2A                                                  CSE045
      C                   ENDIF                                                                CSE045
      C                   ENDIF                                                                CSE045
- 
+
      C                   IF        (CSC011 = 'Y') AND (LIBR = S1SUPP)                         CSC011
      C                   MOVEL     TRADSX1F      CT2AFilFmt                                   CSC011
      C                   ENDIF                                                                CSC011
@@ -5156,16 +5158,16 @@
      C*                                                              *
      C****************************************************************
      C     UTRADSX1B     BEGSR
- 
+
       ** ACCESS TRADE EXTENSION RECORD
- 
+
      C                   MOVEL     'B'           T1WHEN
      C     TRADSY1K      CHAIN     TRADSDD1                           99
- 
+
       ** DATABASE ERROR
       ** IF INSERT, BUT RECORD PRESENT ALREADY
       ** OR IF NOT INSERT, BUT NO RECORD FOUND
- 
+
      C     A_CHTP        IFEQ      'I'
      C     *IN99         ANDEQ     '0'
      C     A_CHTP        ORNE      'I'
@@ -5175,11 +5177,11 @@
      C                   MOVEL     '851'         DBASE                          * DBERR 002*
      C                   EXSR      SRERR                                        ************
      C                   END
- 
+
       ** If depots are different
       ** Update with details from valid trade extension 'B' record
       ** Else, update with 'A' details
- 
+
      C     DELF          IFNE      DELT
      C                   MOVEL     SEVTRDX1B     TRADSX1F
      C                   IF        CSE045 = 'Y'                                               CSE045
@@ -5207,7 +5209,7 @@
       *** Set Settlement Message Required Flag to 'Y'
       *
      C                   MOVEL     'Y'           T1SCMG
- 
+
                                                                                               CSC011
       ** If CSC011 is installed, supply a Front Office ID for the                             CSC011
       ** transaction even if it originated from SIN module.                                   CSC011
@@ -5219,7 +5221,7 @@
      C                   ENDIF                                                                CSC011
                                                                                               CSC011
       ** UPDATE RECORD
- 
+
      C     *IN99         IFEQ      '1'
      C                   MOVE      'N'           T1CONG
      C                   MOVE      'N'           T1RCDG
@@ -5253,7 +5255,7 @@
      C                   EXSR      UTRADSX2B                                                  CSE045
      C                   ENDIF                                                                CSE045
      C                   ENDIF                                                                CSE045
- 
+
      C                   IF        (CSC011 = 'Y') AND (LIBR = S1SUPP)                         CSC011
      C                   MOVEL     TRADSX1F      CT2BFilFmt                                   CSC011
      C                   ENDIF                                                                CSC011
@@ -5500,11 +5502,11 @@
      C                   EXSR      ZDAYS
      C     RALL          MULT      ZDDAYS        ADJ_RALL         15 8
      C                   EXSR      ZDYYR
- 
+
      C     ZINTDD        IFNE      0
- 
+
      C                   DIV(H)    ZINTDD        ADJ_RALL
- 
+
      C     ADJ_RALL      IFGE      0
      C     1             SUB       ADJ_RALL      EFF_RALL
      C                   ELSE
@@ -5517,7 +5519,7 @@
      C                   Z-ADD     *ZEROS        EFF_RALL
      C                   END
      C                   END
- 
+
      C                   ENDSR
      C****************************************************************
       /EJECT
@@ -5548,7 +5550,7 @@
      C                   EXSR      SRERR                                        ************
      C                   END
      C                   ENDIF                                                                208195
- 
+
      C                   MOVEL     BFCLAS        CustClass         1
       *
       ** ACCESS SECURITY
@@ -5604,7 +5606,7 @@
      C                   PARM      NomCcyDec     ZCDPI
      C                   PARM      BseCcyDec     ZCDPO
      C                   PARM      *ZERO         ZAMTCO
- 
+
      C                   ENDSR
      C****************************************************************
       /EJECT
@@ -5620,7 +5622,7 @@
       *
      C                   MOVE      SETC          @AJCD
      C                   EXSR      AOCURR
- 
+
      C                   CALLB     'ZCONV'
      C                   PARM      TCTR          ZAMTCI           15 0
      C                   PARM      TDER          ZEXCH            13 8
@@ -5630,7 +5632,7 @@
      C                   PARM      NomCcyDec     ZCDPI             1 0
      C                   PARM      A6NBDP        ZCDPO             1 0
      C                   PARM      *ZERO         ZAMTCO           15 0
- 
+
      C                   ENDSR
      C****************************************************************
       /EJECT

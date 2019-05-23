@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CRE073             Date 06Dec10               *
       *                 CSW210             Date 04May10               *
@@ -84,6 +85,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -174,14 +176,14 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
      FDPTMV     UF A E           K DISK    COMMIT
      F                                     INFSR(*PSSR)
- 
+
      FDPTMVA    UF   E             DISK    COMMIT
      F                                     INFSR(*PSSR)
      F                                     PREFIX(DP_)
- 
+
      FDPTMVDY1  UF A E           K DISK    COMMIT                                             167486
      F                                     INFSR(*PSSR)                                       167486
                                                                                               167486
@@ -189,7 +191,7 @@
      F                                     RENAME(CDEPPDF:CDEPPD1)
      F                                     INFSR(*PSSR)
      F                                     PREFIX(CD_)
- 
+
      F*SECDEPL5*UF*A*E***********K DISK    COMMIT                                             178378
      F**********                           RENAME(CDEPPDF:CDEPPD2)                            178378
      F**********                           INFSR(*PSSR)                                       178378
@@ -198,30 +200,30 @@
      F                                     RENAME(CDEPPDF:CDEPPD2)                            209844
      F                                     INFSR(*PSSR)                                       209844
      F                                     PREFIX(CD_)                                        209844
- 
+
      FCDEPPA    UF   E             DISK    COMMIT
      F                                     INFSR(*PSSR)
      F                                     PREFIX(CD_)
- 
+
      FCPOSN     UF A E           K DISK    COMMIT
      F                                     INFSR(*PSSR)
      F                                     PREFIX(CP_)
- 
+
      FCPOSNA    UF   E             DISK    COMMIT
      F                                     INFSR(*PSSR)
      F                                     PREFIX(CP_)
- 
+
      FSEPCCD    UF A E           K DISK    COMMIT
      F                                     INFSR(*PSSR)
      F                                     PREFIX(SP_)
- 
+
      FSEPCA     UF   E             DISK    COMMIT
      F                                     INFSR(*PSSR)
      F                                     PREFIX(SP_)
- 
+
      FSECTY     IF   E           K DISK    PREFIX(SEC_)
      F                                     INFSR(*PSSR)
- 
+
      FINVTP     IF   E           K DISK    PREFIX(INV_)
      F                                     INFSR(*PSSR)
      FSDCWHTL1  IF   E           K DISK                                                       CSD015
@@ -245,7 +247,7 @@
      FSEMVTSL0  IF   E           K DISK    PREFIX(MV_)                                        CSE039
       *                                                                                       CSE039
      F/COPY WNCPYSRC,SEDPMVDF01
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -265,17 +267,17 @@
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
      ****Include*the*SE*standard*declares*******************************                      CAP087
      D*COPY*SECPYSRC,STDDECLARE*****************************************                      CAP087
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes the definitions for error and        CAP006
       ** warning message arrays.                                                CAP006
      D/COPY ZACPYSRC,ERR_ARRAYS                                                 CAP006
@@ -285,48 +287,48 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      ** Transaction Details Structure
      ** -----------------------------
- 
+
      ** Externally Describe Data structure to received the valid
      ** Transaction
- 
+
      D DPMVTrans     E DS                  EXTNAME(DPTMVD)
      D                                     PREFIX(V_)
                                                                                               234440
      D TRADTrans     E DS                  EXTNAME(SEVTRADPD)                                 234440
      D                                     PREFIX(T_)                                         234440
                                                                                               234440
- 
+
      ** Externally Describe Data structure to received the before
      ** image of the involved transaction
                                                                                               CSD015
      D DPMVOLDV      E DS                  EXTNAME(DPTMVD)                                    CSD015
      D                                     PREFIX(X_)                                         CSD015
- 
+
      D PrvDPMVRec    E DS                  EXTNAME(DPTMVD)
      D                                     PREFIX(Prev)
- 
+
      D ChkDPMVFmt    E DS                  EXTNAME(DPTMVD)                      CAP006
       ** Rename fields for Timestamp checking                                   CAP006
      D                                     PREFIX(CH)                           CAP006
@@ -335,15 +337,15 @@
      D                                     PREFIX(UP_)                                        CAP087
      ** Externally Describe Data Structure to hold DPTMVD data to be                          CAP087
      ** passed to MMRPDLUPD for update of Depot User Position.                                CAP087
- 
+
      D SEEDPMV       E DS                  EXTNAME(SEEDMWIPD)                   CAP006
       * Error indicators                                                        CAP006
                                                                                 CAP006
      ** Externally Describe Data Structure to function as a scratch pad DS
      ** for DPTMVD records for initialization and other purposes.
- 
+
      D DPMVDS        E DS                  EXTNAME(DPTMVD)
- 
+
       ** External DS for Bank Details
       ** General ledger details
       ** External DS for Currency Details
@@ -374,12 +376,12 @@
      D***CLSTAG          S             30    DIM(13)CTDATA PERRCD(1)                   CSD015 CSW210
      D OPNTAG          S             30    DIM(15)CTDATA PERRCD(1)                            CSW210
      D CLSTAG          S             30    DIM(15)CTDATA PERRCD(1)                            CSW210
- 
+
       ** DS for AccessPrograms, Short DS
       ** DS for AccessPrograms, Long DS
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** 24X7 status data area                                                                CSC011
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
                                                                                               CSC011
@@ -426,14 +428,14 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D*PrvDepot*       S              6S 0                                                    CSD027
      D PrvDepot        S              6A                                                      CSD027
      D PrvDate         S              5P 0
      D*NewDepot*       S              6S 0                                                    CSD027
      D NewDepot        S              6A                                                      CSD027
      D NewDate         S              5P 0
- 
+
      D TimeStamp       S               Z                                        CAP006
                                                                                 CAP006
      D PDS1          E DS                  EXTNAME(SDWLTDPD)                                  CSD015
@@ -561,19 +563,19 @@
      C                   EXSR      SRWATCH                                                    CSD015
      C                   ENDIF                                                                CSD015
      C                   ENDIF                                                                CSD015
- 
+
      C                   SELECT
- 
+
      C                   WHEN      V_CHTP = 'I'
      C/COPY WNCPYSRC,SEH00075
      C                   WRITE     DPTMVDF                              99
- 
+
      C                   WHEN      V_CHTP = 'A'
      C                             OR V_CHTP = 'D'
      C/COPY WNCPYSRC,SEH00076
      C                   UPDATE    DPTMVDF                              99
      C/COPY WNCPYSRC,SEH00077
- 
+
      C                   ENDSL
                                                                                               CRE020
      C/COPY WNCPYSRC,SEH00078
@@ -601,7 +603,7 @@
      C/COPY WNCPYSRC,SEH00079
                                                                                               CRE020
      C/COPY WNCPYSRC,SEDPMVDC05
- 
+
      C     *IN99         CASEQ     '1'           SRErr
      C                   ENDCS
       *
@@ -786,7 +788,7 @@
      C                   ENDIF                                                                167486
      C                   ENDIF                                                                167486
      C                   ENDIF                                                                167486
- 
+
       ** If 24x7 Midas Availability is installed, write to the standard                       CSC011
       ** log file when support system is active                                               CSC011
                                                                                               CSC011
@@ -846,7 +848,7 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRWIUpd       BEGSR
       *
       ** Generate Transaction number
@@ -878,7 +880,7 @@
      C     V_CHTP        CASEQ     'D'           SRUpdDel
      C/COPY WNCPYSRC,SEDPMVDC10
      C                   ENDCS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -891,7 +893,7 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRWOUpd       BEGSR
       *
       ** Move fields updated by Validation Modules
@@ -919,9 +921,9 @@
      C     V_CHTP        CASEQ     'D'           SRUpdDel
      C/COPY WNCPYSRC,SEDPMVDC11
      C                   ENDCS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT                                                                                  CAP087
       *****************************************************************                       CAP087
@@ -980,7 +982,7 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRUpdIns      BEGSR
       *
       ** Update remaining fields
@@ -1013,10 +1015,10 @@
                                                                                 CAP006
      C                   EVAL      DMTMST = TimeStamp                           CAP006
                                                                                 CAP006
- 
- 
+
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1029,9 +1031,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRUpdAmd      BEGSR
- 
+
      C                   MOVE      SEC_MKTI      DPMK
      C                   Z-ADD     RunDate       LCD
      C                   MOVEL     'A'           CHTP
@@ -1069,7 +1071,7 @@
      C     CSE015        IFEQ      'Y'                                                        CSE015
      C                   BITOFF    '2'           TACI                                         CSE015
      C                   ENDIF                                                                CSE015
- 
+
       ** Timestamp                                                              CAP006
      C                   CALLB     'ZAGENTMSTM'                                 CAP006
      C                   PARM                    TimeStamp                      CAP006
@@ -1089,9 +1091,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRUpdDel      BEGSR
- 
+
      C                   MOVEL     '*'           RECI
       *                                                                                       CSE015
      C     ORED          IFNE      RunDate                                                    CSE015
@@ -1127,15 +1129,15 @@
      C                   ELSE
      C                   MOVE      'Y'           DPR1
      C                   END
- 
+
      C     DPR2          IFEQ      'Y'
      C                   MOVE      'N'           DPR2
      C                   ELSE
      C                   MOVE      'Y'           DPR2
      C                   END
- 
+
      C                   TESTB     '0'           DPMS                     99
- 
+
      C     *IN99         IFEQ      '0'
      C                   MOVE      'N'           DCFR
      C                   ELSE
@@ -1154,7 +1156,7 @@
      C     CSE015        IFEQ      'Y'                                                        CSE015
      C                   BITOFF    '2'           TACI                                         CSE015
      C                   ENDIF                                                                CSE015
- 
+
       ** Timestamp                                                              CAP006
      C                   CALLB     'ZAGENTMSTM'                                 CAP006
      C                   PARM                    TimeStamp                      CAP006
@@ -1314,49 +1316,49 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRUpdCtlR     BEGSR
- 
+
      C     1             CHAIN     DPTMVAF                            99
- 
+
      C     *IN99         IFEQ      '0'
      C/COPY WNCPYSRC,SEH00082
      C                   SELECT
- 
+
      C                   WHEN      V_CHTP = 'I'
      C                   ADD       1             DP_SINS
      C                   ADD       1             DP_NORE
- 
+
      C                   WHEN      V_CHTP = 'A'
      C/COPY WNCPYSRC,SEH00122
      C                   ADD       1             DP_SAMD
- 
+
      C                   WHEN      V_CHTP = 'D'
      C                   ADD       1             DP_SDEL
      C                   SUB       1             DP_NORE
- 
+
      C                   ENDSL
      C/COPY WNCPYSRC,SEH00083
- 
+
      C                   MOVEL     NATN          DP_TNLU
- 
+
      C                   UPDATE    DPTMVAF                              99
- 
+
      C     *IN99         CASEQ     '1'           SRErr
      C                   ENDCS
- 
+
      C                   ELSE
- 
+
      C                   MOVEL     'AUDIT'       DBKEY
      C                   MOVEL     'DPTMV   '    DBFILE                         ************
      C                   MOVEL     '002'         DBASE                          * DBERR 002*
                                                                                 ************
      C                   EXSR      SRErr
- 
+
      C                   END
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1368,7 +1370,7 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCalcPos     BEGSR
       *
       ** Fetch Nominal currency details
@@ -1384,9 +1386,9 @@
      C     INVKA         KLIST
      C                   KFLD                    SEC_NMCY
      C                   KFLD                    SEC_SITP
- 
+
      C     INVKA         CHAIN     INVTPDF                            33
- 
+
      C                   IF        V_CHTP = 'A'
      C                             OR  V_CHTP = 'D'
      C/COPY WNCPYSRC,SEDPMVDC13
@@ -1402,24 +1404,24 @@
      C     SEC_STBS      IFEQ      'Y'
      C     SEC_SYBS      ANDEQ     'AU'
      C                   Z-ADD     PrevDPVD      ZECD
- 
+
      C                   EXSR      SRZLCD
- 
+
      C                   Z-ADD     PrevDPVD      ECD
- 
+
      C                   EXSR      SRZNCD
- 
+
      C                   Z-ADD     ZZLCD         ZDCSDT            5 0
      C                   Z-ADD     PrevDPMD      ZDCEDT            5 0
      C                   Z-ADD     ZNOML         ZAMT             15 0
      C                   Z-ADD     A6NBDP        NomCcyDec
- 
+
      C                   EXSR      SRZACCZ
- 
+
      C                   Z-ADD     PrevDPVD      WRKD
- 
+
      C     ZDCINT        DIV       ZNOML         WRKPI
- 
+
      C                   EXSR      SRZYCE
       *
       ** If Ex-Coupon then PI passed is the remaining Interest
@@ -1429,33 +1431,33 @@
      C                   Z-ADD     ZZLCD         ZDCSDT
      C                   Z-ADD     NCD           ZDCEDT
      C                   Z-ADD     A6NBDP        NomCCyDec
- 
+
      C                   EXSR      SRZACCZ
- 
+
      C     ZDCINT        DIV       ZNOML         WKWPI            15 9
      C     WRKPI         SUB       WKWPI         WRKPI
- 
+
      C                   END
- 
+
      C                   ELSE
- 
+
      C                   MOVE      'C'           SCUMEX            1
      C                   Z-ADD     0             WRKPI
      C                   END
- 
+
      C                   EXSR      SRZPRCI
- 
+
      C                   Z-ADD     ZPRCOT        ZPRC
      C                   Z-ADD     A6NBDP        NomCcyDEc
- 
+
      C                   EXSR      SRZCNSD
- 
+
      C                   Z-ADD     ZCONS         PrevValue        15 0
- 
+
      C     INV_PROT      IFEQ      '8'
      C                   MULT(H)   SEC_CFCT      PrevValue
      C                   END
- 
+
      C                   END
       *
       ** Insert or amend mode
@@ -1477,23 +1479,23 @@
      C     SEC_STBS      IFEQ      'Y'
      C     SEC_SYBS      ANDEQ     'AU'
      C                   Z-ADD     DPVD          ZECD
- 
+
      C                   EXSR      SRZLCD
- 
+
      C                   Z-ADD     DPVD          ECD
- 
+
      C                   EXSR      SRZNCD
- 
+
      C                   Z-ADD     ZZLCD         ZDCSDT
      C                   Z-ADD     DPVD          ZDCEDT
      C                   Z-ADD     ZNOML         ZAMT
      C                   Z-ADD     A6NBDP        NomCcyDec
- 
+
      C                   EXSR      SRZACCZ
- 
+
      C                   Z-ADD     DPVD          WRKD              5 0
      C     ZDCINT        DIV       ZNOML         WRKPI
- 
+
      C                   EXSR      SRZYCE
       *
       ** If Ex-coupon then PI Passed is the remaining interest
@@ -1503,37 +1505,37 @@
      C                   Z-ADD     ZZLCD         ZDCSDT
      C                   Z-ADD     NCD           ZDCEDT
      C                   Z-ADD     A6NBDP        NomCcyDec
- 
+
      C                   EXSR      SRZACCZ
- 
+
      C     ZDCINT        DIV       ZNOML         WKWPI            15 9
      C     WRKPI         SUB       WKWPI         WRKPI
- 
+
      C                   END
- 
+
      C                   ELSE
- 
+
      C                   MOVE      'C'           SCUMEX            1
      C                   Z-ADD     0             WRKPI
      C                   END
- 
+
      C                   EXSR      SRZPRCI
- 
+
      C                   Z-ADD     ZPRCOT        ZPRC
      C                   Z-ADD     A6NBDP        NomCcyDec
- 
+
      C                   EXSR      SRZCNSD
- 
+
      C                   Z-ADD     ZCONS         NewValue         15 0
- 
+
      C     INV_PROT      IFEQ      '8'
      C                   MULT(H)   SEC_CFCT      NewValue
      C                   END
- 
+
      C                   END
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1545,30 +1547,30 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRUpdPrvPs    BEGSR
       *
       ** Update customer depot file
       *
      C                   SELECT
- 
+
      C                   WHEN      DPMV = 'WI'
      C                   MOVE      PrevDPID      PrvDepot
      C                   Z-ADD     PrevDPMD      PrvDate
- 
+
      C                   WHEN      DPMV = 'WO'
      C                   MOVE      PrevDPOD      PrvDepot
      C                   Z-ADD     PrevDPDO      PrvDate
- 
+
      C                   ENDSL
- 
+
      C     CDEPKB1       KLIST
      C                   KFLD                    PrevDPBA
      C                   KFLD                    PrevDPBN
      C                   KFLD                    PrevDPSS
      C                   KFLD                    PrvDepot
      C                   KFLD                    SEC_MKTI
- 
+
      C*****CDEPKB2       KLIST                                                                178378
      C************       KFLD                    PrevDPBA                                     178378
      C************       KFLD                    PrevDPBN                                     178378
@@ -1583,7 +1585,7 @@
      C                   KFLD                    PrevDPSS                                     209844
      C                   KFLD                    PrvDepot                                     209844
      C                   KFLD                    SEC_MKTI                                     209844
- 
+
      C************       IF        S01496 = 'N'                                               178378
      C                   IF        BGPFMG <> 'Y'                                              209844
      C                             AND BGN4ST <> 'Y'                                          209844
@@ -1599,7 +1601,7 @@
      C************       ELSE                                                                 178378
      C*****CDEPKB2       CHAIN     CDEPPD2                            33                      178378
      C************       END                                                                  178378
- 
+
      C     *IN33         IFEQ      '1'
      C     *IN33         OREQ      '0'
      C     CD_RECI       ANDEQ     '*'
@@ -1637,10 +1639,10 @@
      C                   Z-ADD     *ZEROS        CD_SAFS                                      233566
      C                   Z-ADD     *ZEROS        CD_SAPD                                      233566
      C**********         ENDIF                                                         CGL031 234440
- 
+
      C                   ENDDO
      C                   ENDIF
- 
+
      C     DPMV          IFEQ      'WI'
                                                                                              BUG2852
      C     CSE015        IFEQ      'Y'                                                       BUG2852
@@ -1655,13 +1657,13 @@
      C                   SUB       PrevDPNA      CD_CDST
      C                   SUB       PrevValue     CD_SAPS
      C                   ENDIF                                                               BUG2852
- 
+
      C     PrevDPMD      IFLE      Rundate
      C                   SUB       PrevDPNA      CD_CNSV
      C                   SUB       PrevValue     CD_SPSV
      C                   SUB       PrevDPNA      CD_CNSI
      C                   END
- 
+
      C                   ELSE
                                                                                              BUG2852
      C     CSE015        IFEQ      'Y'                                                       BUG2852
@@ -1676,19 +1678,19 @@
      C                   ADD       PrevDPNA      CD_SNPT
      C                   SUB       PrevValue     CD_SAPP
      C                   ENDIF                                                               BUG2852
- 
+
      C     PrevDPDO      IFLE      Rundate
      C                   ADD       PrevDPNA      CD_CNPV
      C                   SUB       PrevValue     CD_SAPV
      C                   ADD       PrevDPNA      CD_CNSI
      C                   END
- 
+
      C                   END
- 
+
      C                   MOVEL     NATN          CD_TNLU
- 
+
      C     *IN33         IFEQ      '1'
- 
+
      C************       IF        S01496 = 'N'                                               178378
      C                   IF        BGPFMG <> 'Y'                                              209844
      C                             AND BGN4ST <> 'Y'                                          209844
@@ -1699,9 +1701,9 @@
      C************       ELSE                                                                 178378
      C************       WRITE     CDEPPD2                              99                    178378
      C************       ENDIF                                                                178378
- 
+
      C                   ELSE
- 
+
      C************       IF        S01496 = 'N'                                               178378
      C                   IF        BGPFMG <> 'Y'                                              209844
      C                             AND BGN4ST <> 'Y'                                          209844
@@ -1712,9 +1714,9 @@
      C************       ELSE                                                                 178378
      C************       UPDATE    CDEPPD2                              99                    178378
      C************       ENDIF                                                                178378
- 
+
      C                   END
- 
+
      C     *IN99         CASEQ     '1'           SRErr
      C                   ENDCS
       *
@@ -1747,36 +1749,36 @@
      C                   ADD       1             COUNT                                        223870
       *                                                                                       223870
      C                   ENDDO                                                                223870
- 
+
      C     *IN34         IFEQ      '1'
      C     *IN58         OREQ      '1'                                                        223870
      C                   MOVEL     'AUDIT'       DBKEY
      C                   MOVEL     'CDEPP   '    DBFILE                         ************
      C                   MOVEL     '003'         DBASE                          * DBERR 003*
      C                   EXSR      SRErr                                        ************
- 
+
      C                   ELSE
- 
+
      C                   ADD       1             CD_NORE
      C                   MOVEL     NATN          CD_TNLU
- 
+
      C                   UPDATE    CDEPPAF                              99
- 
+
      C     *IN99         CASEQ     '1'           SRErr
      C                   ENDCS
- 
+
      C                   END
      C                   END
       *
       ** If movement date LT date, update Customer position
       *
      C     PrvDate       IFLE      CD_DDTE
- 
+
      C     CPOSKB        KLIST
      C                   KFLD                    PrevDPBA
      C                   KFLD                    DPSS
      C                   KFLD                    PrevDPBN
- 
+
      C     CPOSKB        CHAIN     CPOSNDF                            33
                                                                                               CGL031
       ** Not found/Record deleted, set up record                                              CGL031
@@ -1804,17 +1806,17 @@
      C                   MOVE      'Y'           CP_CSBV
      C                   MOVEL     NATN          CP_TNLU
      C                   END
- 
+
      C                   UPDATE    CPOSNDF                              99
- 
+
      C     *IN99         CASEQ     '1'           SRErr
      C                   ENDCS
- 
+
      C                   END
- 
- 
+
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1826,7 +1828,7 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRUpdNewPs    BEGSR
       *
       ** Access Customer depot file
@@ -1836,14 +1838,14 @@
      C                   ELSE
      C                   MOVE      DPOD          NewDepot
      C                   END
- 
+
      C     CDEPKA1       KLIST
      C                   KFLD                    DPBA
      C                   KFLD                    DPBN
      C                   KFLD                    DPSS
      C                   KFLD                    NewDepot
      C                   KFLD                    SEC_MKTI
- 
+
      C*****CDEPKA2       KLIST                                                                178378
      C************       KFLD                    DPBA                                         178378
      C************       KFLD                    DPBN                                         178378
@@ -1858,7 +1860,7 @@
      C                   KFLD                    DPSS                                         209844
      C                   KFLD                    NewDepot                                     209844
      C                   KFLD                    SEC_MKTI                                     209844
- 
+
      C************       IF        S01496 = 'N'                                               178378
      C                   IF        BGPFMG <> 'Y'                                              209844
      C                             AND BGN4ST <> 'Y'                                          209844
@@ -1874,7 +1876,7 @@
      C************       ELSE                                                                 178378
      C*****CDEPKA2       CHAIN     CDEPPD2                            33                      178378
      C************       END                                                                  178378
- 
+
      C     *IN33         IFEQ      '1'
      C     *IN33         OREQ      '0'
      C     CD_RECI       ANDEQ     '*'
@@ -1889,13 +1891,13 @@
      C                   MOVE      NewDepot      CD_CDPT
      C                   MOVE      SEC_MKTI      CD_CDMK
      C                   MOVE      PTFR          CD_PTFR
- 
+
      C     DPMV          IFEQ      'WI'
      C                   Z-ADD     DPMD          CD_DDTE
      C                   ELSE
      C                   Z-ADD     DPDO          CD_DDTE
      C                   END
- 
+
      C                   Z-ADD     *ZEROS        CD_CECN
      C                   Z-ADD     *ZEROS        CD_CDNT
      C                   Z-ADD     *ZEROS        CD_CDNV
@@ -1919,9 +1921,9 @@
      C                   Z-ADD     *ZEROS        CD_SAFS                                      233566
      C                   Z-ADD     *ZEROS        CD_SAPD                                      233566
      C                   ENDIF                                                                CGL031
- 
+
      C                   ENDIF
- 
+
      C     DPMV          IFEQ      'WI'
                                                                                              BUG2852
      C     CSE015        IFEQ      'Y'                                                       BUG2852
@@ -1937,15 +1939,15 @@
      C                   ADD       NewValue      CD_SAPS
      C                   ENDIF                                                               BUG2852
      C                   Z-ADD     DPMD          NewDate
- 
+
      C     DPMD          IFLE      Rundate
      C                   ADD       DPNA          CD_CNSV
      C                   ADD       NewValue      CD_SPSV
      C                   ADD       DPNA          CD_CNSI
      C                   END
- 
+
      C                   ELSE
- 
+
      C     CSE015        IFEQ      'Y'                                                       BUG2852
      C     DMTD          IFLE      Rundate                                                   BUG2852
      C                   SUB       DPNA          CD_SNPT                                     BUG2852
@@ -1965,13 +1967,13 @@
      C                   ADD       NewValue      CD_SAPV
      C                   SUB       DPNA          CD_CNSI
      C                   END
- 
+
      C                   END
- 
+
      C                   MOVEL     NATN          CD_TNLU
- 
+
      C     *IN33         IFEQ      '1'
- 
+
      C************       IF        S01496 = 'N'                                               178378
      C                   IF        BGPFMG <> 'Y'                                              209844
      C                             AND BGN4ST <> 'Y'                                          209844
@@ -1982,9 +1984,9 @@
      C************       ELSE                                                                 178378
      C************       WRITE     CDEPPD2                              99                    178378
      C************       ENDIF                                                                178378
- 
+
      C                   ELSE
- 
+
      C************       IF        S01496 = 'N'                                               178378
      C                   IF        BGPFMG <> 'Y'                                              209844
      C                             AND BGN4ST <> 'Y'                                          209844
@@ -1995,9 +1997,9 @@
      C************       ELSE                                                                 178378
      C************       UPDATE    CDEPPD2                              99                    178378
      C************       ENDIF                                                                178378
- 
+
      C                   END
- 
+
      C     *IN99         CASEQ     '1'           SRErr
      C                   ENDCS
       *
@@ -2029,7 +2031,7 @@
      C                   ADD       1             COUNT                                        223870
       *                                                                                       223870
      C                   ENDDO                                                                223870
- 
+
      C     *IN34         IFEQ      '1'
      C     *IN60         OREQ      '1'                                                        223870
      C                   MOVEL     'AUDIT'       DBKEY
@@ -2037,29 +2039,29 @@
      C                   MOVEL     '004'         DBASE                          * DBERR 004*
                                                                                 ************
      C                   EXSR      SRErr
- 
+
      C                   ELSE
- 
+
      C                   ADD       1             CD_NORE
      C                   MOVEL     NATN          CD_TNLU
- 
+
      C                   UPDATE    CDEPPAF                              99
- 
+
      C     *IN99         CASEQ     '1'           SRErr
      C                   ENDCS
      C                   END
- 
+
      C                   END
       *
       ** If movement date LT date, update Customer position
       *
      C     NewDate       IFLE      CD_DDTE
- 
+
      C     CPOSKA        KLIST
      C                   KFLD                    DPBA
      C                   KFLD                    DPSS
      C                   KFLD                    DPBN
- 
+
      C     CPOSKA        CHAIN     CPOSNDF                            33
       *
       ** If no record found, create new
@@ -2093,9 +2095,9 @@
      C                   Z-ADD     DPMD          CP_APDT                                      236705
      c                   ENDIF                                                                236705
      C                   ENDIF                                                                CGL031
- 
+
      C                   WRITE     CPOSNDF                              99
- 
+
      C     *IN99         CASEQ     '1'           SRErr
      C                   ENDCS
       *
@@ -2126,49 +2128,49 @@
      C                   ADD       1             COUNT                                        223870
       *                                                                                       223870
      C                   ENDDO                                                                223870
- 
+
      C     *IN33         IFEQ      '1'
      C     *IN56         OREQ      '1'                                                        223870
- 
+
      C                   MOVEL     'AUDIT'       DBKEY
      C                   MOVEL     'CPOSN   '    DBFILE                         ************
      C                   MOVEL     '005'         DBASE                          * DBERR 005*
                                                                                 ************
      C                   EXSR      SRErr
- 
+
      C                   ELSE
      C*
      C                   ADD       1             CP_NORE
      C                   MOVEL     NATN          CP_TNLU
- 
+
      C                   UPDATE    CPOSNAF                              99
- 
+
      C     *IN99         CASEQ     '1'           SRErr
      C                   ENDCS
- 
+
      C                   END
- 
+
      C                   ELSE
       *
       ** If movement date before either Last Position Change date,
       ** update corresponding flag
       *
      C     NewDate       IFLT      CP_CSCT
- 
+
      C     CP_RECI       IFEQ      '*'
      C                   MOVE      'D'           CP_RECI
      C                   END
- 
+
      C                   MOVE      'Y'           CP_CSBT
      C                   MOVEL     NATN          CP_TNLU
      C                   END
      C*
      C     NewDate       IFLT      CP_CSCV
- 
+
      C     CP_RECI       IFEQ      '*'
      C                   MOVE      'D'           CP_RECI
      C                   END
- 
+
      C                   MOVE      'Y'           CP_CSBV
      C                   MOVEL     NATN          CP_TNLU
       *****************************************************************                236705 234440
@@ -2201,12 +2203,12 @@
      C**********         Z-ADD     WrkCSPI       CP_CSPI                               236758 234440
      C**********         ENDIF                                                         236705 234440
      C                   END
- 
+
      C                   UPDATE    CPOSNDF                              99
- 
+
      C     *IN99         CASEQ     '1'           SRErr
      C                   ENDCS
- 
+
      C                   END
       *****************************************************************                236705 234440
      C**********         ELSE                                                          236705 234440
@@ -2244,21 +2246,21 @@
      C******IN99         CASEQ     '1'           SRErr                                 236705 234440
      C**********         ENDCS                                                         236705 234440
      c**********         ENDIF                                                         236705 234440
- 
+
      C                   END
       *
       ** If No record on Customer Position Profit Centre file
       ** need to add one and amend the Audit file
       *
      C     BKPRCU        IFEQ      'Y'
- 
+
      C     SEPCCK        KLIST
      C                   KFLD                    DPBN
      C                   KFLD                    DPBA
      C                   KFLD                    DPSS
- 
+
      C     SEPCCK        CHAIN     SEPCCD                             33
- 
+
      C     *IN33         IFEQ      '1'
      C                   MOVEL     'D'           SP_RECI
      C                   MOVEL     DPBN          SP_CNUM
@@ -2270,37 +2272,37 @@
      C                   MOVEL     NATN          SP_TNLU
      C                   MOVE      *BLANKS       SP_PTFR
      C                   MOVE      PTFR          SP_PTFR                        CPB001
- 
+
      C                   WRITE     SEPCCDF                              99
- 
+
      C     *IN99         CASEQ     '1'           SRErr
      C                   ENDCS
- 
+
      C     1             CHAIN     SEPCAF                             33
      C     *IN33         IFEQ      '1'
- 
+
      C                   MOVEL     'AUDIT'       DBKEY
      C                   MOVEL     'SEPCA   '    DBFILE                         ************
      C                   MOVEL     '006'         DBASE                          * DBERR 006*
                                                                                 ************
      C                   EXSR      SRErr
- 
+
      C                   ELSE
      C                   ADD       1             SP_NORE
      C                   ADD       1             SP_SINS
- 
+
      C                   UPDATE    SEPCAF                               99
- 
+
      C     *IN99         CASEQ     '1'           SRErr
      C                   ENDCS
- 
+
      C                   END
- 
+
      C                   END
      C                   END
- 
+
      C                   ENDSR
- 
+
       *****************************************************************                       CSE039
       *                                                               *                       CSE039
       *  SrMovement - Movement Status Record                          *                       CSE039
@@ -2401,9 +2403,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRZLCD        BEGSR
- 
+
      C                   CALLB     'ZLCD'
      C                   PARM                    SEC_ISSD
      C                   PARM                    SEC_ITLD
@@ -2434,11 +2436,11 @@
      C                   PARM                    SEC_HCY7                                     CSE071
      C                   PARM                    SEC_HCY8                                     CSE071
      C                   PARM                    SEC_HCY9                                     CSE071
- 
+
       * OUTPUTS
       ** Last Coupon Date before Control Date
      C                   PARM                    ZZLCD             5 0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2451,9 +2453,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRZNCD        BEGSR
- 
+
      C                   CALLB     'ZNCD'
      C                   PARM                    SEC_ITLD
      C                   PARM                    SEC_FCPN
@@ -2484,13 +2486,13 @@
      C                   PARM                    SEC_HCY7                                     CSE071
      C                   PARM                    SEC_HCY8                                     CSE071
      C                   PARM                    SEC_HCY9                                     CSE071
- 
+
       * OUTPUTS
       ** Next Coupon Date
      C                   PARM                    NCD               5 0
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2502,9 +2504,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRZACCZ       BEGSR
- 
+
      C                   CALLB     'ZACCZ'
      C                   PARM                    ZAMT
      C                   PARM                    ZDCSDT
@@ -2523,9 +2525,9 @@
       *
       ** System Date Format (1A)
      C                   PARM                    BJDFIN
- 
+
       * OUTPUTS
- 
+
       ** Accrued Interest  (13P 0)
       ** Accrued Interest  (15P 1)
       ** No. of days (ZDAYS output)
@@ -2534,7 +2536,7 @@
      C                   PARM                    ZDXINT           15 1
      C                   PARM                    ZDDAYS            5 0
      C                   PARM                    ZINTDD            5 0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2549,9 +2551,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRZYCE        BEGSR
- 
+
      C                   CALLB     'ZYCE'
      C                   PARM                    WRKD              5 0
      C                   PARM                    NCD
@@ -2562,7 +2564,7 @@
       ** Cum/Ex coupon indicator (1A)
      C                   PARM                    SCUMEX
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2574,9 +2576,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRZPRCI       BEGSR
- 
+
      C                   CALLB     'ZPRCI'
      C                   PARM                    ZPRCIN           15 8
      C                   PARM                    ZFDATE            5 0
@@ -2594,20 +2596,20 @@
      C                   PARM                    ZNOML
      C                   PARM                    WRKPI            15 9
      C                   PARM                    SCUMEX
- 
+
       ** System Info
       ** Date format (1A)
      C                   PARM                    BJDFIN
- 
+
       * OUTPUTS
- 
+
       ** Zyld Ok indicator (1A)
       ** Price as Percentage (15P 8)
      C                   PARM                    ZYLDOk            1
      C                   PARM                    ZPRCOT           15 8
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2619,23 +2621,23 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRZCNSD       BEGSR
- 
+
      C                   CALLB     'ZCNSD'
      C                   PARM                    ZNOML            15 0
      C                   PARM                    ZPRC             16 9
      C                   PARM                    SEC_SPBS
      C                   PARM                    SEC_NMDP
      C                   PARM                    NomCcyDec
- 
+
       * OUTPUTS
- 
+
       **  Consideration
      C                   PARM                    ZCONS            15 0
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2647,7 +2649,7 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRGenTrnNo    BEGSR
       *
       ** Initialize Transaction Number
@@ -2659,9 +2661,9 @@
      C*****              CALLB     'ZTNLU1'
      C*****              PARM                    ReturnCode
      C*****              PARM                    NATN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -2673,9 +2675,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRInit        BEGSR
- 
+
      C                   CLEAR                   DPMVDS
       *
       ** Zeroise Numeric fields
@@ -2702,9 +2704,9 @@
      C                   Z-ADD     *ZERO         PINT                           CPB001
      C**********         Z-ADD     *ZERO         CPTY                                  207006 CSD027
      C                   EVAL      CPTY = *BLANKS                                             CSD027
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2716,9 +2718,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRtvSec      BEGSR
- 
+
      C     V_DPSS        CHAIN     SECTYDF                            99
       *
       ** DATABASE ERROR
@@ -2742,9 +2744,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRtvTrans    BEGSR
- 
+
      C     DPTMVK        KLIST
      C                   KFLD                    V_DPSS
      C                   KFLD                    V_DPRN
@@ -2775,9 +2777,9 @@
      C                   ENDIF                                                                CAP087
       *                                                                                       CAP087
      C                   ENDDO                                                                CAP087
- 
+
      C     *IN33         IFEQ      '1'
- 
+
      C                   MOVEL     *BLANKS       DBKEY
      C                   MOVE      V_DPRN        DBKEY
      C                   MOVEL     V_DPSS        DBKEY
@@ -2785,7 +2787,7 @@
      C                   MOVEL     '002'         DBASE                          * DBERR 002*
                                                                                 ************
      C                   EXSR      SRErr
- 
+
      C                   ELSE
       *
       ** Move the details of the previous transaction to a working DS
@@ -2795,11 +2797,11 @@
       ** Reset Working DS
       *
      C                   EXSR      SRInit
- 
+
      C                   END
- 
+
      C                   ENDSR
- 
+
       ****************************************************************
       /EJECT
       ****************************************************************
@@ -2817,7 +2819,7 @@
       **  Terminate the Program
       *
      C                   EXSR      *PSSR
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2831,16 +2833,16 @@
       *                                                               *
       *****************************************************************
      C     *InzSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
      C                   PARM                    RetCodeIn
- 
+
       ** Received Parameters
       ** -------------------
- 
+
       ** Incoming Transaction
- 
+
      C                   PARM                    DPMVTrans
                                                                                               CSD015
       ** Added parameter for Midas Compliance Watch                                           CSD015
@@ -2850,15 +2852,15 @@
      C                   PARM                    P_NOTM            7                          222727
      C                   PARM                    P_MSGK           40                          222727
      C                   PARM                    CGL031                                       CGL031
- 
+
      C                   EVAL      V_NOTM = P_NOTM                                            222727
      C                   EVAL      V_MSGK = P_MSGK                                            222727
      C                   MOVEL     'SEDPMVUPD'   DBPGM            10
- 
+
      C/COPY WNCPYSRC,SEH00084
       ** ICD Information Retrieval starts here
       ** -------------------------------------
- 
+
       *
       ** Bank Details
       *
@@ -2875,7 +2877,7 @@
      C                   MOVEL     @OPTN         DBKEY                          * DB ERROR 01*
      C                   EXSR      SRERR                                        **************
      C                   END
- 
+
      C                   MOVE      BJRDNB        RunDate           5 0
       *
       ** Get General Ledger ICD
@@ -3086,7 +3088,7 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
       *                                                                                       CSD015
      C                   CALL      'AOSARDR0'                                                 CSD015
@@ -3108,7 +3110,7 @@
      C                   MOVE      'Y'           CSD015            1                          CSD015
      C                   ENDIF                                                                CSD015
      C                   ENDIF                                                                CSD015
- 
+
      C                   IF        CSD015 = 'Y'                                               CSD015
      C                   CALL      'AOCWCDR0'                                                 CSD015
      C                   PARM      *BLANKS       @RTCD                                        CSD015

@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -108,7 +110,7 @@
       *
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -273,7 +275,7 @@
      C                   IF        PINKC = *ON
      C                   EVAL      *INLR = *ON
      C                   ENDIF
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -293,13 +295,13 @@
       *
      C                   Z-ADD     1             Cx
      C                   Z-ADD     10            Ex
- 
+
      C                   DOU       Cx > 60
- 
+
      C                   IF        WEI(Cx) = 'N' OR WEI(Cx) = 'W'
      C                   EVAL      *IN(Ex) = *ON
      C                   ENDIF
- 
+
      C                   EVAL      Cx = Cx + 1
      C                   EVAL      Ex = Ex + 1
      C                   ENDDO
@@ -391,13 +393,13 @@
       ** Enable respective fields for each event type.
       *
      C                   SELECT
- 
+
      C                   WHEN      SSDET = 'DV'
      C                   EVAL        *IN61 = *ON
- 
+
      C                   WHEN      SSDET = 'IR'
      C                   EVAL        *IN62 = *ON
- 
+
      C                   WHEN      SSDET = 'PP'
      C                   EVAL        *IN89 = *ON
      C                   IF        PPROT = '4'
@@ -405,38 +407,38 @@
      C                   ELSE
      C                   EVAL        *IN64 = *ON
      C                   ENDIF
- 
+
      C                   WHEN      SSDET = 'RC'
      C                   EVAL        *IN65 = *ON
- 
+
      C                   WHEN      SSDET = 'MP'
      C                   EVAL        *IN66 = *ON
- 
+
      C                   WHEN      SSDET = 'XR'
      C                   EVAL        *IN67 = *ON
- 
+
      C                   WHEN      SSDET = 'CV'
      C                   EVAL        *IN68 = *ON
- 
+
      C                   WHEN      SSDET = 'BI'
      C                   EVAL        *IN69 = *ON
- 
+
      C                   WHEN      SSDET = 'RI'
      C                   EVAL        *IN85 = *ON
- 
+
      C                   WHEN      SSDET = 'CR'
      C                   EVAL        *IN86 = *ON
- 
+
      C                   WHEN      SSDET = 'OC'
      C                   EVAL        *IN87 = *ON
- 
+
      C                   WHEN      SSDET = 'RP'
      C                   EVAL        *IN88 = *ON
                                                                                               CSE065
      C                   WHEN      CSE065 = 'Y' AND                                           CSE065
      C                             SSDET = 'AL'                                               CSE065
      C                   EVAL        *IN77 = *ON                                              CSE065
- 
+
      C                   ENDSL
                                                                                               CAS006
      C                   EVAL      SNTCR = *BLANKS                                            CAS006
@@ -485,7 +487,7 @@
      C                   EVAL      PINKJ = *INKJ
      C                   EVAL      PINKL = *INKL
      C                   EVAL      PINKP = *INKP
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -506,7 +508,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -643,7 +645,7 @@
      C                   ELSE
      C                   EVAL      *IN82 = *OFF
      C                   ENDIF
- 
+
      C                   EVAL      SUSER = PsUser
      C                   EVAL      SWSID = PsJobName
       *
@@ -670,7 +672,7 @@
       ** =================================================================
       ** The following /COPY sets these values.
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *
       *****************************************************************

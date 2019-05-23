@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 10Dec06               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 10Dec06               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -245,9 +247,9 @@
      C                   IF        PINKC = *ON
      C                   EVAL      *INLR = *ON
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -372,7 +374,7 @@
      C                   EVAL      PINKJ = *INKJ
      C                   EVAL      PINKL = *INKL
      C                   EVAL      PINKP = *INKP
- 
+
       *  Set up key list for chaining into INVTPD                                             186556
       *                                                                                       186556
      C     PROTKey       KLIST                                                                186556
@@ -399,7 +401,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -552,7 +554,7 @@
      C                   IF        S01401 = 'Y'
      C                   EVAL      *IN82 = *ON
      C                   ENDIF
- 
+
       ** Market Data Feed is present.                                                         CSD006
      C                   IF        CSD006 = 'Y'                                               CSD006
      C                   EVAL      *IN91 = *ON                                                CSD006

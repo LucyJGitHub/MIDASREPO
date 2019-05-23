@@ -17,12 +17,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CSE075             Date 06Mar06               *
       *                 CGL032             Date 05Jul04               *
       *                 CSE075             Date 17Nov05               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSE075 - CSE075 Change Control. Display Coupon Delay period  *
@@ -256,9 +258,9 @@
      C                   IF        PINKC = *ON
      C                   EVAL      *INLR = *ON
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -408,7 +410,7 @@
      C                   EVAL      PINKH = *INKH
      C                   EVAL      PINKL = *INKL
      C                   EVAL      PINKP = *INKP
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -429,7 +431,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -522,7 +524,7 @@
      C                   PARM                    PINKH
      C                   PARM                    PINKL
      C                   PARM                    PINKP
- 
+
       *
       ** Private Banking is present.
       *
@@ -547,7 +549,7 @@
      C                   ENDIF                                                  CPB002
       *                                                                         CPB002
      C                   ENDIF
- 
+
      C                   EVAL      SUSER = PSUser
      C                   EVAL      SWSID = PsJobName
       *

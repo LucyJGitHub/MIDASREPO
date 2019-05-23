@@ -26,8 +26,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD040876           Date 13Sep16               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD040876           Date 13Sep16               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD029805           Date 05Sep14               *
       *                 MD026550           Date 22May14               *
       *                 CGL132             Date 01May13               *
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD040876 - CRS MQ                                            *
       *  MD046248 - Finastra Rebranding                               *
       *  MD029805 - GIIN number validation (Recompile)                *
@@ -70,7 +72,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       ** Valid Non-A/C Holders
      FSDVNAHLPD UF A E             DISK    Infsr(*PSSR)
      F                                     Prefix(V_)
@@ -78,7 +80,7 @@
      FSDVFTNHPD UF A E             DISK    INFSR(*PSSR)                                       CGL132
      F                                     PREFIX(V_)                                         CGL132
      F                                     COMMIT                                             CGL132
- 
+
      FSDVCRNHPD UF A E             DISK    INFSR(*PSSR)                                     MD040876
      F                                     Commit                                           MD040876
      FSDVCRSNPD UF A E             DISK    INFSR(*PSSR)                                     MD040876
@@ -89,19 +91,19 @@
      F                                     Commit
      FSDIFTNHPD UF A E             DISK    INFSR(*PSSR)                                       CGL132
      F                                     COMMIT                                             CGL132
- 
+
      FSDICRNHPD UF A E             DISK    Infsr(*PSSR)                                     MD040876
-     F                                     Commit                                           MD040876    
+     F                                     Commit                                           MD040876
      FSDICRSNPD UF A E             DISK    INFSR(*PSSR)                                     MD040876
      F                                     Commit                                           MD040876
 
      FSDVNAHLL1 IF   E           K DISK    RENAME(SDVNAHLD0:SDVNAHLCHK)
- 
+
      FZAFLDNPD  IT   F   15        DISK    Infsr(*PSSR)
- 
+
       *****************************************************************
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -119,70 +121,70 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API *CTL modules.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** used in checking whether there are messages on the data queue.
      D/COPY ZACPYSRC,DTAQCHKDCL
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** String for error messages to the operator
      D ProcErr         C                   CONST('Error in module')
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Incoming Header
      D HeadIn        E DS                  Extname(APHEADPD)
- 
+
       ** Incoming Transaction
      D*TranInPrim    E DS                  Extname(SDNAHLPD)                                  CER047
      D TranInPrim    E DS                  Extname(SDNAHLPD)                                  CER047
@@ -195,14 +197,14 @@
      D TranInFatca   E DS                  EXTNAME(SDFTNRPD)                                  CGL132
      D TranInCRNH    E DS                  EXTNAME(SDCRNSPD)                                MD040876
      D TranInCRSN    E DS                  EXTNAME(SDCRNDPD)                                MD040876
- 
+
       ** Valid Non-A/C Holder layout
      D ValidNaho     E DS                  Extname(SDVNAHLPD)
      D                                     Prefix(V_)
- 
+
       ** (Current) Non-A/C Holder record in file Format
      D NahoFilFmt    E DS                  Extname(SDNAHOPD)
- 
+
       ** (Current) Non-A/C Holder in Screen Format - Primary Details
      D CurNaPrim     E DS                  Extname(SDNAHLPD)
      D                                     Prefix(@)
@@ -232,29 +234,29 @@
      D ValidCRNH     E DS                  EXTNAME(SDVCRNHPD)                               MD040876
      D SDVCRSN       E DS                  EXTNAME(SDVCRSNPD)                               MD040876
                                                                                             MD040876
- 
+
       ** Error indicators
      D OKNaPrim      E DS                  Extname(SDENAHLPD)
      D OKFATCAdet    E DS                  EXTNAME(SDEFTNHPD)                                 CGL132
      D OKCRNHDet     E DS                  EXTNAME(SDECRNHPD)                               MD040876
      D OKCRSCtry     E DS                  EXTNAME(SDECRSNPD)                               MD040876
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  Extname(SDBANKPD)
- 
+
       ** External DS for API ICD
      D SDAPI         E DS                  Extname(SDAPIPD)
- 
+
       ** External DS for SAR Details
      D SCSARD        E DS                  Extname(SCSARDPD)
      D  SCA_LCD      E                     Extfld(LCD)
- 
+
       ** First DS for Access programs - short data structure
      D DSFDY         E DS                  Extname(DSFDY)
- 
+
       ** Second DS for Access programs - long data structure
      D DSSDY         E DS                  Extname(DSSDY)
- 
+
      D CrFoFilFmt      DS                                                                     CGL132
      D  WCDESC                 1     50                                                       CGL132
      D  WPDESC                51    100                                                       CGL132
@@ -278,27 +280,27 @@
      D  WWTINO2              150    174                                                       CGL132
       ** 24X7 status data area
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
- 
+
       ** SD data area
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Error message field(s)
      D ExtData         S            500
- 
- 
+
+
      D     Msg1        S                   LIKE(#MsgID)
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Fields (500A) to receive the incoming transaction
      D***Trans5001       S            500A                                                    CGL132
      D Trans5001       S           1000A                                                      CGL132
@@ -326,32 +328,32 @@
      D WChar12         S             12A                                                    MD041311
      D WChar217        S            217A                                                    MD041311
      D WChar229        S            229A                                                    MD041311
- 
- 
+
+
       ** Index for arrays of error message ids etc in Amend validation
      D AmIdx           S              3P 0
- 
+
       ** Indicies for arrays used to set up corresponding sequence numbers
       **  for the fields that are in error
      D Ix              S              3P 0
      D Iy              S              3P 0
- 
+
       ** Overall Transaction status, to be passed to the Message Handler
      D TranStatus      S              1A
- 
+
       ** Module ID, to be passed to the Message Handler
      D ModuleID        S              2A
- 
+
      D CGL032          S              1A
      D Retcd           S              7A
      D Option          S              7A
      D Sardesc         S              6A
- 
+
      D WNAHO           S                   LIKE(DDNAHO)
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
      D Object          S             10A   Inz('SDNAHLUPC')
      D Lib             S             10A   Inz('*LIBL')
      D ObjType         S              7A
@@ -360,40 +362,40 @@
      D WaitTime        S              6A   Inz('0     ')
      D Dlcobj          S              1A   Inz('Y')
      D Return          S              7A
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   Like(#MsgID)
      D DummyMsgF       S             10A
- 
+
       ** Whether or not to clear the program message queue (this is not
       ** actually used, but is required by the message handler's parameter
       ** list.
      D ClrPgmMsgQ      S              1A   Inz('Y')
- 
+
       ** Flags to indicate whether substitution is required in
       ** each of the various parts the transaction
      D RepPrim         S              1A   Inz('N')
- 
+
       ** MQ fields
      D MQError         S             28
      D MQReturn        S             10
      D MQErrLong       S            132
- 
+
       ** RTV parameter fields
      D ModeofOp        S              6
      D @in36           S              1
- 
+
       ** 2VL parameter field
      D RespMode        S              1
- 
+
       ** APDTASUBS parameter fields
      D IncData         S           2000
      D CurData         S           2000
- 
+
       ** Keyfields used
      D KNaho           S             10
- 
+
      D CSC011          S              1A
      D TransDtl        S           5800A
      D PNahoNum        S             18A
@@ -415,19 +417,19 @@
      D WChar2          S              2A                                                    MD041311
      D Wtemp1          S              3A                                                    MD041311
      D Wtemp2          S            348A                                                    MD041311
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -437,145 +439,145 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Incoming transaction is broken into 500A fields, so that a common CL
       ** can be used between this module and the one that read the MQ queue.
       ** This module needs to break these 500A fields by loading them into
       ** the appropriate (externally described) data structure.
- 
+
      C**********         EVAL      TranInPrim1 = Trans5001                           CER047 MD040876
      C**********         EVAL      TranInPrim2 = Trans5002                           CER047 MD040876
      C**********         EVAL      TranInPrim = Trans5001 + extdata                           CER047
      C**********         EVAL      TranInPrim = TranInPrim + extdata                 CER047 MD040876
      C**********         EVAL      TranInFatca = Trans5003                           CGL132 MD040876
      C                   EXSR      Parse_NAHL                                               MD040876
- 
+
       ** Generate a timestamp for this transaction
- 
+
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
       ** Reset variables gradually updated
- 
+
      C                   EXSR      SRResetCycle
- 
+
       **  Check if valid Non-A/C Holder details exists
- 
+
      C                   EXSR      SRChkValNaho
- 
+
       **  If valid Non-A/C Holder details does exist (even after delay), fail this input
- 
+
      C     Idx           IFNE      0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       **  Check if valid Non-A/C Holder exists for Midas Non-A/C Holder
- 
+
      C                   EXSR      SRChkValMiCu
- 
+
       **  If valid Non-A/C Holder does exist (even after delay), fail this input
- 
+
      C     Idx           IFNE      0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       ** Reset variables again in case the details have been corrupted
       ** by previous chain to valid Non-A/C Holder details file.
- 
+
      C                   EXSR      SRResetCycle
- 
+
       **  Validate Action Code
- 
+
      C                   EXSR      SRValidateAc
- 
+
       **  If error in validation of action code, fail this input
- 
+
      C     Idx           IFNE      0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       **  Processing depends upon Action Code
- 
+
      C                   SELECT
- 
+
      C                   WHEN         DDACTN = 'I'
- 
+
       **  Processing for Inserts
- 
+
      C                   EXSR      SRValidateTr
- 
+
      C                   WHEN         DDACTN = 'A'
      C                             OR DDACTN = 'D'
- 
+
       **  Processing for Amends or Changes
- 
+
       ** Check for the existence of the replacement character; if this is
       ** used, only the changed data has been sent, and all occurrences of
       ** the replacement character must be replaced with the corresponding
       ** character from the original transaction.
- 
+
      C                   IF        DDACTN = 'A' AND GHSUBS <> *blank
- 
+
      C     GHSUBS        SCAN      TranInPrim                             99
      C                   IF        *In99
      C                   EVAL      RepPrim = 'Y'
      C                   ENDIF
- 
+
       ** If any of the flags set above is true, do the data
       ** substution subroutine.
- 
+
      C                   IF        (RepPrim = 'Y')
      C                   EXSR      SRDtaSubs
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EXSR      SRSetupAmd
      C                   EXSR      SRValidateTr
- 
+
      C                   ENDSL
- 
+
      C     INVALID       TAG
- 
+
       **  Check for exception error from any program lower in the stack
       **  If error detected, send message to system operator and
       **  return to calling program without updating database or
       **  prompting the database update program
- 
+
      C                   IN        APDUMP
- 
+
      C     ARERRMOD      IFNE      *BLANK
      C                   EVAL      MQErrlong  = *blank
      C                   MOVEL     ProcErr       MQError
      C                   MOVE      ARERRMOD      MQError
      C                   MOVEL     MQError       MQErrlong
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    MQReturn
      C                   PARM                    MQErrlong
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
- 
+
      C                   MOVEL     ARERRMOD      APRETCODE
      C     *Lock         IN        APDUMP
      C                   EVAL      ARERRMOD = *BLANK
      C                   OUT       APDUMP
      C                   RETURN
- 
+
      C                   ELSE
- 
+
       **  Processing for Error checking/write to database
- 
+
      C                   EXSR      SRCheckWrite
- 
+
       **  If valid, send data queue entry to prompt DB update program
- 
+
      C     Idx           IFEQ      0
      C                   EVAL      ObjType = '*DTAARA'
- 
+
       **  Check if update program active using Allocate Object API
       **  No prompting necessary if program is running
- 
+
      C                   CALLB     'APCALCOBJ'
      C                   PARM                    Object
      C                   PARM                    Lib
@@ -585,54 +587,54 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM      *BLANK        Return
- 
+
      C     Return        IFEQ      *BLANK
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes a check for whether there
       ** are messages on the server/updater data queue, and sends a 'GO'.
       ** message to the data queue if there are not.
      C/COPY ZACPYSRC,DTAQCHK
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       ** SRChkValNaho - Check if valid Non-A/C Holder details exist   *
       *****************************************************************
- 
+
      C     SRChkValNaho  BEGSR
- 
+
       ** Check for Non-A/C Holder on Valid file
- 
+
      C                   MOVEL     DDNAHO        WNAHO
      C     WNAHO         CHAIN     SDVNAHLL1                          99
- 
+
       ** If record found...
- 
+
      C     *In99         IFEQ      *Off
- 
+
       ** ..delay, then repeat check
- 
+
      C                   CALLB     'ZACDELAY'
- 
+
      C     WNAHO         CHAIN     SDVNAHLL1                          99
- 
+
       ** Error if still present
- 
+
      C     *In99         IFEQ      *Off
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'NHNAHO'
      C                   EVAL      MsgIDArr(Idx) = 'APM0900'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -640,43 +642,43 @@
       ** SRChkValMiCu - Routine to check if valid Non-A/C Holder      *
       **    exists for Midas Non-A/C Holder                           *
       *****************************************************************
- 
+
      C     SRChkValMiCu  BEGSR
- 
+
       ** Key list for file SDVNAHLL1
- 
+
      C     KMINah        Klist
      C                   Kfld                    KNAHO
- 
+
      C
      C     DDNAHO        IFNE      *BLANKS
- 
+
       ** Check for Customer on Valid file
- 
+
      C                   MOVEL     DDNAHO        KNAHO
      C     KMINah        CHAIN     SDVNAHLL1                          99
- 
+
       ** If record found...
- 
+
      C     *In99         IFEQ      *Off
- 
+
       ** ..delay, then repeat check
- 
+
      C                   CALLB     'ZACDELAY'
- 
+
      C     KMINah        CHAIN     SDVNAHLL1                          99
- 
+
       ** Error if still present
- 
+
      C     *In99         IFEQ      *Off
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDNAHO'
      C                   EVAL      MsgIDArr(Idx) = 'APM0900'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -684,33 +686,33 @@
       ** SRValidateAc - Routine to validate action code versus the    *
       **                Customer number supplied                      *
       *****************************************************************
- 
+
      C     SRValidateAc  BEGSR
- 
+
       ** Set retrieve mode to '*FRONT' (Access using Front Office ID)
       **  if insert
       **  if not insert and Midas transaction ID is not present
       ** Otherwise
       **  Set retrieve mode to blank  (Access using Midas transaction ID).
- 
+
      C     DDACTN        IFEQ      'I'
      C                   MOVEL     '*FRONT'      ModeofOp
      C                   ELSE
- 
+
      C     DDNAHO        IFEQ      *BLANK
      C                   MOVEL     '*FRONT'      ModeofOp
      C                   ELSE
      C                   MOVEL     '      '      ModeofOp
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Validate action code versus transaction IDs supplied
       ** The Customer in file format from the SD database is retrieved
       ** as well.
- 
+
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'SDNAHLRTV'
       ** INPUTS :         ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       ** Return code
@@ -720,7 +722,7 @@
       ** Action Code
       ** Front Office Transaction ID
       ** (Midas) Non-A/C Holder Number
- 
+
      C                   PARM      *BLANK        ReturnCode
      C                   PARM                    ModeofOp
      C                   PARM                    APRESPMODE
@@ -728,14 +730,14 @@
      C                   PARM                    APFOTranID
      C                   PARM                    DDNAHO
      C                   PARM                    @IN36
- 
+
       ** OUTPUTS :
       ** (Current) Non-A/C Holder in file format
       ** OK - Action code
       ** OK - Non-A/C Holder Number
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Array index (3P0) from/to caller
- 
+
      C                   PARM                    NahoFilFmt
      C                   PARM                    CrFaFilFmt                                   CGL132
      C                   PARM                    CrFoFilFmt                                   CGL132
@@ -747,69 +749,69 @@
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
      C                   PARM                    Idx
- 
+
      C                   EVAL      PAINSF = DDACTN                                          MD040876
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       ** SRSetUpAmd - Set up fields that are needed in the validation *
       **    of amendments and changes.                                *
       *****************************************************************
- 
+
      C     SRSetupAmd    BEGSR
- 
+
       ** For Amends, put the complete (pre-existing) Non-A/C Holder into the Valid
       **  file record - fields in this will be updated during processing
- 
+
      C                   MOVE      NahoFilFmt    ValidNaho
      C**********         MOVE      CrFaFilFmt    ValidFatca                          CGL132 MD041311
- 
+
       ** For Amends, convert the Non-A/C Holder to screen format
- 
+
      C                   CALLB     'SDNAHLCVT'
       ** INPUTS :         ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       ** Return Code
       ** Non-A/C Holder - file formats
- 
+
      C                   PARM                    RetCodeIn
      C                   PARM                    ValidNaho
      C                   PARM                    CrFaFilFmt                                   CGL132
      C                   PARM                    CrFoFilFmt                                   CGL132
      C                   PARM                    CrCrhFlFmt                                 MD040876
      C                   PARM                    PCrsdF                                     MD040876
- 
+
       ** OUTPUTS :
       ** Non-A/C Holder Details - screen formats
- 
+
      C                   PARM                    CurNaPrim
      C                   PARM                    CurCuFATC                                    CGL132
      C                   PARM                    CurCuFOTH                                    CGL132
      C                   PARM                    CurCuCRNH                                  MD040876
      C                   PARM                    PCrsdS                                     MD040876
- 
- 
+
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       ******************************************************************
       ** SRValidateTr - Routine to validate the main transaction details
       ******************************************************************
- 
+
      C     SRValidateTr  BEGSR
- 
+
       ** Validate Non-A/C Holder Primary details
- 
+
      C                   EXSR      SRValdNaPrim
- 
+
       **  If error in validation, fail this input
- 
+
      C     Idx           IFNE      0
      C                   GOTO      EVALidTr
      C                   ENDIF
- 
+
      C                   IF        CGL132 = 'Y'                                             MD040876
      C                   EXSR      SRValdNaFatca                                              CGL132
      C                   ENDIF                                                              MD040876
@@ -825,25 +827,25 @@
      C                   ENDIF                                                              MD041294
                                                                                             MD041294
      C     EVALidTr      ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       ** SRValdNaPrim - Validate Non-A/C Holder Primary details       *
       *****************************************************************
- 
+
      C     SRValdNaPrim  BEGSR
- 
+
      C                   CALLB     'SDNAHL2VL'
       ** INPUTS :        ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       ** Response mode
       ** Non-A/C Holder Primary Details
       ** Non-A/C Holder Extra Data
- 
+
      C                   PARM                    RespMode
      C                   PARM                    TranInPrim
      C                   PARM                    ExtData
- 
+
       ** OUTPUTS :
       ** Non-A/C Holder Primary Details OK inds
       ** Error fields/message IDs/message data (arrays) from/to caller
@@ -851,7 +853,7 @@
       ** Warning fields/message IDs/message data (arrays) from/to caller
       ** Array index (3P0) from/to caller
       ** Valid Non-A/C Holder layout (DS) from/to caller
- 
+
      C                   PARM                    OKNaPrim
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
@@ -863,9 +865,9 @@
      C                   PARM                    WIdx
      C                   PARM                    ValidNaho
      C**********         PARM                    CGL032                                     MD040876
- 
+
      C                   ENDSR
- 
+
                                                                                               CGL132
       *****************************************************************                       CGL132
       /EJECT                                                                                  CGL132
@@ -1226,9 +1228,9 @@
       ** SRCheck/Write - Routine to control checking of error status and
       **    sending of messages/writing to the database
       *****************************************************************
- 
+
      C     SRCheckWrite  BEGSR
- 
+
       **  If no errors were found:
       **     - set up additional data
       **     - write a record to the Valid file
@@ -1270,7 +1272,7 @@
       ** | or not).  It is shown in the above form for clarity.       |
       ** |                                                            |
       ** +------------------------------------------------------------+
- 
+
      C                   IF        Idx = 0
      C                   EXSR      SRSetUpValid
      C                   WRITE     SDVNAHLD0
@@ -1298,12 +1300,12 @@
      C                   ENDIF                                                              MD040876
      C                   EXSR      SRCallMsgHdl
      C                   ENDIF
- 
+
      C                   IF        Idx > 0
      C                   EXSR      SRSetUpInVal
- 
+
       ** Only write to invalid files if repair in back office
- 
+
      C                   IF        APRprLocn = 'B'
      C                   WRITE     SDINAHLD0
      C                   IF        CGL132 = 'Y'                                             MD040876
@@ -1329,19 +1331,19 @@
      C                   ENDDO                                                              MD041311
      C                   ENDIF                                                              MD040876
      C                   ENDIF
- 
+
       ** If support system is active, write invalid transaction to
       ** log file via APLOGTRAN standard module.
- 
+
      C                   IF        (CSC011 = 'Y') AND (S1SUPP = LIBR)
- 
+
      C**********         EVAL      TransDtl = TranInPrim + ExtData                            CGL132
      C**********         EVAL      TransDtl = TranInPrim + TranInFatca + ExtData     CGL132 MD040876
      C                   EVAL      TransDtl = TranInPrim + TranInFatca                      MD040876
      C                                        + TranInCRNH + ExtData                        MD040876
      C                   EVAL      APTGTTYPE = 'SDNAHL'
      C                   EVAL      PNahoNum = DDNAHO
- 
+
      C                   CALLB     'APLOGTRAN'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    HeadIn
@@ -1349,21 +1351,21 @@
      C                   PARM                    Timestamp
      C                   PARM                    PNahoNum
      C                   PARM      *BLANKS       PANahoNo
- 
+
      C                   IF        RetCodeOut <> *Blanks
      C                   EVAL      DBKEY = PNahoNum
      C                   EVAL      DBFILE = 'APLOGTRAN'
      C                   EVAL      DBASE = 002
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EXSR      SRCallMsgHdl
      C                   ENDIF
- 
+
      C                   COMMIT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1371,24 +1373,24 @@
       ** SRResetCYCLE - Reset error information that is gradually     *
       **              updated during each run of this program         *
       *****************************************************************
- 
+
      C     SRResetCYCLE  BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIDArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIdx
- 
+
      C                   RESET                   AmFldNamAr
      C                   RESET                   AmMsgIDArr
      C                   RESET                   AmMsgDtaAr
      C                   RESET                   AmIdx
- 
+
      C                   RESET                   FldNoArr
      C                   CLEAR                   CurNaPrim
      C                   CLEAR                   CurCuFATC                                    CGL132
@@ -1400,7 +1402,7 @@
      C                   CLEAR                   ValidFatca                                   CGL132
      C                   CLEAR                   ValidCRNH                                  MD040876
      C                   CLEAR                   SDVCRSN                                      CGL157
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1408,11 +1410,11 @@
       ** SRSetUpInVal - Set up additional fields that are needed on the
       **        Valid file record.
       *****************************************************************
- 
+
      C     SRSetupInVal  BEGSR
- 
+
       ** Include Header fields that need to be o/p to the Invalid files
- 
+
      C                   EVAL      DDFRNT = APFOTranID
      C                   EVAL      DDREPA = APRprLocn
      C                   EVAL      DDFOTRANID = APFOTranID                                    CGL132
@@ -1427,9 +1429,9 @@
      C                   EVAL      DDFRNN = APFOTranID                                      MD040876
      C                   EVAL      DDFRNH = APFOTranID                                      MD041311
      C                   ENDIF                                                              MD040876
- 
+
      C                   EVAL      TranStatus = 'F'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1437,26 +1439,26 @@
       ** SRSetUpValid - Set up additional fields that are needed on the
       **    Valid file record.
       *****************************************************************
- 
+
      C     SRSetUpValid  BEGSR
- 
+
       ** For Deletes put the complete (pre-existing) Non-A/C Holder
       **  into the Valid file record
- 
+
      C                   IF           DDACTN = 'D'
      C                   MOVE      NahoFilFmt    ValidNaho
      C**********         MOVE      CrFaFilFmt    ValidFatca                          CGL132 MD040876
      C                   ENDIF
- 
+
       ** Set Valid file field(s) that are needed for all Action Codes
- 
+
      C                   EVAL      V_NACHTP = DDACTN
      C                   EVAL      V_NANAHO = DDNAHO
      C                   EVAL      V_FVNAHO = DDNAHO                                          CGL132
      C                   EVAL      V_NALUSR = DDLUSR                                          CGL132
- 
+
       ** Include Header fields that need to be o/p to the Valid file
- 
+
      C                   EVAL      V_NAFRNT = APFOTranID
      C                   EVAL      V_NAREPA = APRprLocn
      C                   EVAL      V_NATMST = TimeStamp
@@ -1471,24 +1473,24 @@
      C                   EVAL      RVFRNT = APFOTranID                                      MD040876
      C                   EVAL      RVTMST = TimeStamp                                       MD040876
      C                   ENDIF
- 
+
      C                   EVAL      TranStatus = 'S'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
       ** SRCallMsgHdl - Call the Message Handling module
       *****************************************************************
- 
+
      C     SRCallMsgHdl  BEGSR
- 
+
       ** Set up an array of sequence numbers that correspond to the fields
       **  with errors
- 
+
      C                   Z-ADD     1             Ix
      C                   DO        ArrayMax
- 
+
      C                   IF        FldNameArr(Ix) <> *Blanks
      C                   Z-ADD     1             Iy
      C     FldNameArr(Ix)LOOKUP    FieldArr(Iy)                           20
@@ -1496,12 +1498,12 @@
      C                   ELSE
      C                   LEAVE
      C                   ENDIF
- 
+
      C                   ADD       1             Ix
      C                   ENDDO
- 
+
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'ZAMSGHNDLE'
      C                   PARM                    ReturnCode
      C                   PARM                    APRprLocn
@@ -1524,25 +1526,25 @@
      C                   PARM                    TimeStamp
      C                   PARM                    MsgFArray
      C                   PARM                    ClrPgmMsgQ
- 
+
      C                   ENDSR
       *****************************************************************
       /eject
       *****************************************************************
       ** SRDtaSubs - Data Substitution                                *
       *****************************************************************
- 
+
      C     SRDtaSubs     BEGSR
- 
+
       ** Convert file fields to screen format
- 
+
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'SDNAHLCVT'
       ** Return Code     ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       ** Non-A/C Holder - file formats
       ** Non-A/C Holder Details - screen formats
- 
+
      C                   PARM                    ReturnCode
      C                   PARM                    NahoFilFmt
      C                   PARM                    CrFaFilFmt                                 MD040876
@@ -1554,29 +1556,29 @@
      C                   PARM                    CurCuFOTH                                  MD040876
      C                   PARM                    CurCuCRNH                                  MD040876
      C                   PARM                    PCrsdS                                     MD040876
- 
+
       ** Substitute the data for the various parts of the transaction,
       ** dependent on the flags that were set earlier.
- 
+
      C                   IF        RepPrim = 'Y'
- 
+
      C                   CLEAR                   IncData
      C                   CLEAR                   CurData
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'APDTASUBS'
       ** Return code     ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       ** Substitution character
       ** Incoming Data
       ** Current Data
- 
+
      C                   PARM                    ReturnCode
      C                   PARM                    GHSUBS
      C                   PARM      TranInPrim    IncData        2000
      C                   PARM      CurNaPrim     CurData        2000
- 
+
      C                   MOVEL     IncDATA       TranInPrim
- 
+
      C                   IF        CGL132 = 'Y'                                             MD040876
      C                   CLEAR                   IncData                                    MD040876
      C                   CLEAR                   CurData                                    MD040876
@@ -1623,7 +1625,7 @@
      C                   MOVEL     IncDATA       TranInCRSN                                 MD040876
      C                   ENDIF                                                              MD040876
      C                   ENDIF
- 
+
      C                   ENDSR
                                                                                             MD040876
       *****************************************************************                     MD040876
@@ -1701,15 +1703,15 @@
       *****************************************************************
       ** *INZSR - Program Initialisation routine                      *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *Entry        PLIST
- 
+
       ** Common header information (DS) from source system
       ** Transaction information
       ** Ultimate calling Program/Module/Procedure
- 
+
      C                   PARM                    HeadIn
      C**********         PARM                    Trans5001                                  MD040876
      C**********         PARM                    Trans5002                           CER047 MD040876
@@ -1721,46 +1723,46 @@
      C                   PARM                    #ProcPgm
      C                   PARM                    #ProcMod
      C                   PARM                    #ProcName
- 
+
       ** Set up the name of the primary and secondary message files from
       ** which the message handler will get the messages
- 
+
      C                   EVAL      #MsgFile     = 'SDUSRMSG'
      C                   EVAL      MsgFArray(1) = 'DRSMM'
      C                   EVAL      MsgFArray(2) = 'Y2USRMSG'
- 
+
       **  Set up the Module ID, used to make the Transaction number unique
- 
+
      C                   EVAL      ModuleID = 'SD'
- 
- 
+
+
       ** Access Bank details via access program
       ** (database error handling done in access program)
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     Retcd
      C                   PARM      '*FIRST '     Option
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Access API ICD via access program
- 
+
      C                   CALLB     'AOAPIR0'
      C                   PARM      '*DBERR '     Retcd
      C                   PARM      '*FIRST '     Option
      C     SDAPI         PARM      SDAPI         DSFDY
- 
+
       ** Check if CSC011 is installed
- 
+
      C                   EVAL      CSC011 = 'N'
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CSC011'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
       ** Database error
- 
+
      C                   IF        (PRtCd <> *BLANKS) and
      C                             (PRtCd <> '*NRF   ')
      C                   EVAL      DBKEY = 'CSC011'
@@ -1768,7 +1770,7 @@
      C                   EVAL      DBASE = 001
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   EVAL      CSC011 = 'Y'
      C                   IN        SDSTAT
@@ -1814,11 +1816,11 @@
      C                   ELSE                                                               MD040876
      C                   EVAL      CGL157 = 'Y'                                             MD040876
      C                   ENDIF                                                              MD040876
- 
+
       ** Set up the name of the server/database updater data queue.
- 
+
      C                   EVAL      DtaQName = 'APNAHLDTQ'
- 
+
      C                   ENDSR
       *****************************************************************
 **  CPY@

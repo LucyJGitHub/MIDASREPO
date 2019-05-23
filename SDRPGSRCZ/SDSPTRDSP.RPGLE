@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER048             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER048 - German Features - Taxes                             *
@@ -42,12 +44,12 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDSPTRDDF CF   E             WORKSTN
- 
+
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*pssr)
- 
+
       *****************************************************************
       *                                                               *
       * ID F  C  H  L    FUNCTION OF INDICATORS                       *
@@ -78,25 +80,25 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -104,72 +106,72 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
      D/COPY ZACPYSRC,MSGHNDDCL
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @EI             S              1    DIM(60)
      D @Z0             S              1    DIM(60) CTDATA PERRCD(60)
      D @Z10            S              1    DIM(10) CTDATA PERRCD(10)
- 
+
       ** Spot Rate Transaction Details in screen format
      D TrnDets       E DS                  EXTNAME(SDSPTRPD)
      D   DDTSDT                            OVERLAY(DDDFTS:3)
      D   DDTSTM                            OVERLAY(DDDFTS:9)
- 
+
       ** Spot Rate Transaction Details OK indicators
      D OKTrnDets     E DS                  EXTNAME(SDESPTRPD)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
                                                                                               CSD006
       ** External DS for switchable features                                                  CSD006
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSD006
- 
+
       **  Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D CER048          S              1A                                                      CER048
       *                                                                                       CER048
       ** Parameters for AOSARDR0 call                                                         CER048
@@ -227,41 +229,41 @@
      C                   ADD       1             C
      C                   ADD       1             E
      C                   END
- 
+
      C                   EVAL      ActionCode = DDACTN
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes processing for the error and
       ** warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP1
       **--------------------------------------------------------------------------------------------
- 
+
       * Enable action code
      C     @EACTN        COMP      'Y'                                    95
- 
+
       * Enable key fields
      C     @EKYFD        COMP      'Y'                                    26
- 
+
       * Enable detail fields
      C     @EDTFD        COMP      'Y'                                    27
- 
+
       * Enable Function Key - F10
      C     @EINKJ        COMP      'Y'                                    10
- 
+
       * Enable Function Key - F07
      C     @EINKG        COMP      'Y'                                    07
- 
+
       * Enable Function Key - F08
      C     @EINKH        COMP      'Y'                                    08
- 
+
       * Enable Function Key - F15
      C     @EINKP        COMP      'Y'                                    15
- 
+
       * Display euro rates fields
      C     @DERFD        COMP      'Y'                                    29
- 
+
       * Write message subfile, Securities Clients Details and footer screen
- 
+
      C                   WRITE     #MSGCTL
      C                   WRITE     SDSPTRF2
      C                   WRITE     SDSPTRF0
@@ -270,16 +272,16 @@
      C                   ELSE
      C                   WRITE     CLEARDTL
      C                   ENDIF
- 
+
      C                   READ      SDSPTRF0                               99
      C                   IF        @HDTFD <> 'Y'
      C                   READ      SDSPTRF1                               99
      C                   ENDIF
- 
- 
+
+
       * Set screen error indicators off
      C                   MOVEA     @Z0           *IN(30)
- 
+
       * Set return keys
      C                   MOVE      *INKC         @INKC
      C                   MOVE      *INKG         @INKG
@@ -289,13 +291,13 @@
      C                   MOVE      *INKP         @INKP
       *
      C                   ENDSR
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the ProcMsgs subroutine
       ** to process error and warning messages.
      D/COPY ZACPYSRC,MSGHNDDSP2
       **--------------------------------------------------------------------------------------------
- 
+
       ********************************************************************
       /EJECT
       *****************************************************************
@@ -308,42 +310,42 @@
      C     *ENTRY        PLIST
       *
       * INPUT PARAMETERS :
- 
+
       * Return code
      C                   PARM                    RetCodeIn
- 
+
       ** Transaction Details in screen format
      C                   PARM                    TrnDets
- 
+
       ** BKEURO currency
      C                   PARM                    DDVSEU
- 
+
       ** Swift currency code (output screen field)
      C                   PARM                    DDSWCY
- 
+
       ** Dealing currency (output screen field)
      C                   PARM                    DDDLCY
- 
+
       ** Currency name (output screen field)
      C                   PARM                    DDCYNM
- 
+
       ** Spot Rate against base currency (when DDSPRT is against BKEURO)
       ** (output screen field)
      C                   PARM                    DDSPR2
- 
+
       ** Multiply divide indicator tied to DDSPR2
       ** (output screen field)
      C                   PARM                    DDMDI2
- 
+
       ** Swift currency code tied to DDSPR2 (output screen field)
      C                   PARM                    DDSWC2
- 
+
       ** Dealing currency tied to DDSPR2 (output screen field)
      C                   PARM                    DDDCY2
- 
+
       ** Transaction Details OK indicators
      C                   PARM                    OKTrnDets
- 
+
       * ERRORS
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
@@ -352,7 +354,7 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       * ENABLED ACTION CODE
      C                   PARM                    @EACTN            1
       *
@@ -378,9 +380,9 @@
       * DISPLAY FIELDS RELATED TO EURO RATES
       *
      C                   PARM                    @DERFD            1
- 
+
       * OUTPUT PARAMETERS :
- 
+
       * Function Keys
      C                   PARM                    @INKC             1
      C                   PARM                    @INKG             1
@@ -388,8 +390,8 @@
      C                   PARM                    @INKJ             1
      C                   PARM                    @INKL             1
      C                   PARM                    @INKP             1
- 
- 
+
+
       *
       ** Initialise program name
       *
@@ -401,7 +403,7 @@
      C                   MOVEL     PsJobName     DDWID
       *
      C                   MOVEL     '*'           DDPGMQ
- 
+
       *
       ** Access Bank Details
       *
@@ -454,15 +456,15 @@
      C                   EVAL      *IN90 = *OFF                                               CER048
       *                                                                                       CER048
      C                   ENDIF                                                                CER048
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line sets up the fixed data for SD *DSP
       ** functions for the message handler, ZAMSGHNDLE.
      D/COPY SDCPYSRC,MSGHNDDATA
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

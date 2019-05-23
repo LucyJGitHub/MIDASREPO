@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 23Feb15               *
       *                 258531             Date 19Aug14               *
       *                 MD025467           Date 09May14               *
       *                 MD025009A          Date 09May14               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Witholding Tax                                 *
       *  258531 - Exchange rate is reciprocal of expected rate.       *
@@ -78,15 +80,15 @@
       *  CAP057 - Conversion of SPOT Rates into Modular APIs         *
       *                                                               *
       *****************************************************************
- 
- 
+
+
      F***SDCURRL1  UF A E           K DISK    COMMIT                                         BUG8205
      FSDCURRML  UF A E           K DISK    COMMIT                                            BUG8205
       * Midas SD Transaction Details Master File
- 
+
      FSDFCTLL0  UF A E           K DISK    COMMIT
       * Midas SD Standing Data Controls index
- 
+
      F***SDFCTLPAX O    E             DISK    COMMIT                               MD025009 MD025467
      F**********                           PREFIX(X)                               MD025009 MD025467
      F**********                           USROPN                                 MD025009A MD025467
@@ -95,17 +97,17 @@
                                                                                             MD025009
      FSDMDFRL0  UF A E           K DISK    COMMIT                               CSD006
       * Market Data Feed Requests Details File                                  CSD006
- 
+
      FSDMDFIL0  UF A E           K DISK    COMMIT                               CSD006
       * Market Data Feed Requested Details Items File                           CSD006
- 
+
      FSDMDFHPD  UF A E           K DISK    COMMIT                               CSD006
       * Market Data Feed Rate/Price History File                                CSD006
- 
+
      F***SDAPDRL0  IF   E        K DISK    INFSR(*PSSR)                            MD025009 MD025467
       *****************************************************************            MD025009 MD025467
       ***Midas*SD*API*Driving*File*************************************            MD025009 MD025467
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -117,12 +119,12 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
@@ -133,25 +135,25 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
                                                                                               CAP185
      D @TIMESTMPDFT    S             26A                                                      CAP185
- 
+
      D ChkSPTRFmt    E DS                  EXTNAME(SDCURRPD)
      D                                     PREFIX(CH)
       ** Rename fields for Timestamp checking
- 
+
       ***Work*Variables*for*Multithreaded*APIs********************                 MD025009 MD025467
      D***WAPIC           S              4A   INZ                                   MD025009 MD025467
      D***WFILN           S             10A   INZ                                   MD025009 MD025467
@@ -159,19 +161,19 @@
       ************************************************************                 MD025009 MD025467
      D***MPHASDA       E DS                  EXTNAME(MPHAS)                        MD025009 MD025467
      D**********                           DTAARA(MPHAS)                           MD025009 MD025467
- 
+
      D SDVSPTR       E DS                  EXTNAME(SDVSPTRPD)
       ** Externally described DS for valid transactions Detail
- 
- 
+
+
      D OKTrnDets     E DS                  EXTNAME(SDESPTRPD)
       * Error indicators
- 
- 
+
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
      D                                     PREFIX(Z_)
       **  Externally described DS for Currency Access Object
- 
+
      D SDCURR_A      E DS                  EXTNAME(SDCURRPD)
      D  SASPAE       E                     EXTFLD(QQSPAE)                                     CGL029
      D  SAFTAE       E                     EXTFLD(QQFTAE)                                     CGL029
@@ -180,31 +182,31 @@
      D  SATAC5       E                     EXTFLD(QQTAC5)                                     CGL029
      D  SACSCD       E                     EXTFLD(QQCSCD)                                     CGL029
       **  Externally described DS for 'AFTER UPDATE'
- 
+
      D SDCURR_B      E DS                  EXTNAME(SDCURRPD)
      D                                     PREFIX(B_)
       **  Externally described DS for 'BEFORE UPDATE'
- 
+
      D SDCURR_C      E DS                  EXTNAME(SDCURRPD)
      D                                     PREFIX(C_)
       **  Externally described DS for before base currency limits processing
- 
- 
+
+
       * Data Structures for use with access programs
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * Data structure for bank details
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       * Data structure for dealing file details
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
      D  GLACCD       E                     EXTFLD(QQACCD)                                     CGL029
       * Data structure for general ledger
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * First DS for access programs, short data structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * Second DS for access programs, long data structure
                                                                                               CSC011
@@ -219,17 +221,17 @@
                                                                                               CSC011
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSC011
       ** SD data area                                                                         CSC011
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
      D @Timestamp      S             26Z
- 
+
      D BaseCurrIn      S              1
      D Recip           S              1
- 
+
       * Parameter definitions for call to SD0028: Spot rates recalculation
      D @PA001          S                   LIKE(A6CYCD)
      D @PA002          S                   LIKE(BKEURO)
@@ -237,7 +239,7 @@
      D @PA004          S              1
      D @PA005          S              1
      D @PA006          S              7
- 
+
       * Parameter definitions for call to SD0021U: update old currency files
      D @PB001          S              7
      D @PB002          S                   LIKE(A6CYCD)
@@ -299,7 +301,7 @@
      D @PB045          S                   LIKE(A6BYSS)
      D @PB046          S                   LIKE(A6SLSR)
      D @PB047          S                   LIKE(A6SLSS)
- 
+
       * Limit Exchange Rate Work Field
      D WUERLC          S                   LIKE(A6ERLC)
      D WUERLC2         S             15P 8                                                  AR744654
@@ -317,7 +319,7 @@
      D POPTN           S              7A                                                      CSC011
      D PSARD           S              6A                                                      CSC011
      D/COPY OFCPYSRCZ,CFT147_036                                                              CFT147
- 
+
       *                                                                                       CER048
       ** Parameter to call AOSARDR0                                                           CER048
       *                                                                                       CER048
@@ -331,17 +333,17 @@
       * MAIN - MAIN BODY                                              *
       *                                                               *
       *****************************************************************
- 
+
       ** Ensure transaction has not been updated by another workstation
       ** - if so, bypass updating and return to calling program.
      C                   EXSR      CHKOTHUPD
- 
+
      C     @@RTCD        IFNE      *BLANKS
      C                   GOTO      EXIT
      C                   END
- 
+
       ** Amend Process
- 
+
      C**********         IF        NOT %OPEN(SDFCTLPAX)                           MD025009A MD025467
      C**********         OPEN      SDFCTLPAX                                      MD025009A MD025467
      C**********         ENDIF                                                    MD025009A MD025467
@@ -389,10 +391,10 @@
      C                   ENDIF                                                                CSC011
                                                                                               CSC011
      C                   ENDIF                                                                CSC011
- 
+
       * Exit from program
      C     EXIT          TAG
- 
+
      C**********         IF        %OPEN(SDFCTLPAX)                               MD025009A MD025467
      C**********         CLOSE     SDFCTLPAX                                      MD025009A MD025467
      C**********         ENDIF                                                    MD025009A MD025467
@@ -406,12 +408,12 @@
       *                                                               *
       *****************************************************************
      C     CHKOTHUPD     BEGSR
- 
+
       ** Retrieve current details
- 
+
      C                   MOVE      AVCYCD        MidasRef          3
- 
- 
+
+
       ** Determine whether program is running interactively or in batch
       **  ( 0 = batch   1 = interactive)
       *
@@ -438,7 +440,7 @@
      C                   ELSE
      C                   MOVE      *BLANKS       ModeofOp
      C                   END
- 
+
      C                   CALLB     'SDSPTRRTV'
       * INPUTS
       *
@@ -473,7 +475,7 @@
       *
       * OK - Transaction Number
      C                   PARM                    DDTRNNOK          1
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM      *BLANK        FldNameArr
      C                   PARM      *BLANK        MsgIdArr
@@ -484,29 +486,29 @@
       *
       ** Error if Timestamp is not the same (record has been changed
       **  by another workstation)
- 
+
       ** Processing varies according to mode program is running in.
       ** In interacive mode simply check whether the timestamp field
       ** has been updated since the original record was fetched
       ** by this program.
       ** In batch (API input) check return parameters from Retrieve
       ** module for errors, and send message to system operator.
- 
+
       ** Interactive mode:
- 
+
      C     @TYPE         IFEQ      '1'
- 
+
      C     CHA6SRTM      IFNE      AVTMESTMP
      C                   MOVEL     '*RECUPD'     @@RTCD
      C                   END
- 
+
       ** Batch mode:
      C                   ELSE
      C     DDACTNOK      IFEQ      'N'
      C     DDTRNNOK      OREQ      'N'
      C                   MOVEL     '*RECUPD'     @@RTCD
      C                   Z-ADD     1             C                 2 0
- 
+
      C     C             DOWLE     ArrayMax
      C     FldNameArr(C) ANDNE     *BLANKS
      C                   MOVEL     *BLANKS       DBError          28
@@ -518,11 +520,11 @@
      C                   PARM                    DummyMsgF
      C                   ADD       1             C
      C                   END
- 
+
      C                   END
- 
+
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -536,32 +538,32 @@
       *                                                               *
       ****************************************************************
      C     AMEND         BEGSR
- 
+
       ** Access Transaction Detail record
- 
+
      C*****AVCYCD        CHAIN     SDCURRL1                           99                     BUG8205
      C     AVCYCD        CHAIN     SDCURRML                           99                     BUG8205
- 
+
       ** Database error
- 
+
      C     *IN99         IFEQ      '1'
      C                   MOVEL     AVCYCD        DBKEY
      C                   MOVEL     'SDCURRPD'    DBFILE                         ************
      C                   MOVEL     '901'         DBASE                          * DBERR 901*
      C                   EXSR      SRERR                                        ************
      C                   END
- 
+
       ** Update 'BEFORE' status
- 
+
      C                   MOVEL(P)  SDCURR_A      SDCURR_B
- 
- 
+
+
       ** Set Transaction Detail fields on amend
- 
- 
- 
- 
- 
+
+
+
+
+
      C                   Z-ADD     AVINER        A6INER
      C                   MOVEL     AVINMD        A6INMD
      C                   Z-ADD     AVSPRT        A6SPRT
@@ -655,7 +657,7 @@
      C                   Z-ADD     AVSWDT        A6SWDT
      C                   MOVEL     AVSRDS        A6SRDS
      C                   Z-ADD     AVDFTS        A6DFTS
- 
+
       *                                                                                       CER048
      C                   IF        CER048 = 'Y'                                               CER048
      C                   Z-ADD     AVTCMP        A6TCMP                                       CER048
@@ -681,15 +683,15 @@
      C                   MOVEL     AVLEID        A6LEID
      C                   MOVEL     AVDTFR        A6DTFR
      C                   MOVE      ' '           A6TLEX
- 
+
       * Update the currency file
- 
+
      C                   UPDATE    @A6REA3                              90
- 
+
      C/COPY OFCPYSRCZ,CFT147_038                                                              CFT147
- 
+
       ** Spot Rates Recalculation for EMU Currencies
- 
+
      C     CEU002        IFEQ      'Y'
      C     BJCYCD        ANDNE     BKEURO
      C     A6CYCD        OREQ      BKEURO
@@ -701,10 +703,10 @@
      C                   PARM      'N'           @PA005            1
      C                   PARM      *BLANKS       @PA006            7
      C                   ENDIF
- 
- 
+
+
       ** Update Standing Data Control file
- 
+
      C**********         IF        MTHREAD = 'N'                                   MD025009 MD025467
      C*****'SDCURRPD  '  CHAIN     @AHREAU                            90                    MD025467
      C**********         ADD       1             AHNOAM                                     MD025467
@@ -769,7 +771,7 @@
      C                   PARM      A6BYSS        @PB045
      C                   PARM      A6SLSR        @PB046
      C                   PARM      A6SLSS        @PB047
- 
+
       ** Retrieve dealing currency
      C**********         CALLB     'AODEALR0'                                                 CGL029
      C                   CALLB     'AODEALR1'                                                 CGL029
@@ -783,24 +785,24 @@
      C                   MOVEL     @OPTN         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       * A change in dealing currency requires a change to all currencies
- 
+
      C                   IF        BNCYCD = AVCYCD
      C                   IF        B_A6SPRT <> AVSPRT or
      C                             B_A6MDIN <> AVMDIN
- 
+
       * Determine 'screen value' of spot rate and multiply divide indicator
      C                   EXSR      SCRVAL
       * For each record on the currency file
      C     *LOVAL        SETLL     @A6REA3
      C                   READ      @A6REA3
      C                   DOW       NOT %EOF
- 
+
       * if the currency is not base currency or dealing currency
      C                   IF        A6CYCD <> BJCYCD and
      C                             A6CYCD <> BNCYCD
- 
+
      C                   IF        A6MDIN = WUSMDI
      C**********         EVAL(H)   WUERLC = A6SPRT/WUSSSR                                   AR744654
      C                   EVAL(H)   WUERLC2 = A6SPRT/WUSSSR                                  AR744654
@@ -813,7 +815,7 @@
      C                   EVAL(H)   WUERLC = A6SPRT*WUSSSR
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        A6CYCD = BJCYCD
      C                   IF        A6MDIN = 'M'                                               258531
      C                   IF        WUSMDI = 'M'
@@ -831,7 +833,7 @@
      C                   ENDIF                                                                258531
                                                                                               258531
      C                   ENDIF
- 
+
      C                   IF        A6CYCD <> BNCYCD
      C     A6CYCD        CHAIN     @A6REA3                            9091
      C                   EVAL      SDCURR_C = SDCURR_A
@@ -842,31 +844,31 @@
      C**********         UNLOCK    SDCURRL1                                                  BUG8205
      C                   UNLOCK    SDCURRML                                                  BUG8205
      C                   ENDIF
- 
- 
+
+
       * call SD0023U to update Limit Rate old files (TABTG10)
- 
+
      C                   CALL      'SD0023U'                            90
      C                   PARM                    WQ0003            7
      C                   PARM      A6CYCD        WQ0004            3
      C                   PARM      WUERLC        WQ0005           13 8
- 
+
      C                   ENDIF
- 
+
      C                   READ      @A6REA3                              90
      C                   ENDDO
- 
+
      C                   ENDIF
      C                   ENDIF
- 
- 
+
+
       ** Maintain Market Data Feed files                                        CSD006
- 
+
      C                   IF        CSD006F = 'Y'                                CSD006
- 
+
       * If the Data Feed Request ID is not blank,                               CSD006
       * write a new record to MDF Rate/Price History file...                    CSD006
- 
+
      C                   IF        AVDTFR <> *Blank                             CSD006
      C                   MOVEL     AVDTFR        RHDFRI                         CSD006
      C                   MOVEL     AVCYCD        RHDITM                         CSD006
@@ -879,19 +881,19 @@
      C                   MOVEL     SDCURR_B      RHBIMG                         CSD006
      C                   MOVEL     SDCURR_A      RHAIMG                         CSD006
      C                   WRITE     SDMDFHD0                                     CSD006
- 
+
       * and if the Tolerance Exceeded flag is on, update the MDF Requests       CSD006
       * Details and MDF Requested Items files                                   CSD006
- 
+
      C                   IF        AVTLEX = 'Y'                                 CSD006
- 
+
      C                   MOVEL     AVDTFR        WKREQI                         CSD006
      C                   MOVEL     A6CYCD        WKDITM                         CSD006
      C     KLMDFI        CHAIN     SDMDFIL0                                     CSD006
      C                   IF        %FOUND(SDMDFIL0)                             CSD006
      C                   EVAL      MITOLX = 'Y'                                 CSD006
      C                   UPDATE    SDMDFID0                                     CSD006
- 
+
      C     AVDTFR        CHAIN     SDMDFRL0                                     CSD006
      C                   IF        %FOUND(SDMDFRL0)                             CSD006
      C                   EVAL      MRTOLX = 'Y'                                 CSD006
@@ -899,18 +901,18 @@
      C                   ELSE                                                   CSD006
      C                   UNLOCK    SDMDFRL0                                     CSD006
      C                   ENDIF                                                  CSD006
- 
+
      C                   ELSE                                                   CSD006
      C                   UNLOCK    SDMDFIL0                                     CSD006
      C                   ENDIF                                                  CSD006
- 
+
      C
      C                   ENDIF                                                  CSD006
- 
+
      C                   ENDIF                                                  CSD006
- 
+
      C                   ENDIF                                                  CSD006
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -924,17 +926,17 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
- 
+
+
       **  Program Parameters
- 
+
      C     *ENTRY        PLIST
       * Return Code
      C                   PARM                    @@RTCD            7
       * Externally described DS for valid Transaction Detail
      C                   PARM                    SDVSPTR
      C/COPY OFCPYSRCZ,CFT147_039                                                              CFT147
- 
+
       * Access Bank Details
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*MSG    '    @RTCD             7
@@ -949,9 +951,9 @@
      C                   MOVEL     '902'         DBASE                          * DBERR 902 *
      C                   EXSR      SRERR                                        *************
      C                   END
- 
+
       * Access Dealing File
- 
+
      C**********         CALLB     'AODEALR0'                                                 CGL029
      C                   CALLB     'AODEALR1'                                                 CGL029
      C                   PARM      '*MSG    '    @RTCD             7
@@ -967,7 +969,7 @@
      C                   MOVEL     '903'         DBASE                          * DBERR 903 *
      C                   EXSR      SRERR                                        *************
      C                   END
- 
+
       ** Access currency file for base rate details
       *
      C                   CALLB     'AOCURRR0'
@@ -1010,7 +1012,7 @@
      C                   EVAL      CGL165 = 'N'                                               CGL165
      C                   ENDIF                                                                CGL165
       *                                                                                       CGL165
- 
+
       ** Check if switchable feature CEU002 is switched on.
       ** Euro rates
      C                   CALLB     'AOSARDR0'
@@ -1032,7 +1034,7 @@
      C                   ELSE
      C                   MOVE      'N'           CEU002
      C                   END
- 
+
       ** Access general ledger for Euro currency name
       *
      C     CEU002        IFEQ      'Y'
@@ -1130,7 +1132,7 @@
      C                   EXSR      *PSSR                                                      CER048
       *                                                                                       CER048
      C                   ENDIF                                                                CER048
- 
+
       ** Check if CAP185 is installed                                                         CAP185
       *                                                                                       CAP185
      C                   CALL      'AOSARDR0'                                                 CAP185
@@ -1146,11 +1148,11 @@
       *
       *
       ** Key list for accessing Market Data Feed Requested Items Details
- 
+
      C     KLMDFI        KLIST                                                  CSD006
      C                   KFLD                    WKREQI           32            CSD006
      C                   KFLD                    WKDITM           20            CSD006
- 
+
      C*****KAPILST       KLIST                                                     MD025009 MD025467
      C**********         KFLD                    WAPIC                             MD025009 MD025467
      C**********         KFLD                    WFILN                             MD025009 MD025467
@@ -1160,7 +1162,7 @@
      C**********         EVAL      MTHREAD = 'N'                                   MD025009 MD025467
      C**********         EVAL      WAPIC = 'SPTR'                                  MD025009 MD025467
      C**********         EVAL      WFILN = 'SDFCTLPA'                              MD025009 MD025467
- 
+
      C**********         IF        MPHAS = 'A'                                     MD025009 MD025467
      C*****KAPILST       CHAIN     SDAPDRL0                                        MD025009 MD025467
                                                                                             MD025009
@@ -1169,7 +1171,7 @@
      C**********         ENDIF                                                     MD025009 MD025467
                                                                                             MD025009
      C**********         ENDIF                                                     MD025009 MD025467
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -1209,7 +1211,7 @@
      C     *LIKE         DEFINE    DLSW          DLSW2
      C     *LIKE         DEFINE    DLSW          DDDLSW
      C     *LIKE         DEFINE    DLSW          DDDSW2
- 
+
      C                   CALLB     'SDSPTRDEU'                          90
      C                   PARM      *BLANK        RetCodeIn
      C                   PARM      AVCYCD        PrvCycd
@@ -1225,14 +1227,14 @@
      C                   PARM      *BLANK        #SPRA2           14
      C                   PARM      *BLANK        DLSW2
      C                   PARM      *BLANK        #SMDI2
- 
+
      C                   IF        RetCodeIn <> *BLANK OR *IN90
      C                   MOVEL     'SDSPTRDEU'   DBFILE
      C                   MOVEL     '908'         DBASE
      C                   MOVEL     PrvCycd       DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   CALLB     'ZALIGN'
      C                   PARM                    ZALIGNok          1
      C                   PARM      SprtFrDEUA    ZFIELD           16
@@ -1245,7 +1247,7 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   MOVE      ZFIELD        SprtFrDEU
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -1255,18 +1257,18 @@
       *                                                              *
       ****************************************************************
      C     SRERR         BEGSR
- 
+
      C                   MOVEL     '*ERROR '     @@RTCD
      C                   MOVEL     'SDSPTRUPD'   DBPGM            10
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
      C                   MOVE      '1'           *INLR
      C                   DUMP
- 
+
       **  TERMINATE THE PROGRAM
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       ****************************************************************
      C/COPY ZACPYSRC,PSSR_ILE

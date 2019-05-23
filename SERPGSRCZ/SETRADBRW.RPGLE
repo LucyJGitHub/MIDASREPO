@@ -15,10 +15,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. BU13364            Date 15Feb07               *
+      *                 BU13364            Date 15Feb07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
@@ -57,6 +58,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG13364 - Database error upon pressing Enter key in Trade   *
       *             Details Enquiry                                   *
@@ -113,11 +115,11 @@
      F                                     INFDS(INFDS)                                       214408
       * Trades file
      FTRADS     IF   E           K DISK    INFSR(*PSSR)
- 
+
       * Trades file - by Front Office Id.                                       CAP004
      FSETRADL0  IF   E           K DISK    INFSR(*PSSR)                         CAP004
      F                                     RENAME(TRADSDF:TRADSFO)              CAP004
- 
+
       ** SE Securities File                                                                   CSE010
      FSECTY     IF   E           K DISK    INFSR(*PSSR)                                       CSE010
                                                                                               CSE010
@@ -149,19 +151,19 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------------              CSE010
       ** The following /COPY line includes the definitions for error and                      CSE010
       ** warning message arrays.                                                              CSE010
@@ -184,38 +186,38 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** EXTERNAL DS FOR BANK DETAILS
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** Securities Trading ICD
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
- 
+
       ** Customer file
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** External DS for Securities Clients File                                              CSE010
      D SDSECS        E DS                  EXTNAME(SDSECSPD)                                  CSE010
      D  QQACCD1      E                     EXTFLD(QQACCD)                                     CGL029
@@ -228,13 +230,13 @@
                                                                                 CSE019
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
                                                                                 211800
      D DSLDY         E DS                  EXTNAME(DSLDY)                       211800
       ** FIRST DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                      211800
- 
+
      D*EXORDE**********S****************** LIKE(DDTDRF) Import                          CSE010186044
      D EXORDE          S                   LIKE(DDTDRF) Export                                CSE010
      D*@ENDEL**********S**************1****Import                                       CSE010186044
@@ -274,7 +276,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
                                                                                               CSE016
       ** Parameter declaration of ZSDESC                                                      CSE016
                                                                                               CSE016
@@ -1051,7 +1053,7 @@
      C                   ENDIF                                                                CSE010
       *                                                                                       CSE010
      C                   ENDIF
- 
+
      C     RECI          IFEQ      'L'                                                         S0126
      C     RECI          OREQ      'P'                                                         S0126
      C     RECI          OREQ      'R'                                                         S0126
@@ -2005,11 +2007,11 @@
       *                                                               *
       *****************************************************************
      C     ZEDIT         BEGSR
- 
+
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD           16
      C                   PARM                    ZADEC             1 0
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -2018,13 +2020,13 @@
       *                                                               *
       *****************************************************************
      C     ZDATE2        BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE             6 0
      C                   PARM                    ZADATE            7
- 
+
      C                   ENDSR
      C********************************************************************
       /EJECT                                                                                  CSE010

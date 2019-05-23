@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER020             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -250,7 +252,7 @@
       ** ZAMSGTOOPR
      D PDummyMsgID     S                   LIKE(#MsgID)
      D PDummyMsgF      S             10A
- 
+
       *
       ** Standing Data
      D BVEXOP          S              1A
@@ -332,7 +334,7 @@
      C     S1CHTP        CASEQ     'A'           SRAmend
      C     S1CHTP        CASEQ     'D'           SRDelete
      C                   ENDCS
- 
+
      C                   ENDIF
      C/COPY WNCPYSRC,SESECSDC01
       *
@@ -345,28 +347,28 @@
       *
       ** Update if found
      C     *IN70         IFEQ      '0'
- 
+
      C                   SELECT
      C                   WHEN      S1CHTP = 'I'
      C                   EVAL      SASINS = SASINS + 1
      C                   EVAL      SANORE = SANORE + 1
- 
+
      C                   WHEN      S1CHTP = 'A'
      C                   EVAL      SASAMD = SASAMD + 1
- 
+
      C                   WHEN      S1CHTP = 'D'
      C                   EVAL      SASDEL = SASDEL + 1
      C                   EVAL      SANORE = SANORE - 1
      C                   ENDSL
- 
+
      C                   Z-ADD     BJRDNB        SALCD
      C                   EVAL      SACHTP = 'A'
      C                   EVAL      SATNLU = PNATN
- 
+
      C                   UPDATE    SECTYAF
- 
+
      C                   ELSE
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SECTYA'
      C                   EVAL      DBKEY = 'AUDIT'
@@ -407,11 +409,11 @@
      C                   ENDIF                                                                CSC011
                                                                                               CSC011
      C                   ENDIF                                                                CSC011
- 
+
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -425,16 +427,16 @@
       ** Error if it already exists.
       *
      C     S1SESN        CHAIN     SECTYDF                            70
- 
+
      C                   IF        *IN70 = *OFF AND RECI = 'D'
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SECTYD'
      C                   EVAL      DBKEY = S1SESN
      C                   Z-ADD     2             DBASE
      C                   OUT       LDA
      C                   EXSR      SRERR
- 
+
      C                   ELSE
       *
       ** Generate Timestamp.
@@ -465,7 +467,7 @@
      C                   PARM                    S1HCY8                                       CSE071
      C                   PARM                    S1HCY9                                       CSE071
      C                   PARM                    PZLCD
- 
+
      C                   EVAL      S1TMST = PTimestamp
      C                   EVAL      S1TNLU = PNATN
      C                   EVAL      S1RECI = 'D'
@@ -506,7 +508,7 @@
       ** Initialise new fields added to File
      C                   EVAL      S1SRRB = *BLANKS
      C                   EVAL      S1SRBK = *ZEROS
- 
+
      C**********         MOVEL     NwSEFilFmt    SectyUpdF                                    CSE065
      C**********         MOVEL     NwSEFilFmt1   SectyUpdF1                           CSE065 BUG9529
       *                                                                                       CSE065
@@ -516,7 +518,7 @@
      C**********         Z-ADD     *ZEROS        ALDT                                 CSE065 BUG9529
      C**********         ENDIF                                                        CSE065 BUG9529
      C                   MOVEL     NwSEFilFmt    SectyUpdF                                   BUG9529
- 
+
      C                   ENDIF
                                                                                               CSC011
       ** If CSC011 is installed, supply a Front Office ID for the                             CSC011
@@ -586,7 +588,7 @@
      C                   ELSE
      C                   UPDATE    SECTYDF                              99
      C                   ENDIF
- 
+
      C                   IF        *IN99 = *ON
      C     *LOCK         IN        LDA
      C                   MOVEL     S1SREF        DBKey
@@ -595,14 +597,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       *
       ** If the EXTEL option indicator is 'Y', output to PF/EXVALD
       *
      C                   IF        BVEXOP = 'Y'
      C                   EXSR      SRIVAL
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -617,16 +619,16 @@
       ** Access validation details, If record already exist - error
       *
      C     S1SESN        CHAIN     EXVALD                             70
- 
+
      C                   IF        *IN70 = *OFF AND XDRECI = 'D'
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'EXVALD'
      C                   EVAL      DBKEY = S1SESN
      C                   Z-ADD     3             DBASE
      C                   OUT       LDA
      C                   EXSR      SRERR
- 
+
      C                   ELSE
       *
       ** Write validation details
@@ -651,7 +653,7 @@
       *
       ** Check trailer exists
      C     1             CHAIN     EXVALZ                             70
- 
+
      C                   IF        *IN70 = *ON OR XZRECI <> 'Z'
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'EXVALZ'
@@ -666,9 +668,9 @@
      C                   EVAL      XZNORE = XZNORE + 1
      C                   UPDATE    EXVALZF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -698,19 +700,19 @@
       ** Check, if value currency or maturity date has changed
       *
      C                   IF        CSE007 = 'Y' OR CEU017 = 'Y'
- 
+
      C                   IF        S1VLCY <> CHVLCY
      C                   MOVE      'Y'           WPVCCH
      C                   ELSE
      C                   MOVE      'N'           WPVCCH
      C                   ENDIF
- 
+
      C                   IF        S1MATY <> CHMATY
      C                   MOVE      'Y'           WPMDCH
      C                   ELSE
      C                   MOVE      'N'           WPMDCH
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** If feature S01511 is active
@@ -722,18 +724,18 @@
       ** do not continue with the market migration update
       *
      C                   IF        S1MKTI <> CHMKTI
- 
+
      C                   IF        SMAI = 'Y'
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SECTYD'
      C                   EVAL      DBKEY = S1SESN
      C                   Z-ADD     6             DBASE
      C                   OUT       LDA
      C                   EXSR      SRERR
- 
+
      C                   ELSE
- 
+
      C                   MOVE      'Y'           SMAI
      C                   EXCEPT    MARKUP
       *
@@ -757,13 +759,13 @@
       *
       ** CHAIN again to the security as the file pointer needs to reset.
      C     S1SESN        CHAIN     SECTYDF                            70
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      S1SMAI = 'N'
- 
+
      C                   ENDIF
       *
       ** Generate Timestamp.
@@ -795,7 +797,7 @@
       *
      C                   IF        (WPVCCH = 'Y' AND S1ORED <> S1LCD) OR
      C                             (WPMDCH = 'Y' AND S1ORED <> S1LCD)
- 
+
      C                   CALL      'SE0042'
      C                   PARM                    WPVCCH
      C                   PARM                    WPMDCH
@@ -805,7 +807,7 @@
      C                   PARM                    SMDI
      C                   PARM                    MATY
      C                   PARM      *BLANK        WPERR
- 
+
      C                   IF        WPERR <> *BLANK
       *
       ** Immediately end of program database error
@@ -816,7 +818,7 @@
      C                   Z-ADD     8             DBASE
      C                   OUT       LDA
      C                   ENDIF
- 
+
      C                   IF        WPERR = '2'
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SEDEVA'
@@ -824,15 +826,15 @@
      C                   Z-ADD     9             DBASE
      C                   OUT       LDA
      C                   ENDIF
- 
+
      C                   EXSR      SRERR
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       *                                                                                       208194
       ** Recalculate Last Coupon Date (LCPN) in Amend Mode if Rundate                         208194
       ** less than First Coupn Date (FCPN).                                                   208194
@@ -872,7 +874,7 @@
      C                   ENDIF                                                                208194
       *                                                                                       208194
      C                   UPDATE    SECTYDF                              99
- 
+
      C                   IF        *IN99 = *ON
      C     *LOCK         IN        LDA
      C                   MOVEL     S1SREF        DBKey
@@ -881,14 +883,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       *
       ** If the extel option indicator is 'Y', update PF/EXVALD
       *
      C                   IF        BVEXOP = 'Y'
      C                   EXSR      SRAVAL
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -903,7 +905,7 @@
       ** Access validation details, If record does not exist - end process
       *
      C     S1SESN        CHAIN     EXVALD                             70
- 
+
      C                   IF        *IN70 = *OFF AND XDRECI = 'D'
      C                   MOVE      S1SREF        WSREFN
       *
@@ -916,7 +918,7 @@
      C                   UPDATE    EXVALDF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -954,9 +956,9 @@
      C                   Z-ADD     BJRDNB        LCD
      C                   EVAL      CHTP = 'D'
      C                   EVAL      TNLU = PNATN
- 
+
      C                   UPDATE    SECTYDF                              99
- 
+
      C                   IF        *IN99 = *ON
      C     *LOCK         IN        LDA
      C                   MOVEL     S1SREF        DBKey
@@ -971,7 +973,7 @@
      C                   Z-ADD     0             WNODEL
      C     S1SESN        SETLL     SEDEVDF
      C     S1SESN        READE     SEDEVDF                                70
- 
+
      C     *IN70         DOWEQ     '0'
      C     *IN70         IFEQ      '0'
      C     EDRECI        ANDEQ     'M'
@@ -981,7 +983,7 @@
      C                   ENDIF
      C     S1SESN        READE     SEDEVDF                                70
      C                   ENDDO
- 
+
      C                   IF        WNODEL > 0
      C     1             CHAIN     SEDEVAF                            70
      C                   IF        *IN70
@@ -1003,7 +1005,7 @@
      C                   IF        BVEXOP = 'Y'
      C                   EXSR      SRDVAL
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1018,9 +1020,9 @@
       ** Access validation details, If record does not exist - end process
       *
      C     S1SESN        CHAIN     EXVALD                             70
- 
+
      C                   IF        *IN70 = *OFF AND XDRECI = 'D'
- 
+
      C                   EVAL      XDRECI = '*'
      C                   Z-ADD     BJRDNB        XDLCD
      C                   EVAL      XDCHTP = 'D'
@@ -1029,7 +1031,7 @@
       *
       ** Check trailer exists
      C     1             CHAIN     EXVALZ                             70
- 
+
      C                   IF        *IN70 = *ON OR XZRECI <> 'Z'
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'EXVALZ'
@@ -1043,9 +1045,9 @@
      C                   EVAL      XZNDEL = XZNDEL + 1
      C                   UPDATE    EXVALZF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1068,11 +1070,11 @@
       ** transaction Id).
       *
      C                   EVAL      WType = PType
- 
+
      C**********         IF        S1CHTP <> 'I'                                193883
      C**********         MOVEL     '1'           WType                          193883
      C**********         ENDIF                                                  193883
- 
+
      C                   IF        WType = '0'
       *                                                                         193883
      C     S1CHTP        IFeq      'I'                                          193883
@@ -1084,7 +1086,7 @@
      C                   ELSE                                                   193883
      C                   MOVE      *BLANKS       PMode                          193883
      C                   ENDIF
- 
+
      C                   CALLB     'SESECSRTV'
       *
       ** INPUT
@@ -1162,7 +1164,7 @@
       ** Interactive mode:
       *
      C                   IF        PType = '1'
- 
+
      C                   IF        CHTMST <> S1TMST
      C                   MOVEL     '*RECUPD'     RetCodeIn
      C                   ENDIF
@@ -1170,16 +1172,16 @@
       ** Batch mode:
       *
      C                   ELSE
- 
+
      C                   IF        OKACTN = 'N' OR OKSESN = 'N'
      C                   MOVEL     '*RECUPD'     RetCodeIn
      C                   Z-ADD     1             Wc
- 
+
      C     Wc            DOWLE     ArrayMax
      C     FldNameArr(Wc)ANDNE     *BLANKS
      C                   CLEAR                   PDBError
      C                   EVAL      PDBError = MsgIDArr(Wc)
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    PMsgSndRtn
      C                   PARM                    PDBError
@@ -1187,11 +1189,11 @@
      C                   PARM      *BLANKS       PDummyMsgF
      C                   ADD       1             Wc
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1201,18 +1203,18 @@
       *                                                               *
       *****************************************************************
      C     SRERR         BEGSR
- 
+
      C                   EVAL      RetCodeIn = '*ERROR '
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   DUMP
       *
       ** Terminate program.
       *
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

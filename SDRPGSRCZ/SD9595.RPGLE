@@ -16,17 +16,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. 244875             Date 08Jan07               *
+      *                 244875             Date 08Jan07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01 -------------------------------------------*
       *                 CCG015  *CREATE    Date 14Feb02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  244875 - Display file content and update correclty System    *
       *           Name.                                               *
@@ -230,7 +232,7 @@
      C                   EVAL      WWrite = 'N'
      C                   EVAL      #1PSIP = CMPSIP
      C                   EVAL      #1FUSR = CMFUSR
-     C                   EVAL      #1FPWD = CMFPWD
+     C**********         EVAL      #1FPWD = CMFPWD                                            CSD101
      C                   EVAL      #1PSDI = CMPSDI
      C                   EVAL      #1FBDI = CMFBDI
      C                   EVAL      #1EXSZ = CMEXSZ
@@ -336,8 +338,8 @@
       * FTP User
      C                   EXSR      SRVFUSR
  
-      * FTP Password
-     C                   EXSR      SRVFPWD
+      **FTP*Password***************************************************                       CSD101
+     C**********         EXSR      SRVFPWD                                                    CSD101
  
       * PC Download Directory
      C                   EXSR      SRVPSDI
@@ -534,25 +536,25 @@
       *                                                               *
       *****************************************************************
  
-     C     SRVFPWD       BEGSR
+     C*****SRVFPWD       BEGSR                                                                CSD101
  
-      ** Validate FTP password via module CG3601
+      ***Validate*FTP*password*via*module*CG3601***********************                       CSD101
  
-     C                   CALLB     'CG3601'
-     C                   PARM      #1FUSR        PUser
-     C                   PARM      #1FPWD        PPassword
-     C                   PARM      *BLANKS       PMsgIdArr
-     C                   PARM      *BLANKS       PRtnCode
+     C**********         CALLB     'CG3601'                                                   CSD101
+     C**********         PARM      #1FUSR        PUser                                        CSD101
+     C**********         PARM      #1FPWD        PPassword                                    CSD101
+     C**********         PARM      *BLANKS       PMsgIdArr                                    CSD101
+     C**********         PARM      *BLANKS       PRtnCode                                     CSD101
  
-      ** If there are errors, add message ids generated
-      ** by CG3601 to main array ArrMsgIds.
+      ***If*there*are*errors,*add*message*ids*generated****************                       CSD101
+      ***by*CG3601*to*main*array*ArrMsgIds.****************************                       CSD101
  
-     C                   IF        PRtnCode = '*ERROR '
-     C                   EVAL      *IN03 = '1'
-     C                   EXSR      SRMERGE
-     C                   ENDIF
+     C**********         IF        PRtnCode = '*ERROR '                                       CSD101
+     C**********         EVAL      *IN03 = '1'                                                CSD101
+     C**********         EXSR      SRMERGE                                                    CSD101
+     C**********         ENDIF                                                                CSD101
  
-     C                   ENDSR
+     C**********         ENDSR                                                                CSD101
  
       *****************************************************************
       /EJECT
@@ -1091,7 +1093,7 @@
  
      C                   EVAL      CMPSIP = #1PSIP
      C                   EVAL      CMFUSR = #1FUSR
-     C                   EVAL      CMFPWD = #1FPWD
+     C**********         EVAL      CMFPWD = #1FPWD                                            CSD101
      C                   EVAL      CMPSDI = #1PSDI
      C                   EVAL      CMFBDI = #1FBDI
      C                   EVAL      CMEXSZ = #1EXSZ
@@ -1337,7 +1339,7 @@
  
      C                   EVAL      #1PSIP = *BLANKS
      C                   EVAL      #1FUSR = *BLANKS
-     C                   EVAL      #1FPWD = *BLANKS
+     C**********         EVAL      #1FPWD = *BLANKS                                           CSD101
      C                   EVAL      #1PSDI = *BLANKS
      C                   EVAL      #1FBDI = *BLANKS
      C                   EVAL      #1EXSZ = *BLANKS

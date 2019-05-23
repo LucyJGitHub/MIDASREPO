@@ -320,7 +320,6 @@
      C                   IF        %OPEN (SD000405P1)                                       MD053109
      C                             AND PFKnum = ' '                                         MD053109
      C                   CLOSE     SD000405P1                                               MD053109
-     C                   COMMIT                                                             MD053109
      C                   EVAL      *INU7 = *ON                                              MD053109
      C                   EVAL      *INU8 = *ON                                              MD053109
      C                   EVAL      *INLR = *ON                                              MD053109

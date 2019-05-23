@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER070             Date 19Aug14               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER070             Date 19Aug14               *
       *                 CER069             Date 03Jul14               *
       *                 MD026854           Date 29May14               *
       *                 CGL132             Date 01May13               *
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CER069 - German Tax Enhancement                              *
@@ -103,17 +105,17 @@
       *  CGL031 - Taxation of Savings Income                          *
       *                                                               *
       *****************************************************************
- 
- 
+
+
       * Midas SD Additional Customer Details File
      FSDACUSL0  UF A E           K DISK    COMMIT
- 
+
       * Midas SD Standing Data Controls index
      FSDFCTLL0  UF A E           K DISK    COMMIT
                                                                                               CGL132
       ** FATCA Customer details file                                                          CGL132
      FSDFTCSL0  UF   E           K DISK    COMMIT                                             CGL132
- 
+
       * Customer Details File - by Customer number
      FSDCUSTL1  IF   E           K DISK    PREFIX(C_)
                                                                                             BUG10069
@@ -137,8 +139,8 @@
       ** Midas SD Joint Account Member File                                                 BUG26868
       *                                                                                     BUG26868
      FSDJACCL4  IF A E           K DISK                                                     BUG26868
- 
- 
+
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -150,12 +152,12 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
@@ -166,45 +168,45 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
       ** Rename fields for Timestamp checking
      D ChkACUDFmt    E DS                  EXTNAME(SDACUSPD)
      D                                     PREFIX(CH)
- 
+
       ** Externally desc'd DS for valid transactions Detail
      D SDVACUD       E DS                  EXTNAME(SDVACUDPD)
      D                                     PREFIX(A_)
- 
+
       * Error indicators
      D OKTrnDets     E DS                  EXTNAME(SDEACUDPD)
- 
+
       **  Externally described DS for 'BEFORE UPDATE' SDACUSPD
      D B_SDACUS      E DS                  EXTNAME(SDACUSPD)
      D                                     PREFIX(B_)
- 
+
       **  Transaction Details File
      D SDACUS        E DS                  EXTNAME(SDACUSPD)
- 
+
       ** Data Structures for use with access programs
- 
+
       ** Data structure for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       * First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       * Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
       *                                                                                       CER034
@@ -228,19 +230,19 @@
       ** External DS based on Location Codes                                               BUG22578A
       *                                                                                    BUG22578A
      D SDLOCN        E DS                  EXTNAME(SDLOCNPD)                               BUG22578A
- 
+
       ** 24X7 status data area
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
- 
+
       ** SD data area
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
- 
+
       ** Midas API Message Header Format Definition
      D APHEAD        E DS                  EXTNAME(APHEADPD)
- 
+
       ** Data Structure for SAR Details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** Midas SD Midas modules Data Structure                                                CSW207
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)                                  CSW207
                                                                                               CSW207
@@ -249,7 +251,7 @@
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
       ** Outward parameters
       ** RCD : Midas SD Deleted records file retrieval
      D PBRC            DS          3064
@@ -285,7 +287,7 @@
      D    PBLCD             3061   3063P 0
       ** I :  Type of Last Change
      D    PBTYLC            3064   3064
- 
+
      D WUDELR          DS          3000
      D    WUDR01               1    250
      D    WUDR02             251    500
@@ -299,16 +301,16 @@
      D    WUDR10            2251   2500
      D    WUDR11            2501   2750
      D    WUDR12            2751   3000
- 
- 
+
+
       ** Parameter for *Entry
      D P@Rtcd          S              7A
      D DDACTN          S              1A
- 
+
       ** Parameter for Access Object
      D PRtcd           S              7A
      D POptn           S              7A
- 
+
       ** Parameter for SDACUDRTV
      D P@MODE          S              6A
      D P@RSMD          S              1A
@@ -319,16 +321,16 @@
      D DDCUSTOK        S              1A
      D Ix              S              3P 0
      D WIdx            S              3P 0                                                    CER034
- 
+
       ** Parameter for ZARTVJOBA
      D PReturn         S              6A
      D PType           S              1A
- 
+
       ** Parameter for ZAMSGTOOPR
      D MsgSndRtn       S             10A
      D DBError         S            132A
- 
- 
+
+
      D SValK1          S             20                                                       CGL132
      D SVal1           S            200                                                       CGL132
      D SValK2          S             20                                                       CGL132
@@ -355,13 +357,13 @@
      D DateIn          S              6A
      D DaynoOut        S              5P 0
      D ErrorFlag       S              1A
- 
+
       ** Parameter for ZAGENTMSTM
      D @Timestamp      S             26Z
- 
+
       ** Account sequence field (packed) for call to CLINTSE
      D WKACSN          S              2P 0
- 
+
       ** Work Variables
      D WDayMnt         S              4A
      D WCCYY           S              4A
@@ -375,12 +377,12 @@
      D WUNoDL          S              5P 0
      D WUNoIN          S              5P 0
      D W0RTN           S              7A
- 
+
       ** Other Variables
      D C               S              2P 0
- 
+
       ** Fields defined for Calling SDACUDLOG
- 
+
      D CSC011          S              1A
      D TRANSDTL        S           5800A
      D PCustNum        S             18A
@@ -390,7 +392,7 @@
      D CSD029          S              1A                                                      CSD029
      D CGL132          S              1A                                                      CGL132
      D CGL133          S              1A                                                      CGL132
- 
+
       ** Swift installed flag                                                                 CSW207
      D CSW207          S              1A                                                      CSW207
      D CSD092          S              1A   INZ('N')                                           CSD092
@@ -434,7 +436,7 @@
       * MAIN - MAIN BODY                                              *
       *                                                               *
       *****************************************************************
- 
+
       *                                                                                    BUG22578A
       ** Do not update History files if first run                                          BUG22578A
       *                                                                                    BUG22578A
@@ -447,19 +449,19 @@
       *                                                                                    BUG22578A
       ** Ensure transaction has not been updated by another workstation
       ** - if so, bypass updating and return to calling program.
- 
+
      C                   EXSR      SRChkOthUpd
- 
+
      C                   IF        P@Rtcd <> *Blanks
      C                   GOTO      EXIT
      C                   ENDIF
- 
+
       ** Get Customer Details
- 
+
      C                   EXSR      SRGetCust
- 
+
       ** Insert, Amend or Delete the Customer
- 
+
      C     A_ACTYLC      CASEQ     'I'           SRInsert
      C     A_ACTYLC      CASEQ     'A'           SRAmend
      C     A_ACTYLC      CASEQ     'D'           SRDelete
@@ -477,26 +479,26 @@
     *                                                                                         CER034
       ** If 24x7 Midas Availability is installed
       ** and Support System is active
- 
+
      C                   IF        (CSC011 = 'Y') AND (S1SUPP = LIBR)
- 
+
      C                   CALLB     'SDACUDLOG'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    SDACUS
      C                   PARM                    TRANSDTL
- 
+
       ** If there is no error, write the log file
- 
+
      C                   IF        RetCodeOut = *BLANKS
- 
+
      C                   EVAL      APTGTTYPE = 'SDACUD'
      C                   EVAL      APFOTRANID = A_ACFRNT
      C                   EVAL      APRPRLOCN  = A_ACREPA
      C                   EVAL      APUSERID   = PSUser
      C                   EVAL      APMIDUSR   = PSUser
- 
+
      C                   MOVEL     A_ACCUST      PCustNum
- 
+
      C                   CALLB     'APLOGTRAN'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    APHEAD
@@ -504,20 +506,20 @@
      C                   PARM      *BLANKS       PTimestamp
      C                   PARM                    PCustNum
      C                   PARM      *BLANKS       PACustNo
- 
+
      C                   ENDIF
- 
+
       ** If there is an error in either log file, end program
- 
+
      C                   IF        RetCodeOut <> *BLANKS
      C                   EVAL      P@RTCD = '*ERROR'
      C                   ENDIF
- 
+
      C                   ENDIF
       ** Exit From Program
- 
+
      C     EXIT          TAG
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -527,90 +529,90 @@
       *                                                               *
       *****************************************************************
      C     SRChkOthUpd   BEGSR
- 
+
       ** Retrieve current Customer details
- 
+
      C                   EVAL      MidasTrNum = A_ACCUST
- 
+
       ** Determine whether program is running interactively or in batch
       **  ( 0 = batch   1 = interactive)
- 
+
      C                   CALLB     'ZARTVJOBA'
      C                   PARM                    PReturn
      C                   PARM                    PType
- 
+
       ** Allow access to transaction record by Front-Office ID when in Repair
       ** mode for inserts . Set  *RTV module  parameter P@MODE  to   *FRONT
       ** if the pgm is:  a) running in Interactive mode - PType = 1  ~~~~~~
       **                 b) action code is Insert - 'I'
       **                 c) Front-Office Id is NOT Blank
- 
+
      C                   IF        PType = '1' and
      C                             A_ACTYLC = 'I' and
      C                             A_ACFRNT <> *Blanks
- 
+
      C                   EVAL      P@MODE = '*FRONT'
- 
+
      C                   ELSE
- 
+
       ** Otherwise, if running in batch use Front-Office ID
       **            (if insert)
       **            else, use Midas Deal Number
- 
+
      C                   IF        PType = '0' and
      C                             A_ACTYLC = 'I'
      C                   EVAL      P@MODE = '*FRONT'
      C                   ELSE
      C                   EVAL      P@MODE = *Blanks
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   CALLB     'SDACUDRTV'
- 
+
       ** Inputs
       ** Return code
      C                   PARM      *Blanks       RetCodeOut
- 
+
       ** Mode = '*FRONT' (FRONT OFFICE TRANSACTION INTERFACE)
       ** Mode = '      ' (NOT FRONT OFFICE TRANSACTION INTERFACE)
- 
+
      C                   PARM                    P@MODE
- 
+
       ** Response mode
      C                   PARM      *Blanks       P@RSMD
- 
+
       ** Action Code
      C                   PARM      A_ACTYLC      DDACTN
- 
+
       ** Front Office Transaction ID
      C                   PARM      A_ACFRNT      FOTRID
- 
+
       ** Midas Transaction Number
      C                   PARM                    MidasTrNum
- 
+
 rgc   ** Value is 'Y' to indicate its from SDACUDENQ otherwise from SDACUDSIN
 rgc  C                   PARM                    PSDACUDENQ
- 
- 
+
+
       ** Outputs
       ** Transaction Details in File Format
      C                   PARM                    ChkACUDFmt
- 
+
       ** OK - Action code
      C                   PARM      *Blanks       DDACTNOK
- 
+
       ** OK - Transaction Number
      C                   PARM                    DDCUSTOK
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM      *Blanks       FldNameArr
      C                   PARM      *Blanks       MsgIdArr
      C                   PARM      *Blanks       MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM      *Zeros        Ix
- 
+
       *                                                                                       CER034
       ** Warning fields/message IDs/message data (arrays) from/to caller                      CER034
       *                                                                                       CER034
@@ -624,31 +626,31 @@ rgc  C                   PARM                    PSDACUDENQ
       *                                                                                       CER034
       ** Error if Timestamp is not the same (record has been changed
       **  by another workstation)
- 
+
       ** Processing varies according to mode program is running in.
       ** In interacive mode simply check whether the timestamp field
       ** has been updated since the original Customer was fetched
       ** by this program.
       ** In batch (API input) check return parameters from Retrieve
       ** module for errors, and send message to system operator.
- 
+
       ** Interactive mode:
- 
+
      C                   IF        PType = '1'
- 
+
      C                   IF        A_ACTYLC <> 'I'  and
      C                             CHE5TMST <> A_ACTMST
      C                   EVAL      P@Rtcd = '*RECUPD'
      C                   ENDIF
- 
+
       ** Batch mode:
- 
+
      C                   ELSE
      C                   IF        DDACTNOK = 'N' or
      C                             DDCUSTOK = 'N'
      C                   EVAL      P@Rtcd = '*RECUPD'
      C                   Z-ADD     1             C
- 
+
      C                   DOW       C < ArrayMax AND
      C                             FldNameArr(C) <> *Blanks
      C                   CLEAR                   DBError
@@ -660,10 +662,10 @@ rgc  C                   PARM                    PSDACUDENQ
      C                   PARM                    DummyMsgF
      C                   ADD       1             C
      C                   ENDDO
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -673,30 +675,30 @@ rgc  C                   PARM                    PSDACUDENQ
       *                                                               *
       *****************************************************************
      C     SRInsert      BEGSR
- 
+
       ** Access Transaction Details
- 
+
      C     A_ACCUST      CHAIN     SDACUSL0                             99
- 
+
       ** Database error
- 
+
      C                   IF        %Found(SDACUSL0)
      C                   EVAL      DBKEY  = A_ACCUST
      C                   EVAL      DBFILE = 'SDACUSPD'
      C                   EVAL      DBASE  =  001
      C                   EXSR      SRErr
      C                   ENDIF
- 
+
       ** Initialize Transaction Detail
- 
+
      C                   CLEAR                   SDACUS
- 
+
       ** Store Old fields for comparisons
- 
+
      C                   EVAL      B_SDACUS = SDACUS
- 
+
       ** Set Transaction fields on insert
- 
+
      C                   EVAL      E5CUST = A_ACCUST
      C                   EVAL      E5LCD  = A_ACLCD
      C                   EVAL      E5TYLC = A_ACTYLC
@@ -727,56 +729,56 @@ rgc  C                   PARM                    PSDACUDENQ
      C                   EVAL      E5JATP = A_ACJATP
      C                   EVAL      E5REPI = A_ACREPI
      C                   EVAL      E5CSSN = C_BBCSSN
- 
+
       ** Format Date of Birth
- 
+
      C                   EVAL      E5DBTH = A_ACDBTH
      C                   MOVE      A_ACDBTH      WDayMnt
      C                   MOVEL     A_ACDBTH      WCCYY
      C                   MOVEL     WCCYY         E5BRT2
      C                   MOVE      WCCYY         WYear
      C                   MOVE      WCCYY         WNCCYY
- 
+
      C                   MOVEL     WDayMnt       WMonth
      C                   MOVE      WDayMnt       WDay
- 
+
      C                   IF        BJDFIN = 'M'
      C                   EVAL      E5BRT1 = WMonth + WDay + WYear
      C                   ELSE
      C                   EVAL      E5BRT1 = WDay + WMonth + WYear
      C                   ENDIF
- 
+
      C                   IF        WNCCYY > 1972  and
      C                             WNCCYY < 2071
- 
+
      C                   CALLB     'ZDATE1'
      C                   PARM      E5BRT1        DateIn
      C     E5BRTH        PARM                    DaynoOut
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag
- 
+
      C                   ELSE
      C                   EVAL      E5BRTH = *Zeros
      C                   ENDIF
- 
+
       ** Front Office ID
- 
+
      C                   EVAL      E5FRNT = A_ACFRNT
- 
+
       ** Repair Location
- 
+
      C                   EVAL      E5REPA = A_ACREPA
- 
+
       ** Timestamp
- 
+
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
      C                   MOVE      TimeStamp     E5TMST
- 
+
       ** If CSC011 is installed, supply a Front Office ID for the
       ** transaction even if it originated from SIN module.
- 
+
      C                   IF        CSC011 = 'Y'
      C                   IF        E5FRNT = *BLANKS
      C                   EVAL      E5FRNT = 'MD' + A_ACCUST
@@ -796,7 +798,7 @@ rgc  C                   PARM                    PSDACUDENQ
      C                   EVAL      E5FL09 = A_ACFL09                                          CSD029
      C                   EVAL      E5FL10 = A_ACFL10                                          CSD029
      C                   ENDIF                                                                CSD029
- 
+
       ** Update the Additional field details when CSW207 is on                                CSW207
      C                   IF        CSW207 = 'Y' OR BGN4ST = 'Y'                               CSW207
      C                   EVAL      E5ISCD = A_ACISCD                                          CSW207
@@ -828,7 +830,7 @@ rgc  C                   PARM                    PSDACUDENQ
      C                   ENDIF                                                                CER045
       *                                                                                       CER034
       ** Write new Transaction Detail
- 
+
      C                   WRITE     @ACUSL0
                                                                                               CGL132
      C                   IF        CGL132 = 'Y' AND                                           CGL132
@@ -880,13 +882,13 @@ rgc  C                   PARM                    PSDACUDENQ
      C                   PARM      *BLANKS       PACRV                                        CSD092
      C                   PARM      *BLANKS       PELEC                                        CGL132
      C                   ENDIF                                                                CSD092
- 
+
      C                   EVAL      WUNoRc = 1
      C                   EVAL      WUNoAm = 0
      C                   EVAL      WUNoDl = 0
      C                   EVAL      WUNoIn = 1
      C                   EXSR      SRSNCHRC
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -896,26 +898,26 @@ rgc  C                   PARM                    PSDACUDENQ
       *                                                               *
       *****************************************************************
      C     SRAmend       BEGSR
- 
+
       ** Access Transaction Detail record
- 
+
      C     A_ACCUST      CHAIN     SDACUSL0                           99
- 
+
       ** Database error
- 
+
      C                   IF        Not %Found(SDACUSL0)
      C                   EVAL      DBKEY  = A_ACCUST
      C                   EVAL      DBFILE = 'SDACUSPD'
      C                   EVAL      DBASE  =  002
      C                   EXSR      SRErr
      C                   ENDIF
- 
+
       ** Update 'BEFORE' status
- 
+
      C                   EVAL      B_SDACUS = SDACUS
- 
+
       ** Set Transaction Detail fields on amend
- 
+
      C                   EVAL      E5CUST = A_ACCUST
      C                   EVAL      E5LCD  = A_ACLCD
      C                   EVAL      E5TYLC = A_ACTYLC
@@ -946,50 +948,50 @@ rgc  C                   PARM                    PSDACUDENQ
      C                   EVAL      E5JATP = A_ACJATP
      C                   EVAL      E5REPI = A_ACREPI
      C                   EVAL      E5CSSN = C_BBCSSN
- 
+
       ** Format Date of Birth
- 
+
      C                   EVAL      E5DBTH = A_ACDBTH
      C                   MOVE      A_ACDBTH      WDayMnt
      C                   MOVEL     A_ACDBTH      WCCYY
      C                   MOVEL     WCCYY         E5BRT2
      C                   MOVE      WCCYY         WYear
      C                   MOVE      WCCYY         WNCCYY
- 
+
      C                   MOVEL     WDayMnt       WMonth
      C                   MOVE      WDayMnt       WDay
- 
+
      C                   IF        BJDFIN = 'M'
      C                   EVAL      E5BRT1 = WMonth + WDay + WYear
      C                   ELSE
      C                   EVAL      E5BRT1 = WDay + WMonth + WYear
      C                   ENDIF
- 
+
      C                   IF        WNCCYY > 1972  and
      C                             WNCCYY < 2071
- 
+
      C                   CALLB     'ZDATE1'
      C                   PARM      E5BRT1        DateIn
      C     E5BRTH        PARM                    DaynoOut
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag
- 
+
      C                   ELSE
      C                   EVAL      E5BRTH = *Zeros
      C                   ENDIF
- 
+
       ** Timestamp
- 
+
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
      C                   MOVE      TimeStamp     E5TMST
- 
+
       ** Front Office ID
- 
+
      C                   EVAL      E5FRNT = A_ACFRNT
- 
+
       ** Repair Location
- 
+
      C                   EVAL      E5REPA = A_ACREPA
                                                                                               CSD029
       ** Update the Additional field details when CSD029 is on                                CSD029
@@ -1005,7 +1007,7 @@ rgc  C                   PARM                    PSDACUDENQ
      C                   EVAL      E5FL09 = A_ACFL09                                          CSD029
      C                   EVAL      E5FL10 = A_ACFL10                                          CSD029
      C                   ENDIF                                                                CSD029
- 
+
       ** Update the Additional field details when CSW207 is on                                CSW207
      C                   IF        CSW207 = 'Y' or BGN4ST = 'Y'                               CSW207
      C                   EVAL      E5ISCD = A_ACISCD                                          CSW207
@@ -1037,7 +1039,7 @@ rgc  C                   PARM                    PSDACUDENQ
      C                   EVAL      E5TIN5 = A_ACTIN5                                          CGL132
      C                   EVAL      E5TNC5 = A_ACTNC5                                          CGL132
       ** Update Record
- 
+
      C                   UPDATE    @ACUSL0
                                                                                               CGL132
      C                   IF        CGL132 = 'Y' AND                                           CGL132
@@ -1089,13 +1091,13 @@ rgc  C                   PARM                    PSDACUDENQ
      C                   PARM      *BLANKS       PACRV                                        CSD092
      C                   PARM      *BLANKS       PELEC                                        CGL132
      C                   ENDIF                                                                CSD092
- 
+
      C                   EVAL      WUNoRc = 0
      C                   EVAL      WUNoAm = 1
      C                   EVAL      WUNoDl = 0
      C                   EVAL      WUNoIn = 0
      C                   EXSR      SRSNCHRC
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1105,24 +1107,24 @@ rgc  C                   PARM                    PSDACUDENQ
       *                                                               *
       *****************************************************************
      C     SRDelete      BEGSR
- 
+
      C**********         IF        C_BBTAIN <> 'Y' AND                            BUG26917 BUG26917A
      C**********                   CER048 = 'Y'                                   BUG26917 BUG26917A
       ** Access Transaction Details
- 
+
      C     A_ACCUST      CHAIN     SDACUSL0                           99
- 
+
       ** Database error
- 
+
      C                   IF        *IN99 = *ON
      C                   EVAL      DBKEY  = A_ACCUST
      C                   EVAL      DBFILE = 'SDACUSPD'
      C                   EVAL      DBASE  =  003
      C                   EXSR      SRErr
      C                   ENDIF
- 
+
       ** Update 'BEFORE' status
- 
+
      C                   EVAL      B_SDACUS = SDACUS
       *                                                                                     BUG23518
       ** Set Additional Customer fields on Delete                                           BUG23518
@@ -1136,9 +1138,9 @@ rgc  C                   PARM                    PSDACUDENQ
      C                   PARM                    TimeStamp                                  BUG23518
       *                                                                                     BUG23518
      C                   MOVE      TimeStamp     E5TMST                                     BUG23518
- 
+
       ** Delete record
- 
+
      C**********         DELETE    @ACUSL0                                                  BUG23518
      C                   UPDATE    @ACUSL0                                                  BUG23518
                                                                                               CSD092
@@ -1160,7 +1162,7 @@ rgc  C                   PARM                    PSDACUDENQ
      C                   PARM      *BLANKS       PACRV                                        CSD092
      C                   PARM      *BLANKS       PELEC                                        CGL132
      C                   ENDIF                                                                CSD092
- 
+
      C**********         EVAL      WUNoRc = -1                                              BUG23518
      C                   EVAL      WUNoRc = 0                                               BUG23518
      C**********         EVAL      WUNoAm = 0                                               BUG23518
@@ -1169,7 +1171,7 @@ rgc  C                   PARM                    PSDACUDENQ
      C                   EVAL      WUNoDl = 0                                               BUG23518
      C                   EVAL      WUNoIn = 0
      C                   EXSR      SRSNCHRC
- 
+
      C**********         ELSEIF    CER048 = 'N'                                   BUG26917 BUG26917A
       ***Access*Transaction*Details*                                              BUG26917 BUG26917A
       **********                                                                  BUG26917 BUG26917A
@@ -1324,11 +1326,11 @@ rgc  C                   PARM                    PSDACUDENQ
       * SRGetCust - Get Customer Details
       *****************************************************************
      C     SRGetCust     BEGSR
- 
+
      C     A_ACCUST      CHAIN     SDCUSTL1
- 
+
       ** Database Error
- 
+
      C                   IF        Not %Found(SDCUSTL1)
                                                                                             BUG10069
       ** Check the shadow file.                                                             BUG10069
@@ -1345,7 +1347,7 @@ rgc  C                   PARM                    PSDACUDENQ
      C                   ENDIF                                                              BUG10069
                                                                                             BUG10069
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1355,44 +1357,44 @@ rgc  C                   PARM                    PSDACUDENQ
       *                                                               *
       *****************************************************************
      C     SRSNCHRC      BEGSR
- 
+
      C                   EVAL      W0RTN = *Blanks
- 
+
       ** Move key fields to @AHREAU
- 
+
      C                   EVAL      AHFLNM = WFlName
- 
+
      C     KLCHSN        KLIST
      C                   KFLD                    AHFLNM
      C     KLCHSN        CHAIN     @AHREAU                            90
- 
+
       ** Database Error
- 
+
      C                   IF        *IN90 = *ON
      C                   EVAL      DBKEY = AHFLNM
      C                   EVAL      DBFILE = 'SDFCTLL0'
      C                   EVAL      DBASE = 005
      C                   EXSR      SRErr
      C                   END
- 
+
       ** USER: Processing after Data read
- 
+
      C                   ADD       AHNORC        WUNORC
      C                   ADD       AHNOIN        WUNOIN
      C                   ADD       AHNOAM        WUNOAM
      C                   ADD       AHNODL        WUNODL
- 
+
       ** Move non-key fields to @AHREAU
- 
+
      C                   EVAL      AHNORC = WUNORC
      C                   EVAL      AHNOIN = WUNOIN
      C                   EVAL      AHNOAM = WUNOAM
      C                   EVAL      AHNODL = WUNODL
- 
+
       ** Update record
- 
+
      C                   UPDATE    @AHREAU
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1865,15 +1867,15 @@ rgc  C                   PARM                    PSDACUDENQ
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
- 
+
+
       **  Program Parameters
- 
+
      C     *ENTRY        PLIST
- 
+
       ** Return Code
      C                   PARM                    P@Rtcd
- 
+
       ** Externally described DS for valid Transaction Detail
      C                   PARM                    SDVACUD
       *                                                                                       CER034
@@ -1887,16 +1889,16 @@ rgc  C                   PARM                    PSDACUDENQ
      C**********         KFLD                    C_BBCUST                           CER034 BUG22578A
      C**********         KFLD                    C_BBCOLC                           CER034 BUG22578A
       *                                                                                       CER034
- 
+
       ** Access Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*MSG    '    PRtcd
      C                   PARM      '*FIRST  '    POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
- 
+
      C                   IF        PRtcd <> *Blanks
      C                   EVAL      DBKEY  = POptn
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -1919,23 +1921,23 @@ rgc  C                   PARM                    PSDACUDENQ
      C                   OUT       LDA                                                        CSW207
      C                   EXSR      SRErr                                                      CSW207
      C                   ENDIF                                                                CSW207
- 
+
       ** Initialise
- 
+
      C                   EVAL      WFlName = 'SDACUSPD'
- 
+
       ** Check if CSC011 is installed
- 
+
      C                   EVAL      CSC011 = 'N'
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CSC011'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
       ** Database error
- 
+
      C                   IF        (PRtCd <> *BLANKS) and
      C                             (PRtCd <> '*NRF   ')
      C                   EVAL      DBKEY = 'CSC011'
@@ -1943,7 +1945,7 @@ rgc  C                   PARM                    PSDACUDENQ
      C                   EVAL      DBASE = 905
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   EVAL      CSC011 = 'Y'
      C                   IN        SDSTAT
@@ -1995,7 +1997,7 @@ rgc  C                   PARM                    PSDACUDENQ
      C                   EXSR      SRERR                                                      CSD029
      C                   ENDIF                                                                CSD029
      C                   ENDIF                                                                CSD029
- 
+
       *                                                                                       CER034
       ** Check if CER034 is enabled                                                           CER034
       *                                                                                       CER034
@@ -2337,18 +2339,18 @@ rgc  C                   PARM                    PSDACUDENQ
       *                                                               *
       *****************************************************************
      C     SRErr         BEGSR
- 
+
      C                   EVAL      P@Rtcd = '*ERROR '
      C                   EVAL      DBPGM = 'SDACUDUPD'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   DUMP
- 
+
       **  Terminate the Program
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
 ** CTDATA CPY@

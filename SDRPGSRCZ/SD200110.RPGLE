@@ -16,8 +16,9 @@
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL146             Date 10Jul13               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL146             Date 10Jul13               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL146 - MT940/MT950 Production in Input Cycle               *
       *           Added hooks: CGL146_001, CGL146_007, CGL146_008,    *
@@ -116,7 +118,12 @@
       *                                                                                       CER030
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CER030
       *
- 
+     D Arr_User        S             50A   DIM(100)                                           CSD101
+     D Arr_Unique      S             75A   DIM(100)                                           CSD101
+                                                                                              CSD101
+     D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSD101
+      ** SD data area                                                                         CSD101
+
       ** Declared variables
       ** ------------------
       *                                                                                       CER030
@@ -133,7 +140,27 @@
       *
      D KeyUsed         DS
      D  KeyNWRK                            LIKE(EDNWRK)
- 
+
+      ** SD000403 parameters.                                                                 CSD101
+     D PUniq           S             75A                                                      CSD101
+     D PInterface      S             20A                                                      CSD101
+     D PUser           S             50A                                                      CSD101
+     D PUserDesc       S             50A                                                      CSD101
+     D PStat           S              1A                                                      CSD101
+     D PRecord         S              1A                                                      CSD101
+     D PReturnVal      S              7A                                                      CSD101
+     D PAUser          S             50A   DIM(100)                                           CSD101
+     D PAUniq          S             75A   DIM(100)                                           CSD101
+     D PReturnCode     S              7A                                                      CSD101
+     D PIDDesc         S             50A                                                      CSD101
+     D Ax              S              4S 0                                                    CSD101
+     D PAction         S              1A                                                      CSD101
+     D PValidList      S             10A   INZ('SDINTFVL')                                    CSD101
+     D PLibrary        S             10A                                                      CSD101
+     D PIDName         S            100A                                                      CSD101
+     D PPass1          S            128A                                                      CSD101
+     D PDescr          S           1000A                                                      CSD101
+                                                                                              CSD101
       *------------------------------------------------------------------------*
       ** C Spec. Declaratives
       ** ====================
@@ -337,6 +364,117 @@
      C                   PARM                    NewFilRcd
      C/COPY OFCPYSRCZ,CGL146_011                                                              CGL146
       *    ----------    ------
+                                                                                              CSD101
+     C                   SELECT                                                               CSD101
+                                                                                              CSD101
+     C                   WHEN      ActionCode = 'I' and EDPROT = '*FTP  '                     CSD101
+                                                                                              CSD101
+     C                   CLEAR                   PAUser                                       CSD101
+     C                   CLEAR                   PAUniq                                       CSD101
+     C                   EVAL      PUniq = 'NETWORK_' + EDNWRK                                CSD101
+     C                   EVAL      PIDDesc = EDNETD                                           CSD101
+     C                   EVAL      PUser = EDSUID                                             CSD101
+     C                   EVAL      PUserDesc = EDSUID                                         CSD101
+     C                                                                                        CSD101
+     C                   CALL      'SD000403'                                                 CSD101
+     C                   PARM      *BLANKS       PReturnCode                                  CSD101
+     C                   PARM                    PUniq                                        CSD101
+     C                   PARM                    PIDDesc                                      CSD101
+     C                   PARM      *BLANKS       PInterface                                   CSD101
+     C                   PARM                    PUser                                        CSD101
+     C                   PARM                    PUserDesc                                    CSD101
+     C                   PARM      'I'           PStat                                        CSD101
+     C                   PARM      'M'           PRecord                                      CSD101
+     C                   PARM      *BLANKS       PReturnVal                                   CSD101
+     C                   PARM                    PAUser                                       CSD101
+     C                   PARM                    PAUniq                                       CSD101
+                                                                                              CSD101
+     C                   WHEN      ActionCode = 'A' and EDPROT = '*FTP  '                     CSD101
+                                                                                              CSD101
+     C                   IN        SDSTAT                                                     CSD101
+                                                                                              CSD101
+     C                   EVAL      PLibrary = LIBR + 'DMLIB'                                  CSD101
+     C                   EVAL      PIDName = 'NETWORK_' + EDNWRK                              CSD101
+                                                                                              CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *BLANKS       PReturnCode                                  CSD101
+     C                   PARM      'F'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM      *BLANKS       PPass1                                       CSD101
+     C                   PARM      *BLANKS       PDescr                                       CSD101
+                                                                                              CSD101
+     C                   IF        PReturnCode = *BLANKS                                      CSD101
+     C                   CLEAR                   PAUser                                       CSD101
+     C                   CLEAR                   PAUniq                                       CSD101
+     C                   EVAL      PUniq = 'NETWORK_' + EDNWRK                                CSD101
+     C                   EVAL      PUser = EDSUID                                             CSD101
+     C                                                                                        CSD101
+     C                   CALL      'SD000403'                                                 CSD101
+     C                   PARM      *BLANKS       PReturnCode                                  CSD101
+     C                   PARM                    PUniq                                        CSD101
+     C                   PARM      *BLANKS       PIDDesc                                      CSD101
+     C                   PARM      *BLANKS       PInterface                                   CSD101
+     C                   PARM                    PUser                                        CSD101
+     C                   PARM      *BLANKS       PUserDesc                                    CSD101
+     C                   PARM      'A'           PStat                                        CSD101
+     C                   PARM      'M'           PRecord                                      CSD101
+     C                   PARM      *BLANKS       PReturnVal                                   CSD101
+     C                   PARM                    PAUser                                       CSD101
+     C                   PARM                    PAUniq                                       CSD101
+                                                                                              CSD101
+     C                   ELSE                                                                 CSD101
+                                                                                              CSD101
+     C                   CLEAR                   PAUser                                       CSD101
+     C                   CLEAR                   PAUniq                                       CSD101
+     C                   EVAL      PUniq = 'NETWORK_' + EDNWRK                                CSD101
+     C                   EVAL      PIDDesc = EDNETD                                           CSD101
+     C                   EVAL      PUser = EDSUID                                             CSD101
+     C                   EVAL      PUserDesc = EDSUID                                         CSD101
+     C                                                                                        CSD101
+     C                   CALL      'SD000403'                                                 CSD101
+     C                   PARM      *BLANKS       PReturnCode                                  CSD101
+     C                   PARM                    PUniq                                        CSD101
+     C                   PARM                    PIDDesc                                      CSD101
+     C                   PARM      *BLANKS       PInterface                                   CSD101
+     C                   PARM                    PUser                                        CSD101
+     C                   PARM                    PUserDesc                                    CSD101
+     C                   PARM      'I'           PStat                                        CSD101
+     C                   PARM      'M'           PRecord                                      CSD101
+     C                   PARM      *BLANKS       PReturnVal                                   CSD101
+     C                   PARM                    PAUser                                       CSD101
+     C                   PARM                    PAUniq                                       CSD101
+                                                                                              CSD101
+     C                   ENDIF                                                                CSD101
+                                                                                              CSD101
+     C                   WHEN      ActionCode = 'D' and EDPROT = '*FTP  '                     CSD101
+                                                                                              CSD101
+     C                   EVAL      Ax = 1                                                     CSD101
+     C                   CLEAR                   Arr_User(Ax)                                 CSD101
+     C                   CLEAR                   Arr_Unique(Ax)                               CSD101
+                                                                                              CSD101
+     C                   EVAL      Arr_User(Ax) = %TRIM(EDSUID)                               CSD101
+     C                   EVAL      Arr_Unique(Ax) = %TRIM('NETWORK_' + EDNWRK)                CSD101
+                                                                                              CSD101
+     C                   MOVEA     Arr_User      PAUser                                       CSD101
+     C                   MOVEA     Arr_Unique    PAUniq                                       CSD101
+                                                                                              CSD101
+     C                   CALL      'SD000403'                                                 CSD101
+     C                   PARM      *BLANKS       PReturnCode                                  CSD101
+     C                   PARM      *BLANKS       PUniq                                        CSD101
+     C                   PARM      *BLANKS       PIDDesc                                      CSD101
+     C                   PARM      *BLANKS       PInterface                                   CSD101
+     C                   PARM      *BLANKS       PUser                                        CSD101
+     C                   PARM      *BLANKS       PUserDesc                                    CSD101
+     C                   PARM      'D'           PStat                                        CSD101
+     C                   PARM      'M'           PRecord                                      CSD101
+     C                   PARM      *BLANKS       PReturnVal                                   CSD101
+     C                   PARM                    PAUser                                       CSD101
+     C                   PARM                    PAUniq                                       CSD101
+                                                                                              CSD101
+     C                   ENDSL                                                                CSD101
+                                                                                              CSD101
      C     @UpdatRcd     ENDSR
  
       *========================================================================*

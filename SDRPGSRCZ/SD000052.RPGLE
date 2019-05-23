@@ -16,15 +16,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD028  *CREATE    Date 22Aug05               *
+      *                 CSD028  *CREATE    Date 22Aug05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD028 - KYC (Standing Data Authorisations )                 *
       *                                                               *
@@ -113,6 +115,8 @@
  
       ** Externally described DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
+      ** Midas SD Layout for DTAARA                                                           CSD101
+     D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSD101
  
       ** DS for access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
@@ -443,6 +447,14 @@
      D RqdLn1          S              3P 0
      D DifLn1          S              4P 0
      D PRetCode        S              7A
+                                                                                              CSD101
+     D PReturnCode     S              7A                                                      CSD101
+     D PAction         S              1A                                                      CSD101
+     D PValidList      S             10A   INZ('SDINTFVL')                                    CSD101
+     D PLibrary        S             10A                                                      CSD101
+     D PIDName         S            100A                                                      CSD101
+     D PPass1          S            128A                                                      CSD101
+     D PDescr          S           1000A                                                      CSD101
  
       ** Entry Parameter
      D PICCOB          S              1
@@ -970,9 +982,25 @@
      C                   CALLP     setDBUser(CMIobject:WJstring)
      C                   ENDIF
  
-     C                   IF        WKYCPassword <> *BLANKS
+     C**********         IF        WKYCPassword <> *BLANKS                                    CSD101
+     C                   IF        WKYCDBUser <> *BLANKS                                      CSD101
+     C                   EVAL      PLibrary = LIBR + 'DMLIB'                                  CSD101
+     C                   EVAL      PIDName = 'COMPLKYC_' +  WKYCDBUser                        CSD101
+                                                                                              CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       PReturnCode                                  CSD101
+     C                   PARM      'F'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM      *Blanks       PPass1                                       CSD101
+     C                   PARM      *Blanks       PDescr                                       CSD101
+                                                                                              CSD101
+     C                   IF        PReturnCode = *Blanks                                      CSD101
+     C                   EVAL      WKYCPassword = PPass1                                      CSD101
      C                   EVAL      WJstring = makestr(%trim(WKYCPassword))
      C                   CALLP     setPassword(CMIobject:WJstring)
+     C                   ENDIF                                                                CSD101
      C                   ENDIF
  
      C                   IF        WKYCDBName <> *BLANKS
@@ -1045,7 +1073,7 @@
      C                   EVAL      PSysK2 = 'KYCServerName       '
      C                   EVAL      PSysK3 = 'KYCPortNumber       '
      C                   EVAL      PSysK4 = 'KYCDBUser           '
-     C                   EVAL      PSysK5 = 'KYCPassword         '
+     C**********         EVAL      PSysK5 = 'KYCPassword         '                            CSD101
  
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       PRtnCode
@@ -1083,9 +1111,9 @@
      C                   IF        PSysV4 = '*NRF'
      C                   EVAL      DBKEY = PSysK4
      C                   ENDIF
-     C                   IF        PSysV5 = '*NRF'
-     C                   EVAL      DBKEY = PSysK5
-     C                   ENDIF
+     C**********         IF        PSysV5 = '*NRF'                                            CSD101
+     C**********         EVAL      DBKEY = PSysK5                                             CSD101
+     C**********         ENDIF                                                                CSD101
      C                   EVAL      DBFILE = 'SDSVALPD'
      C                   EVAL      DBASE = 001
      C                   EXSR      *PSSR
@@ -1095,8 +1123,10 @@
      C                   EVAL      WKYCServerName = PSysV2
      C                   EVAL      WKYCPortNumber = PSysV3
      C                   EVAL      WKYCDBUser     = PSysV4
-     C                   EVAL      WKYCPassword   = PSysV5
- 
+     C**********         EVAL      WKYCPassword   = PSysV5                                    CSD101
+                                                                                              CSD101
+     C                   IN        SDSTAT                                                     CSD101
+                                                                                              CSD101
      C                   ENDSR
  
       *********************************************************************

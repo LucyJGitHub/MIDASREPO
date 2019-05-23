@@ -27,8 +27,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER070             Date 19Aug14               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER070             Date 19Aug14               *
       *                 CER059             Date 19Jul10               *
       *                 BUG2553            Date 19Aug09               *
       *                 BUG25956           Date 09Sep09               *
@@ -53,6 +54,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -84,30 +86,30 @@
       *  CGL031 - Taxation on Savings Income                          *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       ** Midas SD Valid Additional Customers Details
      FSDVACUDPD UF A E             DISK    INFSR(*PSSR)
      F                                     PREFIX(V_)
      F                                     COMMIT
- 
+
       ** Midas SD Invalid Additional Customers Details
      FSDIACUDPD UF A E             DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       ** Midas SD Valid ACUD by Customer & Timestamp
      FSDVACUDL1 IF   E           K DISK    RENAME(SDVACUDD0:SDVACUDCHK)
- 
+
       ** Midas ZA Sequence numbers for input fields
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       ** Hook to enable non-core files to be included
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -126,70 +128,70 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
       /COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
       /COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
       /COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
       /COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API *CTL modules.
       /COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** used in checking whether there are messages on the data queue.
       /COPY ZACPYSRC,DTAQCHKDCL
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** String for error messages to the operator
      D ProcErr         C                   CONST('Error in module')
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Incoming Header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
- 
+
       ** Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(SDACUDPD)
       *                                                                                      CER034A
@@ -198,14 +200,14 @@
       *                                                                                      CER034A
       ** Screen 3 Incoming Transaction                                                       CER034A
      D TranInDet3    E DS                  EXTNAME(SDACU4DPD)                                CER034A
- 
+
       ** Valid Additional Customer layout
      D ValidAcud     E DS                  EXTNAME(SDVACUDPD)
      D                                     PREFIX(V_)
- 
+
       ** (Current) Additional Customer record in file Format
      D AcusFilFmt    E DS                  EXTNAME(SDACUSPD)
- 
+
       ** (Current) Additional Customer in Screen Format - Primary Details
      D CurCuPrim     E DS                  EXTNAME(SDACUDPD)
      D                                     PREFIX(@)
@@ -217,76 +219,76 @@
       ** (Current) Additional Customer in Screen Format - Screen 3                           CER034A
      D CurCustDet3   E DS                  EXTNAME(SDACU4DPD)                                CER034A
      D                                     PREFIX(C1)                                        CER034A
- 
+
       ** Error indicators
      D OKCuPrim      E DS                  EXTNAME(SDEACUDPD)
      D OKCustDet2    E DS                  EXTNAME(SDEACU3PD)                                CER034A
      D OKCustDet3    E DS                  EXTNAME(SDEACU4PD)                                CER034A
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for API ICD
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
- 
+
       ** External DS for SAR Details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
      D SCA_LCD       E                     EXTFLD(LCD)
- 
+
       ** First DS for Access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for Access programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** 24X7 status data area
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
- 
+
       ** SD data area
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Error message field(s)
      D Msg1            S                   LIKE(#MsgID)
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Fields (500A) to receive the incoming transaction
      D*Trans5001       S            500A
      D Trans5001       S           1500A                                                    BUG25877
      D PTrans5002      S            500A                                                     CER034A
      D PTrans5003      S            500A                                                     CER034A
- 
+
       ** Field (500A) to receive the incoming Extra Data
      D ExtData500      S            500A
- 
+
       ** Index for arrays of error message ids etc in Amend validation
      D AmIdx           S              3P 0
- 
+
       ** Indicies for arrays used to set up corresponding sequence numbers
       **  for the fields that are in error
      D Ix              S              3P 0
      D Iy              S              3P 0
- 
+
       ** Overall Transaction status, to be passed to the Message Handler
      D TranStatus      S              1A
- 
+
       ** Module ID, to be passed to the Message Handler
      D ModuleID        S              2A
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
       ** Parameter for APCALCOBJ
      D Object          S             10A   INZ('SDACUDUPC')
      D Lib             S             10A   INZ('*LIBL')
@@ -296,48 +298,48 @@
      D WaitTime        S              6A   INZ('0     ')
      D Dlcobj          S              1A   INZ('Y')
      D Return          S              7A
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
       ** Whether or not to clear the program message queue (this is not
       ** actually used, but is required by the message handler's parameter
       ** list.
      D ClrPgmMsgQ      S              1A   INZ('Y')
- 
+
       ** Flags to indicate whether substitution is required in
       ** each of the various parts the transaction
      D RepPrim         S              1A   inz('N')
- 
+
       ** Parameters for Access Object
      D PRtCd           S              7A
      D POptn           S              7A
      D PSard           S              6A
- 
+
       ** Parameters for ZAMSGTOOPR
      D MQReturn        S             10A
      D MQErrlong       S            132A
      D MQError         S             28A
- 
+
       ** Parameter for SDACUDRTV
      D ModeofOp        S              6A
      D PSDACUDENQ      S              1A
      D DDACTNOK        S              1A
      D DDCUSTOK        S              1A
- 
+
       ** Parameter for SDACUDVAL
      D CGL032          S              1A
      D RespMode        S              1A
- 
+
       ** Parameter for APDTASUBS
      D IncData         S           2000A
      D CurData         S           2000A
- 
+
       ** Key Fields for SDVACUDL1
      D KCUST           S              6A
- 
+
      D CSC011          S              1A
      D TransDtl        S           5800A
      D PCustNum        S             18A
@@ -355,18 +357,18 @@
       ** Validate Screens Y/N Flag                                                           CER034A
      D WValScrn1       S              1A                                                     CER034A
      D WValScrn2       S              1A                                                     CER034A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -376,148 +378,148 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
- 
+
+
       ** Incoming transaction is broken into 500A fields, so that a common CL
       ** can be used between this module and the one that read the MQ queue.
       ** This module needs to break these 500A fields by loading them into
       ** the appropriate (externally described) data structure.
- 
+
      C**********         EVAL      TranInPrim = Trans5001 + ExtData500                       CER034A
      C                   EVAL      TranInPrim = Trans5001                                    CER034A
      C                   EVAL      TranInDet2 = PTrans5002                                   CER034A
      C                   EVAL      TranInDet3 = PTrans5003                                   CER034A
- 
+
       ** Generate a timestamp for this transaction
- 
+
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
       ** Reset variables gradually updated
- 
+
      C                   EXSR      SRResetCycle
- 
+
       **  Check if valid Additional Customer details exists
- 
+
      C                   EXSR      SRChkValAcud
- 
+
       **  If valid Cust.det. does exist (even after delay), fail this input
- 
+
      C                   IF        Idx <> 0
      C                   GOTO      InValid
      C                   ENDIF
- 
+
       **  Check if valid Customer exists for Midas Customer Number
- 
+
      C                   EXSR      SRChkValMiCu
- 
+
       **  If valid Customer does exist (even after delay), fail this input
- 
+
      C                   IF        Idx <> 0
      C                   GOTO      InValid
      C                   ENDIF
- 
+
       ** Reset variables again in case the details have been corrupted
       ** by previous chain to valid Customer details file.
- 
+
      C                   EXSR      SRResetCycle
- 
+
       **  Validate Action Code
- 
+
      C                   EXSR      SRValidateAc
- 
- 
+
+
       **  If error in validation of action code, fail this input
- 
+
      C                   IF        Idx <> 0
      C                   GOTO      InValid
      C                   ENDIF
- 
+
       **  Processing depends upon Action Code
- 
+
      C                   SELECT
- 
+
      C                   WHEN         DDACTN = 'I'
- 
+
       **  Processing for Inserts
- 
+
      C                   EXSR      SRValidateTr
- 
+
      C**********         WHEN         DDACTN = 'A' or                                      BUG23518A
      C                   WHEN         DDACTN = 'A'                                         BUG23518A
      C**********                      DDACTN = 'D'                                BUG23518 BUG23518A
      C**********                      DDACTN = 'D' OR                             BUG23518 BUG23518A
      C**********                      DDACTN = 'C' OR                             BUG23518 BUG23518A
      C**********                      DDACTN = 'R'                                BUG23518 BUG23518A
- 
+
       **  Processing for Amends or Changes
- 
+
       ** Check for the existence of the replacement character; if this is
       ** used, only the changed data has been sent, and all occurrences of
       ** the replacement character must be replaced with the corresponding
       ** character from the original transaction.
- 
+
      C                   IF        DDACTN = 'A' AND GHSUBS <> *Blanks
- 
+
      C     GHSUBS        SCAN      TranInPrim                             99
      C                   IF        *IN99 = *ON
      C                   EVAL      RepPrim = 'Y'
      C                   ENDIF
- 
+
       ** If any of the flags set above is true, do the data
       ** substitution subroutine.
- 
+
      C                   IF        (RepPrim = 'Y')
      C                   EXSR      SRDtaSubs
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EXSR      SRSetUpAmd
      C                   EXSR      SRValidateTr
- 
+
      C                   ENDSL
- 
+
      C     InValid       TAG
- 
+
       **  Check for exception error from any program lower in the stack
       **  If error detected, send message to system operator and
       **  return to calling program without updating database or
       ** prompting the database update program
- 
+
      C                   IN        APDUMP
- 
+
      C                   IF        ARERRMOD <> *Blanks
      C                   EVAL      MQErrlong  = *Blanks
      C                   EVAL      MQError = ProcErr + '  ' + ARERRMOD
      C                   EVAL      MQErrlong = MQError
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    MQReturn
      C                   PARM                    MQErrlong
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
- 
+
      C                   EVAL      APRETCODE = ARERRMOD
      C     *LOCK         IN        APDUMP
      C                   EVAL      ARERRMOD = *Blanks
      C                   OUT       APDUMP
      C                   RETURN
- 
+
      C                   ELSE
- 
+
       **  Processing for Error checking/write to database
- 
+
      C                   EXSR      SRCheckWrite
- 
+
       ** If valid, send data queue entry to prompt DB update program
- 
+
      C                   IF        Idx = 0
      C                   EVAL      ObjType = '*DTAARA'
- 
+
       **  Check if update program active using Allocate Object API
       **  No prompting necessary if program is running
- 
+
      C                   CALLB     'APCALCOBJ'
      C                   PARM                    Object
      C                   PARM                    Lib
@@ -527,24 +529,24 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM      *Blanks       Return
- 
+
      C                   IF        Return = *Blanks
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes a check for whether there
       ** are messages on the server/updater data queue, and sends a 'GO'.
       ** message to the data queue if there are not.
       /COPY ZACPYSRC,DTAQCHK
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Hook to enable non-core subroutines to be included
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -554,31 +556,31 @@
       *                                                               *
       *****************************************************************
      C     SRChkValAcud  BEGSR
- 
+
       ** Check for Customer on Valid file
- 
+
      C                   EVAL      ACCUST = DDCUST
      C     ACCUST        CHAIN     SDVACUDL1                          99
- 
+
       ** If record found...
- 
+
      C                   IF        *IN99 = *OFF
- 
+
       ** ..delay, then repeat check
- 
+
      C                   CALLB     'ZACDELAY'
- 
+
      C     ACCUST        CHAIN     SDVACUDL1                          99
- 
+
       ** Error if still present
- 
+
      C                   IF        *IN99 = *OFF
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'ACCUST'
      C                   EVAL      MsgIDArr(Idx) = 'APM0900'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -589,44 +591,44 @@
       *                                                               *
       *****************************************************************
      C     SRChkValMiCu  BEGSR
- 
+
       ** Key list for file SDVACUDL1
      C     KMICus        KLIST
      C                   KFLD                    KCUST
- 
+
       ** If (numeric) Midas Customer number supplied
- 
+
      C                   TESTN                   DDCUST               9898
- 
+
      C                   IF        DDCUST <> *Blanks and
      C                             *IN98 = *ON
- 
+
       ** Check for Customer on Valid file
- 
+
      C                   EVAL      KCUST = DDCUST
      C     KMICus        CHAIN     SDVACUDL1                          99
- 
+
       ** If record found...
- 
+
      C                   IF        *IN99 = *OFF
- 
+
       ** ..delay, then repeat check
- 
+
      C                   CALLB     'ZACDELAY'
- 
+
      C     KMICus        CHAIN     SDVACUDL1                          99
- 
+
       ** Error if still present
- 
+
      C                   IF        *IN99 = *OFF
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDCUST'
      C                   EVAL      MsgIDArr(Idx) = 'APM0900'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -637,13 +639,13 @@
       *                                                               *
       *****************************************************************
      C     SRValidateAc  BEGSR
- 
+
       ** Set retrieve mode to '*FRONT' (Access using Front Office ID)
       **  if insert
       **  if not insert and Midas transaction ID is not present
       ** Otherwise
       **  Set retrieve mode to blank  (Access using Midas transaction ID).
- 
+
      C                   IF        DDACTN = 'I'
      C                   EVAL      ModeofOp = '*FRONT'
      C                   ELSE
@@ -653,53 +655,53 @@
      C                   EVAL      ModeofOp = *Blanks
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Validate action code versus transaction IDs supplied.
       ** The Additional Customer in file format from the SD database
       ** is retrieved as well.
- 
+
      C                   RESET                   ReturnCode
      C                   CALLB     'SDACUDRTV'
- 
+
       ** INPUTS
       ** Return code
      C                   PARM      *Blanks       ReturnCode
- 
+
       ** Mode = '*FRONT' (FRONT OFFICE TRANSACTION INTERFACE)
       ** Mode = '      ' (NOT FRONT OFFICE TRANSACTION INTERFACE)
- 
+
      C                   PARM                    ModeofOp
- 
+
       ** Response mode
      C                   PARM                    APRESPMODE
- 
+
       ** Action Code
      C                   PARM                    DDACTN
- 
+
       ** Front Office Transaction ID
      C                   PARM                    APFOTRANID
- 
+
       ** (Midas) Customer Number
      C                   PARM                    DDCUST
- 
+
       ** Value is ' ' to have the same effect as SDACUDSIN
      C                   PARM      *Blanks       PSDACUDENQ
- 
+
       ** OUTPUTS
       ** (Current) Additional Customer in file format
      C                   PARM                    AcusFilFmt
- 
+
       ** OK - Action code
      C                   PARM                    DDACTNOK
- 
+
       ** OK - Customer Number
      C                   PARM                    DDCUSTOK
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
       *                                                                                      CER034A
@@ -712,7 +714,7 @@
       ** Array index (3P0) from/to caller                                                    CER034A
       *                                                                                      CER034A
      C                   PARM                    WIdx                                        CER034A
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -723,31 +725,31 @@
       *                                                               *
       *****************************************************************
      C     SRSetUpAmd    BEGSR
- 
+
       ** For Amends, put the complete (pre-existing) Additional Customer into the
       ** Valid file record - fields in this will be updated during processing
- 
+
      C                   EVAL      ValidAcud = AcusFilFmt
- 
+
       ** For Amends, convert the Additional Customer to screen format
- 
+
      C                   CALLB     'SDACUDCVT'
- 
+
       ** INPUTS
       ** Return Code
      C                   PARM                    RetCodeIn
- 
+
       ** Additional Customer - file formats
      C                   PARM                    ValidAcud
- 
+
       ** Output parameters
       ** Additional Customer Details - screen formats
      C                   PARM                    CurCuPrim
      C                   PARM                    CurCustDet2                                 CER034A
      C                   PARM                    CurCustDet3                                 CER034A
- 
+
       ** Customer Details
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -758,13 +760,13 @@
       *                                                               *
       *****************************************************************
      C     SRValidateTr  BEGSR
- 
+
       ** Validate Customer Primary details
- 
+
      C                   EXSR      SRValdCuPrim
- 
+
       **  If error in validation, fail this input
- 
+
      C                   IF        Idx <> 0
      C                   GOTO      EValidTr
      C                   ENDIF
@@ -799,7 +801,7 @@
      C                   IF        Idx <> 0                                                  CER034A
      C                   LEAVESR                                                             CER034A
      C                   ENDIF                                                               CER034A
- 
+
      C     EValidTr      ENDSR
       *****************************************************************
       /EJECT
@@ -809,44 +811,44 @@
       *                                                               *
       *****************************************************************
      C     SRValdCuPrim  BEGSR
- 
+
      C                   MOVE      *All'Y'       OkCuPrim
- 
+
      C                   CALLB     'SDACUDVAL'
- 
+
       ** INPUTS
       ** Response mode
      C                   PARM                    RespMode
- 
+
       ** Additional Customer Primary Details
      C                   PARM                    TranInPrim
- 
+
       ** Switchable feature CGL032
      C                   PARM                    CGL032
- 
+
       ** OUTPUTS
       ** Additional Customer Primary Details OK inds
      C                   PARM                    OKCuPrim
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       ** Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       ** Valid Additional Customer layout (DS) from/to caller
      C                   PARM                    ValidAcud
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                                 CER034A
@@ -1010,7 +1012,7 @@
       *                                                               *
       *****************************************************************
      C     SRCheckWrite  BEGSR
- 
+
       **  If no errors were found:
       **     - set up additional data
       **     - write a record to the Valid file
@@ -1052,37 +1054,37 @@
       ** | or not).  It is shown in the above form for clarity.       |
       ** |                                                            |
       ** +------------------------------------------------------------+
- 
- 
+
+
      C                   IF        Idx = 0
- 
+
      C                   EXSR      SRSetUpValid
      C                   WRITE     SDVACUDD0
- 
+
      C                   EXSR      SRCallMsgHdl
- 
+
      C                   ENDIF
- 
+
      C                   IF        Idx > 0
      C                   EXSR      SRSetUpInVal
- 
+
       ** Only write to Invalid files if repair in back office
- 
+
      C                   IF        APRPRLOCN = 'B'
      C                   WRITE     SDIACUDD0
      C                   ENDIF
- 
+
       ** If support system is active, write invalid transaction to
       ** log file via APLOGTRAN standard module.
- 
+
      C                   IF        (CSC011 = 'Y') AND (S1SUPP = LIBR)
- 
+
      C**********         EVAL      TransDtl = TranInPrim + ExtData500                        CER034A
      C                   EVAL      TransDtl = TranInPrim + TranInDet2 +                      CER034A
      C                                        TranInDet3 + ExtData500                        CER034A
      C                   EVAL      APTGTTYPE = 'SDACUD'
      C                   EVAL      PCustNum = ACCUST
- 
+
      C                   CALLB     'APLOGTRAN'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    HeadIn
@@ -1090,20 +1092,20 @@
      C                   PARM                    Timestamp
      C                   PARM                    PCustNum
      C                   PARM      *BLANKS       PACustNo
- 
+
      C                   IF        RetCodeOut <> *Blanks
      C                   EVAL      DBKEY = PCustNum
      C                   EVAL      DBFILE = 'APLOGTRAN'
      C                   EVAL      DBASE = 002
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   EXSR      SRCallMsgHdl
      C                   ENDIF
- 
+
      C                   COMMIT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1114,34 +1116,34 @@
       *                                                               *
       *****************************************************************
      C     SRResetCycle  BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIDArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIdx
- 
+
      C                   RESET                   AmFldNamAr
      C                   RESET                   AmMsgIDArr
      C                   RESET                   AmMsgDtaAr
      C                   RESET                   AmIdx
- 
+
      C                   RESET                   FldNoArr
- 
+
      C                   CLEAR                   CurCuPrim
      C                   CLEAR                   CurCustDet2                                 CER034A
      C                   CLEAR                   CurCustDet3                                 CER034A
- 
+
      C                   MOVE      *ALL'Y'       OKCuPrim
      C                   MOVE      *ALL'Y'       OKCustDet2                                  CER034A
      C                   MOVE      *ALL'Y'       OKCustDet3                                  CER034A
- 
+
      C                   CLEAR                   ValidAcud
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1151,15 +1153,15 @@
       *                                                               *
       *****************************************************************
      C     SRSetUpInVal  BEGSR
- 
+
       ** Include Header fields that need to be o/p to the Invalid files
- 
+
      C                   EVAL      DDFRNT = APFOTRANID
      C                   EVAL      DDREPA = APRPRLOCN
      C                   EVAL      DDTMST = TimeStamp
- 
+
      C                   EVAL      TranStatus = 'F'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1169,29 +1171,29 @@
       *                                                               *
       *****************************************************************
      C     SRSetUpValid  BEGSR
- 
+
       ** For Deletes put the complete (pre-existing) Additional Customer
       ** into the Valid file record.
- 
+
      C**********         IF           DDACTN = 'D'                                          BUG23518
      C                   IF           DDACTN = 'D' OR DDACTN = 'C' OR                       BUG23518
      C                                DDACTN = 'R'                                          BUG23518
      C                   EVAL      ValidAcud = AcusFilFmt
      C                   ENDIF
- 
+
       ** Set Valid file field(s) that are needed for all Action Codes
- 
+
      C                   EVAL      V_ACTYLC = DDACTN
      C                   EVAL      V_ACCUST = DDCUST
- 
+
       ** Include Header fields that need to be o/p to the Valid file
- 
+
      C                   EVAL      V_ACFRNT = APFOTRANID
      C                   EVAL      V_ACREPA = APRPRLOCN
      C                   EVAL      V_ACTMST = TimeStamp
- 
+
      C                   EVAL      TranStatus = 'S'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1201,31 +1203,31 @@
       *                                                               *
       *****************************************************************
      C     SRCallMsgHdl  BEGSR
- 
+
       ** Set up an array of sequence numbers that correspond to the fields
       **  with errors
- 
+
      C                   Z-ADD     1             Ix
      C                   DO        ArrayMax
- 
+
      C                   IF        FldNameArr(Ix) <> *Blanks
- 
+
      C                   Z-ADD     1             Iy
      C     FldNameArr(Ix)LOOKUP    FieldArr(Iy)                           20
      C                   EVAL      FldNoArr(Ix) = FldSeqArr(Iy)
- 
+
      C                   ELSE
- 
+
      C                   LEAVE
- 
+
      C                   ENDIF
- 
+
      C                   ADD       1             Ix
- 
+
      C                   ENDDO
- 
+
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'ZAMSGHNDLE'
       ** Return code (10A, returned to this procedure)
      C                   PARM                    ReturnCode
@@ -1271,7 +1273,7 @@
      C                   PARM                    MsgFArray
       ** Whether or not to clear the program message queue (1A)
      C                   PARM                    ClrPgmMsgQ
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1281,50 +1283,50 @@
       *                                                               *
       *****************************************************************
      C     SRDtaSubs     BEGSR
- 
+
       ** Convert file fields to screen format
- 
+
      C                   RESET                   ReturnCode
      C                   CALLB     'SDACUDCVT'
- 
+
       ** Return Code
      C                   PARM                    ReturnCode
       ** Input parameters
       ** Additional Customer - file formats
      C                   PARM                    AcusFilFmt
- 
+
       ** Output parameters
       ** Additional Customer Details - screen formats
      C                   PARM                    CurCuPrim
      C                   PARM                    CurCustDet2                                 CER034A
      C                   PARM                    CurCustDet3                                 CER034A
- 
+
       ** Substitute the data for the various parts of the transaction,
       ** dependent on the flags that were set earlier.
- 
+
      C                   IF        RepPrim = 'Y'
- 
+
      C                   CLEAR                   IncData
      C                   CLEAR                   CurData
      C                   RESET                   ReturnCode
      C                   CALLB     'APDTASUBS'
- 
+
       ** Return Code
      C                   PARM                    ReturnCode
- 
+
       ** Substitution character
      C                   PARM                    GHSUBS
- 
+
       ** Incoming Data
      C                   PARM      TranInPrim    IncData
- 
+
       ** Current Data
      C                   PARM      CurCuPrim     CurData
- 
+
      C                   EVAL      TranInPrim = IncData
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1337,59 +1339,59 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       ** Transaction information
      C                   PARM                    Trans5001
      C                   PARM                    PTrans5002                                  CER034A
      C                   PARM                    PTrans5003                                  CER034A
      C                   PARM                    ExtData500
- 
+
       ** Ultimate calling Program/Module/Procedure
      C                   PARM                    #ProcPgm
      C                   PARM                    #ProcMod
      C                   PARM                    #ProcName
- 
+
       ** Set up the name of the primary and secondary message files from
       ** which the message handler will get the messages
- 
+
      C                   EVAL      #MsgFile     = 'SDUSRMSG'
      C                   EVAL      MsgFArray(1) = 'DRSMM'
      C                   EVAL      MsgFArray(2) = 'Y2USRMSG'
- 
+
       **  Set up the Module ID, used to make the Transaction number unique
- 
+
      C                   EVAL      ModuleID = 'SD'
- 
+
       ** Access Bank details via access program
       **  (database error handling done in access program)
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Access API ICD via access program
- 
+
      C                   CALLB     'AOAPIR0'
      C                   PARM      '*DBERR '     PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDAPI         PARM      SDAPI         DSFDY
- 
+
       ** Check for Switchable Feature for CGL032
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *Blanks       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CGL032'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
       ** Database error
- 
+
      C                   IF        (PRtCd <> *Blanks) and
      C                             (PRtCd <> '*NRF   ')
      C                   EVAL      DBKEY = 'CGL032'
@@ -1397,25 +1399,25 @@
      C                   EVAL      DBASE = 001
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtCd = *Blanks
      C                   EVAL      CGL032 = 'Y'
      C                   ELSE
      C                   EVAL      CGL032 = 'N'
      C                   ENDIF
- 
+
       ** Check if CSC011 is installed
- 
+
      C                   EVAL      CSC011 = 'N'
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CSC011'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
       ** Database error
- 
+
      C                   IF        (PRtCd <> *BLANKS) and
      C                             (PRtCd <> '*NRF   ')
      C                   EVAL      DBKEY = 'CSC011'
@@ -1423,7 +1425,7 @@
      C                   EVAL      DBASE = 001
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   EVAL      CSC011 = 'Y'
      C                   IN        SDSTAT
@@ -1649,11 +1651,11 @@
      C                   EVAL      WValScrn2 = 'N'                                           CER034A
       *                                                                                      CER034A
      C                   ENDIF                                                               CER034A
- 
+
       ** Set up the name of the server/database updater data queue.
- 
+
      C                   EVAL      DtaQName = 'APACUDDTQ'
- 
+
      C                   ENDSR
       *****************************************************************
 ** CTDATA CPY@

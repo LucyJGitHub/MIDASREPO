@@ -14,11 +14,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD033895           Date 16Apr15               *
-      *  Prev Amend No. MD021423 *CREATE   Date 30Aug13               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD033895           Date 16Apr15               *
+      *                 MD021423 *CREATE   Date 30Aug13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD033895 - Correct parameters for UT000033.                  *
       *  MD021423 - Abnormally long run of PDCL/MAPY processing       *
       *             components                                        *
@@ -39,6 +41,9 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *
+      ** SD data area                                                                         CSD101
+     D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSD101
+      *                                                                                       CSD101
       ** Data structure for CurrentValue string
      D CurrentValue    DS           200
      D  UserProfile            1     10
@@ -76,14 +81,16 @@
       *
      DPRtnCode         S              7A
      DPAction          S              1A
-     DPValidList       S             10A   INZ('GPLDAPVL')
+     D***PValidList       S             10A   INZ('GPLDAPVL')                                 CSD101
+     DPValidList       S             10A   INZ('SDINTFVL')                                    CSD101
      DPLibrary         S             10A
      D***PUserName**   S            256A                                                    MD033895
      D***PPassword1*   S            256A                                                    MD033895
      D***PPassword2*   S            256A                                                    MD033895
      D***PDescrptn**   S             50A                                                    MD033895
      D PUserName       S            100A                                                    MD033895
-     D PPassword1      S            600A                                                    MD033895
+     D***PPassword1      S            600A                                           MD033895 CSD101
+     D PPassword1      S            128A                                                      CSD101
      D PPassword2      S            600A                                                    MD033895
      D PDescrptn       S           1000A                                                    MD033895
       *
@@ -153,15 +160,27 @@
       *
       ** Check if the User exist in Validation List
       *
-     C                   CALL      'UT000033'
-     C                   PARM      '*BLANKS'     RtnCode
-     C                   PARM      'F'           PAction
-     C                   PARM                    PValidList
-     C                   PARM                    PLibrary
-     C                   PARM      UserProfile   PUserName
-     C                   PARM      *BLANKS       PPassword1
-     C                   PARM      *BLANKS       PPassword2
-     C                   PARM      *BLANKS       PDescrptn
+     C**********         CALL      'UT000033'                                                 CSD101
+     C**********         PARM      '*BLANKS'     RtnCode                                      CSD101
+     C**********         PARM      'F'           PAction                                      CSD101
+     C**********         PARM                    PValidList                                   CSD101
+     C**********         PARM                    PLibrary                                     CSD101
+     C**********         PARM      UserProfile   PUserName                                    CSD101
+     C**********         PARM      *BLANKS       PPassword1                                   CSD101
+     C**********         PARM      *BLANKS       PPassword2                                   CSD101
+     C**********         PARM      *BLANKS       PDescrptn                                    CSD101
+                                                                                              CSD101
+     C                   EVAL      PLibrary = LIBR + 'DMLIB'                                  CSD101
+     C                   EVAL      PUserName = 'BANKFUSION_' + UserProfile                    CSD101
+                                                                                              CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       RtnCode                                      CSD101
+     C                   PARM      'F'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PUserName                                    CSD101
+     C                   PARM      *Blanks       PPassword1                                   CSD101
+     C                   PARM      *Blanks       PDescrptn                                    CSD101
       *
      C                   IF        RtnCode <> *BLANKS
      C                   EVAL      GenError = 'Y'
@@ -234,37 +253,40 @@
       *
       ** Get Global System Prefix
       *
-     C                   EVAL      RtnCode = *BLANKS
-     C                   EVAL      POP01 = 'GlobalSystemPrefix'
-     C                   EVAL      PVL01 = *BLANKS
+     C**********         EVAL      RtnCode = *BLANKS                                          CSD101
+     C**********         EVAL      POP01 = 'GlobalSystemPrefix'                               CSD101
+     C**********         EVAL      PVL01 = *BLANKS                                            CSD101
       *
-     C                   CALL      'AOSVALR0'
-     C                   PARM                    RtnCode
-     C                   PARM                    POP01
-     C                   PARM                    PVL01
-     C                   PARM      *BLANKS       POP02
-     C                   PARM      *BLANKS       PVL02
-     C                   PARM      *BLANKS       POP03
-     C                   PARM      *BLANKS       PVL03
-     C                   PARM      *BLANKS       POP04
-     C                   PARM      *BLANKS       PVL04
-     C                   PARM      *BLANKS       POP05
-     C                   PARM      *BLANKS       PVL05
-     C                   PARM      *BLANKS       POP06
-     C                   PARM      *BLANKS       PVL06
-     C                   PARM      *BLANKS       POP07
-     C                   PARM      *BLANKS       PVL07
-     C                   PARM      *BLANKS       POP08
-     C                   PARM      *BLANKS       PVL08
-     C                   PARM      *BLANKS       POP09
-     C                   PARM      *BLANKS       PVL09
-     C                   PARM      *BLANKS       POP10
-     C                   PARM      *BLANKS       PVL10
+     C**********         CALL      'AOSVALR0'                                                 CSD101
+     C**********         PARM                    RtnCode                                      CSD101
+     C**********         PARM                    POP01                                        CSD101
+     C**********         PARM                    PVL01                                        CSD101
+     C**********         PARM      *BLANKS       POP02                                        CSD101
+     C**********         PARM      *BLANKS       PVL02                                        CSD101
+     C**********         PARM      *BLANKS       POP03                                        CSD101
+     C**********         PARM      *BLANKS       PVL03                                        CSD101
+     C**********         PARM      *BLANKS       POP04                                        CSD101
+     C**********         PARM      *BLANKS       PVL04                                        CSD101
+     C**********         PARM      *BLANKS       POP05                                        CSD101
+     C**********         PARM      *BLANKS       PVL05                                        CSD101
+     C**********         PARM      *BLANKS       POP06                                        CSD101
+     C**********         PARM      *BLANKS       PVL06                                        CSD101
+     C**********         PARM      *BLANKS       POP07                                        CSD101
+     C**********         PARM      *BLANKS       PVL07                                        CSD101
+     C**********         PARM      *BLANKS       POP08                                        CSD101
+     C**********         PARM      *BLANKS       PVL08                                        CSD101
+     C**********         PARM      *BLANKS       POP09                                        CSD101
+     C**********         PARM      *BLANKS       PVL09                                        CSD101
+     C**********         PARM      *BLANKS       POP10                                        CSD101
+     C**********         PARM      *BLANKS       PVL10                                        CSD101
       *
-     C                   IF        RtnCode = *BLANKS
-     C                   EVAL      SysPrefix = PVL01
-     C                   EVAL      PLibrary = SysPrefix + 'GMLIB'
-     C                   ENDIF
+     C**********         IF        RtnCode = *BLANKS                                          CSD101
+     C**********         EVAL      SysPrefix = PVL01                                          CSD101
+     C**********         EVAL      PLibrary = SysPrefix + 'GMLIB'                             CSD101
+     C**********         ENDIF                                                                CSD101
+                                                                                              CSD101
+     C                   IN        SDSTAT                                                     CSD101
+                                                                                              CSD101
      C                   ENDSR
       /EJECT
       *****************************************************************

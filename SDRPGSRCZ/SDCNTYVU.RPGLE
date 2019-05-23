@@ -33,14 +33,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. BG12120            Date 20Oct06               *
+      *                 BG12120            Date 20Oct06               *
       *                 CRE026  *CREATE    Date 24May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  BG12120 - Recompile over changes done in validation programs *
       *  CRE026 - Consumer Banking                                    *
@@ -51,9 +53,9 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -72,68 +74,68 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API CTL & VU modules.
      D/COPY ZACPYSRC,APICTLARR
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Incoming header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
- 
+
       * Incoming transaction in screen format
      D TranInCnty    E DS                  EXTNAME(SDCntyPD)
      D TranInCnt2    E DS                  EXTNAME(SDCnt2PD)
      D                                     PREFIX(S2_)
      D TranInCnt3    E DS                  EXTNAME(SDCnt3PD)
      D                                     PREFIX(S3_)
- 
+
       * Valid file layout
      D ValidCnty     E DS                  EXTNAME(SDVcntyPD)
      D                                     PREFIX(V_)
@@ -145,7 +147,7 @@
       * - Receive instructions (xxRSTM to xxROCN)
       * - Pay     instructions (xxPSTM to xxBTB6)
       * Separate out settlement instructions
- 
+
       * Current transaction record in file format
      D CntyFilFmt    E DS                  EXTNAME(SDCtryPD)
      D Cnt2FilFmt    E DS                  EXTNAME(SDCtx2PD)
@@ -155,7 +157,7 @@
       * - Receive instructions (xxRSTM to xxROCN)
       * - Pay     instructions (xxPSTM to xxBTB6)
       * Separate out settlement instructions
- 
+
       * Current transaction in screen format
      D CurTrCnty     E DS                  EXTNAME(SDcntyPD)
      D                                     PREFIX(@)
@@ -163,73 +165,73 @@
      D                                     PREFIX(@S2)
      D CurTrCnt3     E DS                  EXTNAME(SDcnt3PD)
      D                                     PREFIX(@S3)
- 
+
       * Extra data in file format
      D ExtData       E DS                  EXTNAME(SDCtEXPD)
- 
+
       * Error indicators
      D OKTrcnty      E DS                  EXTNAME(SDEcntyPD)
      D OKTrcnt2      E DS                  EXTNAME(SDEcnt2PD)
      D OKTrcnt3      E DS                  EXTNAME(SDEcnt3PD)
- 
+
       * External DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       * External DS for API ICD
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
- 
+
       * External DS for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
- 
+
       * First DS for access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       * Second DS for access programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       * Error message field(s)
      D     Msg1        S                   LIKE(#MsgID)
- 
+
       * Index for arrays of error message ids etc in amend validation
      D AmIdx           S              3P 0 INZ(0)
- 
+
       * Index for arrays of error message ids etc
      D Idx             S              3P 0 INZ(0)
- 
+
       * Index for arrays of warning message ids etc
      D WIdx            S              3P 0 INZ(0)
- 
+
       * Fields (500A) to receive the incoming transaction
      D Trans5001       S            500A
- 
+
       * Field (500A) to receive the incoming Extra Data
      D ExtData500      S            500A
- 
+
       * Indices for arrays used to set up corresponding
       * sequence numbers for the fields that are in error
      D Ix              S              3P 0
      D Iy              S              3P 0
- 
+
       * Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -239,7 +241,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       * Incoming transaction is broken into 500A fields, so that a common CL
       * can be used between this module and the one that read the MQ queue.
       * This module needs to break these 500A fields by loading them into
@@ -248,14 +250,14 @@
      C                   MOVEL     BCLData       TranInCnt3
      C                   MOVEL     EurRepData    TranInCnt2
      C                   MOVEL     Extdata500    Extdata
- 
+
       ** Generate a timestamp for this transaction
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
       * Reset variables gradually updated
      C                   EXSR      RESETCYCLE
- 
+
       * Validate action code
      C                   EXSR      ValidateAc
       *
@@ -263,17 +265,17 @@
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       * Processing depends upon action code
      C                   SELECT
- 
+
       * Processing for inserts
      C                   WHEN      DDACTN = 'I'
      C                   EXSR      ValidateTr
      C                   IF        ULX004 = 'Y'
      C                   EXSR      ValidateTr2
      C                   ENDIF
- 
+
      C                   IF        ULX043 = 'Y'
      C                   EXSR      ValidateTr3
      C                   ENDIF
@@ -285,14 +287,14 @@
      C                   IF        ULX004 = 'Y'
      C                   EXSR      ValidateTr2
      C                   ENDIF
- 
+
      C                   IF        ULX043 = 'Y'
      C                   EXSR      ValidateTr3
      C                   ENDIF
      C                   ENDSL
       *
      C     INVALID       TAG
- 
+
       * Write to database
      C     UpdateYN      IFEQ      'Y'
      C     Idx           ANDEQ     0
@@ -301,9 +303,9 @@
      C                   EXSR      UpdateDB
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   SETON                                        LR
- 
+
       ** If action is for Update, get the correct record information
       ** from file
      C                   IF        UpdateYN='Y' and Idx=0 and DDACTN <> 'D'
@@ -324,10 +326,10 @@
      C                   EVAL                   Buffer = TranInCnty + TranInCnt3
      C                                                 + TranInCnt2 + @TimeStamp
      C                                                 + Extdata
- 
+
      C                   ENDIF
      C                   RETURN
- 
+
       ********************************************************************
       /EJECT
       *****************************************************************
@@ -336,12 +338,12 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       * Transaction information
      C                   PARM                    Trans5001
      C                   PARM                    BCLData         500
@@ -358,13 +360,13 @@
      C                   PARM                    Buffer         6000
      C                   PARM                    APIRetc           1
      C                   PARM                    @TimeStamp       26
- 
+
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'SDUSRMSG'
      C                   EVAL      MsgFArray(3) = 'Y2USRMSG'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
- 
+
       *  Hook to enable non-core message files to be included
      C/COPY WNCPYSRC,SDCntyM01
      C/COPY WNCPYSRC,SDCnt2M01
@@ -376,7 +378,7 @@
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       * Access API ICD via access program
      C                   CALLB     'AOAPIR0'
      C                   PARM      '*DBERR '     @RTCD
@@ -419,7 +421,7 @@
      C                   ELSE
      C                   MOVEL     'N'           ULX004
      C                   EndIf
- 
+
       * Access SAR details file to determine if ULX043 switchable feature
       * is switched on
      C                   CALLB     'AOSARDR0'
@@ -432,12 +434,12 @@
      C                   ELSE
      C                   MOVEL     'N'           ULX043
      C                   EndIf
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SDCnty01
       /COPY WNCPYSRC,SDCnt201
       /COPY WNCPYSRC,SDCnt301
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -495,7 +497,7 @@
       * OK - Country Code
      C                   PARM                    DDCNCDOK          1
       *
- 
+
       *
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
@@ -504,10 +506,10 @@
       *
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
- 
+
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -524,17 +526,17 @@
       *                                                               *
       *****************************************************************
      C     SetupAmd      BEGSR
- 
+
       * For amends, put the complete (pre-existing) transaction into the valid
       * file record - fields in this will be updated during processing
- 
+
      C                   MOVE      CntyFilFmt    ValidCnty
      C                   MOVE      Cnt2FilFmt    ValidCnt2
      C                   MOVE      Cnt3FilFmt    ValidCnt3
- 
+
       * Include all data structures required. If Settle details not included copy FXFXDLVU/MMDEAM
       *
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -544,50 +546,50 @@
       *                                                                *
       ******************************************************************
      C     ValidateTr    BEGSR
- 
+
       * Validate transaction details
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'SDCNTYVAL'
- 
+
       * Inputs
- 
+
       * Response mode
      C                   PARM      'S'           RespMode          1
- 
+
       ** Country Details
      C                   PARM                    TranInCnty
- 
- 
+
+
       * Extra Data
      C                   PARM                    ExtData
       ***********************************
       * Ensure validation module is ready to accept infdata and extdata
       ***********************************
- 
+
       * Outputs
       *
       ** Country Details OK inds
      C                   PARM                    OKTrcnty
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx              3 0
- 
+
       * Valid country (DS) from/to caller
      C                   PARM                    ValidCnty
- 
+
       * Insert correct parameters for this VAL function
       *
       *  If error in validation, fail this input
@@ -596,7 +598,7 @@
      C                   EndIf
       *### Check whether any post validation processing is done in SIN module
       *### and if so insert here. Data structures may be needed.
- 
+
      C     EValidTr      ENDSR
       *****************************************************************
       /EJECT
@@ -607,17 +609,17 @@
       *                                                                *
       ******************************************************************
      C     ValidateTr2   BEGSR
- 
+
       * Validate transaction details2
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'SDCNTYVL2'
- 
+
       * Inputs
- 
+
       * Response mode
      C                   PARM      'S'           RespMode          1
- 
+
       ** Country Details (Lux European)
      C                   PARM                    TranInCnt2
       * Extra Data
@@ -625,29 +627,29 @@
       ***********************************
       * Ensure validation module is ready to accept infdata and extdata
       ***********************************
- 
+
       * Outputs
       *
       ** Country Details(Lux European) OK inds
      C                   PARM                    OKTrcnt2
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx              3 0
- 
+
       * Valid country (Lux European) (DS) from/to caller
      C                   PARM                    ValidCnt2
- 
+
       * Insert correct parameters for this VAL function
       *
       *  If error in validation, fail this input
@@ -657,7 +659,7 @@
       * ### Check whether any post validation processing is done in
       *     SIN module
       * ### and if so insert here. Data structures may be needed.
- 
+
      C     EValidTr2     ENDSR
       *****************************************************************
       /EJECT
@@ -668,17 +670,17 @@
       *                                                                *
       ******************************************************************
      C     ValidateTr3   BEGSR
- 
+
       * Validate transaction details3
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'SDCNTYVL3'
- 
+
       * Inputs
- 
+
       * Response mode
      C                   PARM      'S'           RespMode          1
- 
+
       ** Country Details(Lux BCL)
      C                   PARM                    TranInCnt3
       * Extra Data
@@ -686,27 +688,27 @@
       ***********************************
       * Ensure validation module is ready to accept infdata and extdata
       ***********************************
- 
+
       * Outputs
       *
       ** Country Details(Lux BCL) OK inds
      C                   PARM                    OKTrcnt3
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx              3 0
- 
+
       * Valid country (Lux BCL) (DS) from/to caller
      C                   PARM                    ValidCnt3
       * Insert correct parameters for this VAL function
@@ -718,7 +720,7 @@
       * ### Check whether any post validation processing is done in
       * SIN module
       * ### and if so insert here. Data structures may be needed.
- 
+
      C     EValidTr3     ENDSR
       *****************************************************************
       /EJECT
@@ -735,28 +737,28 @@
       *              are amendable.                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     ValdateAmd    BEGSR
- 
+
       * This subroutine calls a procedure which checks whether it
       * was valid to amend any of the fields which have been
       * changed.  Some are never amendable and some depend upon ICD
       * settings as to whether they are amendable.
- 
+
       * To determine what fields have changed, the current fields
       * on file must be converted to a 'screen' format.
- 
+
       * These fields are then compared with the fields on the input
       * transaction.
- 
+
       * Any errors detected by the called procedure take precedence
       * over any errors found during the validation of the complete
       * transaction.  The errors from the called procedure are kept
       * separately and, if any are found, these errors will REPLACE
       * the normal validation errors.
- 
+
       * Convert file format to screen format
- 
+
      C                   RESET                   ReturnCode
      C                   CALLB     'SDCNTYCVT'
       * Ensure correct parameters for this CVT function
@@ -773,21 +775,21 @@
       * Lux Eur Country Details File Format
      C                   PARM                    Cnt2FilFmt
       *
- 
+
       * Output Parameters
- 
+
       * Country Details Screen Format
      C                   PARM                    CurTrCnty
       * Lux BCL Country Details Screen Format
      C                   PARM                    CurTrCnt3
       * Lux Eur Country Details Screen Format
      C                   PARM                    CurTrCnt2
- 
+
       *
       * Insert correct parameters for this CVT function
- 
+
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'SDCNTYAMD'
       *
       * INPUTS
@@ -799,7 +801,7 @@
      C                   PARM                    CurTrCnty
       * (Current) Deal in file format
      C                   PARM                    CntyFilfmt
- 
+
       * OUTPUTS
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKTrcnty
@@ -813,8 +815,8 @@
      C                   PARM                    AmendOk           1
       * Reset of Fields in Error Required (Y/N)
      C                   PARM      'N'           ResetErrs         1
- 
- 
+
+
       * If any errors overwrite previous error information
      C                   IF        AmIdx <> 0
      C                   MOVEA     AmMsgIdArr    MsgidArr
@@ -822,7 +824,7 @@
      C                   MOVEA     AmMsgDtaAr    MsgDtaArr
      C                   Z-ADD     AmIdx         Idx
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -833,24 +835,24 @@
       *                                                               *
       *****************************************************************
      C     RESETCYCLE    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIDArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIdx
- 
+
      C                   RESET                   AmFldNamAr
      C                   RESET                   AmMsgIDArr
      C                   RESET                   AmMsgDtaAr
      C                   RESET                   AmIdx
- 
+
      C                   RESET                   FldNoArr
- 
+
      C                   CLEAR                   CurTrCnty
      C                   CLEAR                   CurTrCnt2
      C                   CLEAR                   CurTrCnt3
@@ -860,7 +862,7 @@
      C                   CLEAR                   ValidCnty
      C                   CLEAR                   ValidCnt2
      C                   CLEAR                   ValidCnt3
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -870,7 +872,7 @@
       *              valid file record.                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
       *
       * Set file field(s) that are needed for all action codes
@@ -894,17 +896,17 @@
      C                   EVAL      V_COTXCY=DDTXCY
      C                   EVAL      V_COJAMG=DDJAMG
      C                   EVAL      V_COCTTX=DDCTTX
- 
+
      C                   EVAL      V2_C2CTRY=S2_DDCNCD
      C                   EVAL      V2_C2ICTR=S2_DDICTR
      C                   EVAL      V2_C2EMUM=S2_DDEMUM
      C                   EVAL      V2_C2ISOC=V_COISOC
- 
+
      C                   EVAL      V3_CXCTRY=S3_DDCNCD
      C                   EVAL      V3_CXEMUZ=S3_DDEMUZ
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -912,14 +914,14 @@
       * UPDATEDB - Update database                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     UPDATEDB      BEGSR
       *
       * Update
      C                   RESET                   ReturnCode
       *
      C                   CALLB     'SDCNTYUPD'
- 
+
       * Ensure correct parameters for this UPD function
      C                   PARM      *Blanks       @RTCD
      C                   PARM                    ValidCnty
@@ -936,14 +938,14 @@
       *
       * If update not done due to record being updated by another
       * workstation send message to screen.
- 
+
      C     @RTCD         IFEQ      '*RECUPD'
      C                   MOVEL     '*ANY'        FldNameArr(1)
- 
+
      C                   MOVEL     'USR0015'     MsgIdArr(1)
- 
+
      C                   EndIf
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

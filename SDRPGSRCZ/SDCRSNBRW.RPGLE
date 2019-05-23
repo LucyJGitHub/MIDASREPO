@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD040876           Date 13Sep16               *
-      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD040876           Date 13Sep16               *
+      *                 CGL177             Date 11Jan16               *
       *                 MD036464           Date 06Nov15               *
       *                 MD036244           Date 30Oct15               *
       *                 MD036327           Date 27Oct15               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD040876 - CRS MQ (Recompile)                                *
       *  CGL177 - CRS Reporting Phase 2                               *
       *  MD036464 - CRS Non account holder enquiry                    *

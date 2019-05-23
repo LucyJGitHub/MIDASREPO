@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CGL177             Date 11Jan16               *
-      *  Prev Amend No. MD038367           Date 22Apr16               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *                 MD038367           Date 22Apr16               *
       *                 MD036200           Date 28Oct15               *
       *                 MD036335           Date 28Oct15               *
       *                 MD036291           Date 26Oct15               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  CGL177 - CRS Reporting Phase 2                               *
       *  MD038367 - Database Error occurs when accessing a country    *
       *             located in second page of CRS List of Countries   *

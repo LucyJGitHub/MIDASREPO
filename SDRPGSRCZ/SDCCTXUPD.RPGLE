@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER070             Date 19Aug14               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER070             Date 19Aug14               *
       *                 CER069             Date 03Jul14               *
       *                 CLE134             Date 01Aug12               *
       *                 AR740756           Date 03Apr11               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CER069 - German Tax Enhancement                              *
@@ -60,12 +62,12 @@
       *  CGL032 - Automatic Exchange of Information                   *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Midas SD Customer Details by Country of Tax - Update
      FSDACTXL0  UF A E           K DISK    COMMIT
       **********                                                                    CER048 BUG22578A
@@ -89,19 +91,19 @@
       ** Midas SD Joint Account Member File                                                 AR740756
                                                                                             AR740756
      FSDJACCL4  IF   E           K DISK                                                     AR740756
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       ** Standard D-specs
       ** ================
- 
+
       ** The following /COPY line includes the LDA layout,
       ** the copyright array definition,
       ** and the following named constants:
@@ -111,76 +113,76 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
       /COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
       /COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
- 
+
       /COPY ZACPYSRC,ERR_ARRAYS
- 
+
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
- 
+
       /COPY ZACPYSRC,ERR_XARRYS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** New Details in File Format
      D NwDlFilFmt    E DS                  EXTNAME(SDVCCTXPD)
- 
+
       ** Custumer Details by Country of Tax File Format
      D SDDlFilUpd    E DS                  EXTNAME(SDACTXPD)
- 
+
       * First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       * Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
       *                                                                                       CER048
       ** Third DS for access programs, long data structure                                    CER048
       *                                                                                       CER048
      D DSLDY         E DS                  EXTNAME(DSLDY)                                     CER048
- 
+
       ** 24X7 status data area
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
- 
+
       ** SD data area
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
- 
+
       ** Midas API Message Header Format Definition
      D APHEAD        E DS                  EXTNAME(APHEADPD)
- 
+
       ** Data Structure for SAR Details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       *                                                                                       CER048
@@ -208,28 +210,28 @@
       ** External DS for Country of Tax Code Details                                          CER048
       *                                                                                       CER048
      D SDCTTX        E DS                  EXTNAME(SDCTTXPD)                                  CER048
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **Timestamp
      D PTimeStamp      S             26Z
                                                                                               234227
       ** Entry Parameters                                                                     234227
      D PAction         S              1A                                                      234227
      D PCustNo         S              6A                                                      234227
- 
+
       ** Fields defined for Calling SDCCTXLOG
- 
+
      D CSC011          S              1A
      D TRANSDTL        S           5800A
      D PCustNum        S             18A
      D PACustNo        S             18A
      D P@Timestamp     S             26A
      D PSard           S              6A
- 
+
       ** Parameter for Access Object
      D PRtcd           S              7A
      D POptn           S              7A
@@ -245,29 +247,29 @@
       *                                                                                       CER048
      D CER048          S              1A                                                      CER048
      D CER069          S              1A                                                      CER069
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ *INZSR is executed at program activation.                  ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
      C     KEY1          KLIST
      C                   KFLD                    CTCUST
      C                   KFLD                    CTCTTX
- 
+
       ** If Joint Account Type changed from 'Y' to 'N', delete all                            234227
       ** records in SDACTXPD for this customer.                                               234227
                                                                                               234227
@@ -294,23 +296,23 @@
      C                   ELSE                                                                 234227
                                                                                               234227
      C     KEY1          CHAIN     SDACTXL0                           10
- 
+
       ** Generate Timestamp
- 
+
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    PTimestamp
- 
+
       ** Translate records to file layout
- 
+
      C                   IF        NwDlFilFmt <> SDDlFilUpd                                   CER048
       *                                                                                       CER048
      C                   EVAL      CTTMST = PTimestamp
- 
+
      C                   MOVEL     NwDlFilFmt    SDDlFilUpd
- 
+
      C                   IF        *IN10 = *OFF
      C                   UPDATE    SDACTXD0                             20
- 
+
      C                   IF        *IN20 = *ON
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDACTXPD'
@@ -319,7 +321,7 @@
      C                   OUT       LDA
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
      C                   ELSE
      C                   WRITE     SDACTXD0
      C                   ENDIF
@@ -335,29 +337,29 @@
      C                   ENDIF                                                                CER059
       *                                                                                       CER048
      C                   ENDIF                                                                234227
- 
+
       ** If 24x7 Midas Availability is installed
       ** and Support System is active
- 
+
      C                   IF        (CSC011 = 'Y') AND (S1SUPP = LIBR)
- 
+
      C                   CALLB     'SDCCTXLOG'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    SDDlFilUpd
      C                   PARM                    TRANSDTL
- 
+
       ** If there is no error, write the log file
- 
+
      C                   IF        RetCodeOut = *BLANKS
- 
+
      C                   EVAL      APTGTTYPE = 'SDACUD'
      C                   EVAL      APFOTRANID = AXFRNT
      C                   EVAL      APRPRLOCN  = AXREPA
      C                   EVAL      APUSERID   = PSUser
      C                   EVAL      APMIDUSR   = PSUser
- 
+
      C                   MOVEL     AXCUST        PCustNum
- 
+
      C                   CALLB     'APLOGTRAN'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    APHEAD
@@ -365,17 +367,17 @@
      C                   PARM      *BLANKS       P@Timestamp
      C                   PARM                    PCustNum
      C                   PARM      *BLANKS       PACustNo
- 
+
      C                   ENDIF
- 
+
       ** If there is an error in either log file, end program
- 
+
      C                   IF        RetCodeOut <> *BLANKS
      C                   EVAL      PRetCode = '*ERROR'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON                                                232543
                                                                                               232543
      C                   RETURN
@@ -957,12 +959,12 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** Input Parameters
       ** ================
- 
+
       ** Return Code
      C                   PARM                    PRetCode
                                                                                               CER059
@@ -974,22 +976,22 @@
                                                                                               234227
       ** Customer Number                                                                      234227
      C                   PARM                    PCustNo                                      234227
- 
+
       ** New Details in File Format
      C                   PARM                    NwDlFilFmt
- 
+
       ** Check if CSC011 is installed
- 
+
      C                   EVAL      CSC011 = 'N'
- 
+
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CSC011'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
       ** Database error
- 
+
      C                   IF        (PRtCd <> *BLANKS) and
      C                             (PRtCd <> '*NRF   ')
      C                   EVAL      DBKEY = 'CSC011'
@@ -997,7 +999,7 @@
      C                   EVAL      DBASE = 003
      C                   EXSR      SRERR
      C                   ENDIF
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   EVAL      CSC011 = 'Y'
      C                   IN        SDSTAT
@@ -1073,13 +1075,13 @@
      C                   IF        PRtcd = *BLANKS                                            CER069
      C                   EVAL      CER069 = 'Y'                                               CER069
      C                   ENDIF                                                                CER069
- 
+
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================
       ** The following /COPY sets these values.
- 
+
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1088,20 +1090,20 @@
       * SRErr - Exception Errors                                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SRErr         BEGSR
- 
+
      C                   EVAL      PRetCode = '*ERROR '
      C                   EVAL      DBPGM = 'SDCCTXUPD'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   DUMP
- 
+
       **  Terminate the Program
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

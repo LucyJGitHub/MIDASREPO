@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD031234           Date 16May19               *
-      *  Prev Amend No. MD020755           Date 16May19               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD031234           Date 16May19               *
+      *                 MD020755           Date 16May19               *
       *                 MD050212           Date 02Apr18               *
       *                 MD051563           Date 19Jul18               *
       *                 MD051393           Date 29Jun18               *
@@ -143,6 +144,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD031234 - Marketing information not updated on CLINTCB      *
       *             when inserting customer.                          *
       *           - Applied for MD-52640.                             *

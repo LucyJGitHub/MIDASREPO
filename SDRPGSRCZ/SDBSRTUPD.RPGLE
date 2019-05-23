@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MG000484           Date 20Mar18               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CTI006             Date 31Mar14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -38,10 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MG000484 - Rate Change should not be generated if New Base   *
-      *             Rate has the same value as the previous history   *
-      *             record.                                           *
-      *           - Applied for MD-49833.                             *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CTI006 - Trade Finance BF Midas 2.2 Interface                *
       *  BUG22792 - Apply fix 258440                                  *
@@ -72,7 +69,7 @@
       * Midas SD Controls File
      FSDFCTLL0  UF A E           K DISK
      F                                     COMMIT
- 
+
       * Market Data Feed Requests Details File                                                CSD006
      FSDMDFRL0  UF A E           K DISK    COMMIT                                             CSD006
                                                                                               CSD006
@@ -111,46 +108,46 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID BASE RATE
      D SDVBSRT       E DS                  EXTNAME(SDVBSRTPD)
- 
+
       ** Rename fields for Timestamp checking
      D ChkBSRTFmt    E DS                  EXTNAME(SDBSRTPD)
      D                                     PREFIX(CH)
- 
+
       **  Midas Base Rate File
      D BaseRate      E DS                  EXTNAME(SDBSRTPD)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** Midas Modules details accessed via access program
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * First DS for Access programs - short data structure
- 
+
       ** SD data area                                                                         CSC011
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSC011
                                                                                               CSC011
@@ -187,7 +184,7 @@
      D PRtCd           S              7A                                                      CSC011
      D POptn           S              7A                                                      CSC011
      D PSard           S              6A                                                      CSC011
- 
+
       ** Data structure passed to SD0520X
      D WUDELR          DS
      D  WUDR01                 1    250
@@ -276,7 +273,7 @@
      D WOBACBSR        S                   LIKE(BACBSR)                                      BUG4660
       *                                                                                       258440
      D WOBAVDRC        S                   LIKE(BAVDRC)                                       258440
- 
+
       *  User / Branch data area                                                              BG4254
      D ZMUSER          DS            17                                                       BG4254
      D  WUSRID                 1     10                                                       BG4254
@@ -296,19 +293,19 @@
       ** Ensure transaction has not been updated by another workstation
       ** - if so, bypass updating and return to calling program.
      C                   EXSR      CHKOTHUPD
- 
+
      C     ReturnCode    IFNE      *BLANKS
      C                   RETURN
      C                   END
- 
+
       * EXIT IF NOT INSERTION, AMENDMENT, DELETION
- 
+
      C     BVTYLC        IFNE      'I'
      C     BVTYLC        ANDNE     'A'
      C     BVTYLC        ANDNE     'D'
      C                   RETURN
      C                   END
- 
+
       ***  Get timestamp                                                                      CAP084
      C                   CALLB     'ZAGENTMSTM'                                               CAP084
      C                   PARM                    TimeStamp                                    CAP084
@@ -439,14 +436,14 @@
      C                   ENDIF                                                                CSD012
                                                                                               CSD012
      C     NOUPDAT       TAG                                                                  CSD012
- 
+
       * INSERT OR AMEND THE BASE RATE
- 
+
      C     BVTYLC        CASEQ     'I'           BSRTINS
      C     BVTYLC        CASEQ     'A'           BSRTAMD
      C     BVTYLC        CASEQ     'D'           BSRTDLT
      C                   END
- 
+
       ** Maintain Market Data Feed files                                                      CSD006
      C     CSD006F       IFEQ      'Y'                                                        CSD006
      C                   EXSR      MNTMDFF                                                    CSD006
@@ -503,10 +500,10 @@
       *                                                               *
       *****************************************************************
      C     CHKOTHUPD     BEGSR
- 
+
       ** Retrieve current details
- 
- 
+
+
       ** Determine whether program is running interactively or in batch
       **  ( 0 = batch   1 = interactive)
       *
@@ -521,7 +518,7 @@
      C                   ELSE
      C                   MOVE      *BLANKS       ModeofOp
      C                   END
- 
+
      C                   CALLB     'SDBSRTRTV'
      C                   PARM                    RetCodeIn
      C                   PARM                    ModeofOp          6
@@ -549,24 +546,24 @@
       *
       ** Error if Timestamp is not the same (record has been changed
       **  by another workstation)
- 
+
       ** Processing varies according to mode program is running in.
       ** In interacive mode simply check whether the timestamp field
       ** has been updated since the original record was fetched
       ** by this program.
       ** In batch (API input) check return parameters from Retrieve
       ** module for errors, and send message to system operator.
- 
+
       ** Interactive mode:
- 
+
      C     @TYPE         IFEQ      '1'
      C     BVTYLC        IFNE      'I'                                                        CAP084
- 
+
      C     CHBATMST      IFNE      BVTMESTMP
      C                   MOVEL     '*RECUPD'     ReturnCode
      C                   ENDIF                                                                CAP084
      C                   END
- 
+
       ** Batch mode:
      C                   ELSE
      C     OKACTN        IFEQ      'N'
@@ -574,7 +571,7 @@
      C     OKBSRC        OREQ      'N'
      C                   MOVEL     '*RECUPD'     ReturnCode
      C                   Z-ADD     1             C                 2 0
- 
+
      C     C             DOWLE     ArrayMax
      C     FldNameArr(C) ANDNE     *BLANKS
      C                   MOVEL     *BLANKS       DBError          28
@@ -586,11 +583,11 @@
      C                   PARM                    DummyMsgF
      C                   ADD       1             C
      C                   END
- 
+
      C                   END
- 
+
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -601,9 +598,9 @@
      C****************************************************************
      C     BSRTINS       BEGSR
       *
- 
+
       * INITIALIZE BASE RATE
- 
+
      C                   CLEAR                   BaseRate
       *
      C                   MOVEL     SDVBSRT       BaseRate
@@ -769,24 +766,6 @@
       * Timestamp                                                                             CAP084
      C                   EVAL      BATMST=TimeStamp                                           CAP084
       *
-      * Check previous value in history file                                                MG000484
-     C                   MOVE      BACYCD        WCYCD                                      MG000484
-     C                   MOVE      BABSRC        WBSRC                                      MG000484
-     C     BAVDNR        SUB       1             WVDNR                                      MG000484
-     C     BSHSKY        SETGT     SDBSHSL1                                                 MG000484
-     C     BSHSK         READPE    SDBSHSL1                               42                MG000484
-      * If found compare G0CBSR (previous rate) with current value                          MG000484
-     C     *IN42         IFEQ      '0'                                                      MG000484
-      * If new base rate is the same as previous history record, flag it as 'no change'.    MG000484
-     C     BANBRT        IFNE      0                                                        MG000484
-     C     BANBRT        ANDEQ     G0CBSR                                                   MG000484
-     C     BANBRT        OREQ      0                                                        MG000484
-     C     BACBSR        ANDEQ     G0CBSR                                                   MG000484
-     C                   MOVEL     'N'           BAACLT                                     MG000484
-     C                   MOVEL     'N'           BAACRC                                     MG000484
-     C                   ENDIF                                                              MG000484
-     C                   ENDIF                                                              MG000484
-      *                                                                                     MG000484
       * UPDATE DEAL
       *
      C                   UPDATE    @BAREDG
@@ -957,7 +936,6 @@
      C                   PARM      BABSRS        WQ0009            5
      C                   PARM      BATYLC        WQ0010            1
      C                   PARM      BJRDNB        WQ0011            5 0
-     C                   PARM      BAACRC        WQ0012            1                        MG000484
       *
      C     *IN90         IFEQ      *ON
      C                   MOVEL     BVCYCD        DBKEY
@@ -1069,7 +1047,7 @@
      C                   KFLD                    WBSRC                                        245028
       *
       ** Key list for accessing Market Data Feed Requested Items Details
- 
+
      C     KLMDFI        KLIST
      C                   KFLD                    WKREQI           32
      C                   KFLD                    WKDITM           20
@@ -1137,7 +1115,7 @@
      C                   IN        SDSTAT                                                     CSC011
      C                   IN        SC24X7                                                     CSC011
      C                   ENDIF                                                                CSC011
- 
+
      C/COPY WNCPYSRC,SDH00525
       *
      C                   ENDSR

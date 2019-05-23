@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
       *                 CER045             Date 20Jul09               *
       *                 BUG24833           Date 09Jul09               *
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing                       *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -75,13 +77,13 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Midas SD Additional Customer Details Display File
      FSDACUDDF  CF   E             WORKSTN
- 
+
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK    INFSR(*pssr)
- 
+
       *****************************************************************
       *                                                               *
       * ID F  C  H  L    FUNCTION OF INDICATORS                       *
@@ -107,25 +109,25 @@
       ** and the copyright array definition:
       /COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
       /COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
       /COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
       /COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of
@@ -133,83 +135,83 @@
       ** STD_D_SPEC.
       /COPY ZACPYSRC,FVAL_ARRAY
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
       /COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
       /COPY ZACPYSRC,MSGHNDDCL
       **--------------------------------------------------------------------------------------------
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @EI             S              1    DIM(60)
      D @Z0             S              1    DIM(60) CTDATA PERRCD(60)
      D*@FUNCTIONS      S             79    DIM(2) CTDATA PERRCD(1)                          BUG22133
      D*@FUNCTIONS      S             79    DIM(3) CTDATA PERRCD(1)                 BUG22133 BUG23518
      D*@FUNCTIONS      S             79    DIM(4) CTDATA PERRCD(1)                BUG23518 BUG23518A
      D @FUNCTIONS      S             79    DIM(5) CTDATA PERRCD(1)                         BUG23518A
- 
+
       ** SDACUSPD Transaction Details in screen format
      D TrnDets       E DS                  EXTNAME(SDACUDPD)
- 
+
       ** SDACUDPD Transaction Details OK indicators
      D OKTrnDets     E DS                  EXTNAME(SDEACUDPD)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for SAR Details                                                        BUG23640
      D SCSARD        E DS                  Extname(SCSARDPD)                                BUG23640
                                                                                             BUG23640
       **  Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Midas SD Midas modules Data Structure                                                CSW207
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)                                  CSW207
                                                                                               CSW207
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Parameter for Access Object
      D PRtcd           S              7A
      D POptn           S              7A
      D PSard           S              6A                                                    BUG23640
- 
+
       ** Parameter of *Entry
      D SDCUSDcall      S              1A
      D PEKYFD          S              1A
@@ -221,23 +223,23 @@
      D PINKL           S              1A
      D PINKJ           S              1A                                                    BUG22133
      D PINKW           S              1A                                                    BUG23518
- 
+
       ** Value is 'Y' if its called from SDACUDENQ
       ** Value is ' ' if its called from SDACUDSIN
       ** Value is 'R' if its called from SDACUDRPR
      D PSDACUDENQ      S              1A
- 
+
       ** Switchable feature CGL032
      D PCGL032         S              1A
      D PEPRTD          S              1A
- 
+
       ** Swift installed flag                                                                 CSW207
      D CSW207          S              1                                                       CSW207
                                                                                               CSW207
       ** Index for error indicators
      D C               S              2P 0
      D E               S              2P 0
- 
+
       ** Other Variables
      D WDate           S              4A
       *                                                                                       232543
@@ -264,8 +266,8 @@
       *                                                                                     BUG23640
      D CER047          S              1A                                                    BUG23640
      D CER048          S              1A                                                    BUG23640
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -279,17 +281,17 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Main processing
- 
+
      C                   EXSR      SRMain
- 
+
       ** Return
- 
+
      C                   IF        PINKC = '1'
      C                   EVAL      *INLR = *ON
      C                   ENDIF
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -297,16 +299,16 @@
       * SRMain - Main Processing
       *****************************************************************
      C     SRMain        BEGSR
- 
+
       ** Move 'OK' Flags into array (For Checking)
- 
+
      C                   MOVEA     OKTrnDets     @EI
- 
+
       ** Set Screen Error Indicators according to Status of 'OK' Flags
- 
+
      C                   Z-ADD     1             C
      C                   Z-ADD     10            E
- 
+
      C                   DOU       C > 60
      C                   IF        @EI(C) = 'N' or
      C                             @EI(C) = 'W'
@@ -315,9 +317,9 @@
      C                   ADD       1             C
      C                   ADD       1             E
      C                   ENDDO
- 
+
       ** Set up function keys
- 
+
      C                   SELECT
      C                   WHEN      DDACTN = 'E' and
      C                             PSDACUDENQ = 'Y'
@@ -334,14 +336,14 @@
      C                   OTHER
      C                   EVAL      TOGLTEXT = @FUNCTIONS(1)
      C                   ENDSL
- 
+
       ** Set up the customer reference to be used by the message handler
- 
+
      C                   EVAL      TranRef = DDCUST
      C                   EVAL      ActionCode = DDACTN
- 
+
       ** Set up Date of Birth field on the screen
- 
+
      C                   IF        BJDFIN = 'D'
      C                   MOVEL     DDDBTH        DDDATE3
      C                   MOVE      DDDBTH        WDate
@@ -368,29 +370,29 @@
      C                   MOVEL     IsdteYY       DteM_YY                                      232543
      C                   MOVEL     DteFmtM       DDISDT1                                      232543
      C                   ENDIF                                                                232543
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes processing for the error and
       ** warning messages.
       /COPY ZACPYSRC,MSGHNDDSP1
       **--------------------------------------------------------------------------------------------
- 
+
       ** Protect all fields
- 
+
      C                   EVAL      *IN70 = *ON
- 
+
       ** Enable Detail Fields (All Fields except Action Code & Deal Number)
- 
+
      C                   IF        PEDTFD = 'Y'
      C                   EVAL      *IN70 = *OFF
      C                   ENDIF
- 
+
      C                   IF        PEINKG = 'Y'
      C                   EVAL      *IN83 = *ON
      C                   ENDIF
- 
+
       ** Protected field due to CGL032
- 
+
      C                   IF        PEPRTD = 'Y'
      C                             OR DDACTN <> 'E'                                           251935
      C                             AND DDACTN <> 'D'                                        BUG24845
@@ -400,15 +402,15 @@
      C                   ELSE
      C                   EVAL      *IN71 = *ON
      C                   ENDIF
- 
+
       ** Switchable feature CGL032
- 
+
      C                   IF        PCGL032 = 'Y'
      C                   EVAL      *IN72 = *ON
      C                   ELSE                                                                 233004
      C                   EVAL      *IN72 = *OFF                                               233004
      C                   ENDIF
- 
+
       ** Switchable feature CSW207                                                            CSW207
                                                                                               CSW207
      C                   IF        CSW207 = 'Y' OR BGN4ST = 'Y'                               CSW207
@@ -434,33 +436,33 @@
      C                   ENDIF                                                              BUG23518
       *                                                                                     BUG23518
       ** Position cursor on first field if no errors
- 
+
      C     'N'           LOOKUP    @EI                                    73
- 
+
       ** Write message subfile, Securities Clients Details and footer screen
- 
+
      C                   TIME                    DDTIME
      C                   WRITE     SDACUDM0
      C                   WRITE     SDACUDD1
      C                   WRITE     SDACUDF1
- 
+
      C                   READ      SDACUDD1                               99
- 
+
       ** Set screen error indicators off
- 
+
      C                   MOVEA     @Z0           *IN(10)
- 
+
       ** Set return keys
- 
+
      C                   EVAL      PINKC = *INKC
      C                   EVAL      PINKG = *INKG
      C                   EVAL      PINKH = *INKH
      C                   EVAL      PINKJ = *INKJ                                            BUG22133
      C                   EVAL      PINKW = *INKW                                            BUG23518
- 
+
       ** If F12 or ENTER is press, set F3 = *ON if called from Customer Details
       ** so it will not return on browse screen
- 
+
      C                   IF        *INKL = '1'
      C                   IF        SDCUSDcall = 'C'
      C                   EVAL      PINKC = '1'
@@ -469,9 +471,9 @@
      C                   EVAL      PINKL = *INKL
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Merge dates on Date of Birth field (screen format)
- 
+
      C                   IF        BJDFIN = 'D'
      C                   EVAL      DDDBTH = DDDATE3 + DDDATE2 + DDDATE1
      C                   ELSE
@@ -493,60 +495,60 @@
      C                   MOVEL     DteM_YY       IsDteYY                                      232543
      C                   MOVEL     WIssDate      DDISDT                                       232543
      C                   ENDIF                                                                232543
- 
+
      C                   ENDSR
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the ProcMsgs subroutine
       ** to process error and warning messages.
       /COPY ZACPYSRC,MSGHNDDSP2
       **--------------------------------------------------------------------------------------------
- 
+
       ********************************************************************
       /EJECT
       *****************************************************************
       * *INZSR - Initial Processing
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** INPUT PARAMETERS :
       ** Return code
      C                   PARM                    RetCodeIn
- 
+
       ** Transaction Details in screen format
      C                   PARM                    TrnDets
- 
+
       ** Transaction Details OK indicators
      C                   PARM                    OKTrnDets
- 
+
       ** Called from customer details module or direct from Midas menu
      C                   PARM                    SDCUSDcall
- 
+
       ** Called from SDACUDENQ module if value is 'Y'
      C                   PARM                    PSDACUDENQ
- 
+
       ** ERRORS
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       ** WARNING
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       ** Enabled Key & Detail Fields
      C                   PARM                    PEKYFD
      C                   PARM                    PEDTFD
      C                   PARM                    PEINKG
- 
+
       ** Protected field due to CGL032
      C                   PARM                    PEPRTD
- 
+
       ** Switchable features CGL032
      C                   PARM                    PCGL032
- 
+
       ** OUTPUT PARAMETERS :
       ** Function Keys
      C                   PARM                    PINKC
@@ -555,35 +557,35 @@
      C                   PARM                    PINKL
      C                   PARM                    PINKJ                                      BUG22133
      C                   PARM                    PINKW                                      BUG23518
- 
+
       ** Initialize program name
- 
+
      C                   EVAL      DBPGM = 'SDACUDDSP'
- 
+
       ** Move user and workstation ID to screen fields.
- 
+
      C                   EVAL      DDUSER = PsUser
      C                   EVAL      DDWID  = PsJobName
- 
+
      C                   EVAL      *IN94 = *ON
      C                   EVAL      DDPGMQ = '*'
- 
+
       ** Access Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     PRtcd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error
- 
+
      C                   IF        PRtcd <> *BLANKS
      C                   EVAL      DBFILE = 'SDBANKPD'
      C                   EVAL      DBASE  = 901
      C                   EVAL      DBKEY  = POptn
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check if Private Banking is switched on:                                             CSW207
                                                                                               CSW207
      C                   CALL      'AOMMODR0'                                                 CSW207
@@ -659,15 +661,15 @@
      C                   ELSE                                                                 CLE134
      C                   EVAL      *IN89 = *OFF                                               CLE134
      C                   ENDIF                                                                CLE134
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line sets up the fixed data for SD *DSP
       ** functions for the message handler, ZAMSGHNDLE.
       /COPY SDCPYSRC,MSGHNDDATA
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -676,17 +678,17 @@
       *                                                               *
       *****************************************************************
      C     SRERR         BEGSR
- 
+
      C                   EVAL      DBPGM = 'SDACUDDSP'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   DUMP
- 
+
       **  Terminte the program
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

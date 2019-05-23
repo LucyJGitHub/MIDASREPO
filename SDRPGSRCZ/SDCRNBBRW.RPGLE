@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD040563           Date 18Aug16               *
-      *  Prev Amend No. CGL177  *CREATE    Date 11Jan16               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD040563           Date 18Aug16               *
+      *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD040563 - Database Error encountered when F16(List by CRS   *
       *             Indicia) is pressed from Non-Account Holder       *
       *             Enquiry main screen                               *

@@ -16,15 +16,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CGL013  *CREATE    Date 25Mar02               *
+      *                 CGL013  *CREATE    Date 25Mar02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL013 - MT94x Messages Generation                           *
       *                                                               *
@@ -322,36 +324,36 @@
  E1  C                   ENDIF
       *
       ** End Server User Id.
- 
-      ** Server Password and Server Password to Verify
+
+      ***Server*Password*and*Server*Password*to*Verify*****************                       CSD101
       *
-      ** -- The Field is mandatory if not already filled in file
+      ***--*The*Field*is*mandatory*if*not*already*filled*in*file*******                       CSD101
       *
- B1  C                   IF        EDSRVP = *Blanks AND F5SRVP = *Blanks
-     C                   MOVE      'USR3987'     ZAMSID
-     C                   MOVE      *On           *IN50
- 
-      ** -- Should be the same value as Server Password to Verify
+ B1  C**********         IF        EDSRVP = *Blanks AND F5SRVP = *Blanks                      CSD101
+     C**********         MOVE      'USR3987'     ZAMSID                                       CSD101
+     C**********         MOVE      *On           *IN50                                        CSD101
+
+      ***--*Should*be*the*same*value*as*Server*Password*to*Verify******                       CSD101
       *
- X1  C                   ELSE
- 
- B2  C                   IF        F5SRVP <> F5SPWV
-     C                   MOVE      'USR3988'     ZAMSID
-     C                   MOVE      *On           *IN50
- E2  C                   ENDIF
- 
- E1  C                   ENDIF
- 
-      ** -- If an error was found
+ X1  C**********         ELSE                                                                 CSD101
+
+ B2  C**********         IF        F5SRVP <> F5SPWV                                           CSD101
+     C**********         MOVE      'USR3988'     ZAMSID                                       CSD101
+     C**********         MOVE      *On           *IN50                                        CSD101
+ E2  C**********         ENDIF                                                                CSD101
+
+ E1  C**********         ENDIF                                                                CSD101
+
+      ***--*If*an*error*was*found**************************************                       CSD101
       *
-     C                   IF        *IN50
-     C                   EXSR      $ZaSndMsg
-     C                   MOVE      *On           *IN40
-     C                   MOVEL(P)  '*MSG'        RetCodeOut
-     C                   ENDIF
+     C**********         IF        *IN50                                                      CSD101
+     C**********         EXSR      $ZaSndMsg                                                  CSD101
+     C**********         MOVE      *On           *IN40                                        CSD101
+     C**********         MOVEL(P)  '*MSG'        RetCodeOut                                   CSD101
+     C**********         ENDIF                                                                CSD101
       *
-      ** End Server Password and Server Password to Verify
- 
+      ***End*Server*Password*and*Server*Password*to*Verify*************                       CSD101
+
       ** Exit Program Name
       *
       ** -- The Field is mandatory

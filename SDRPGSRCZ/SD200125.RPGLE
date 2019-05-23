@@ -15,15 +15,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CGL013  *CREATE    Date 25Mar02               *
+      *                 CGL013  *CREATE    Date 25Mar02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL013 - MT94x Messages Generation                           *
       *                                                               *
@@ -417,11 +419,11 @@
      C                   EVAL      EDRPNM = F5RPNM
      C                   EVAL      EDTSNM = F5TSNM
      C                   EVAL      EDSUID = F5SUID
- 
-     C                   IF        F5SRVP <> *Blanks
-     C                   EVAL      EDSRVP = F5SRVP
-     C                   ENDIF
- 
+
+     C**********         IF        F5SRVP <> *Blanks                                          CSD101
+     C**********         EVAL      EDSRVP = F5SRVP                                            CSD101
+     C**********         ENDIF                                                                CSD101
+
      C                   EVAL      EDEXTP = F5EXTP
       *    ----------    ------
      C     @ScrToFile    ENDSR

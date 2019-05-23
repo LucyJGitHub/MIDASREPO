@@ -13,12 +13,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.04 -----------------------------------------------*
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -171,6 +173,11 @@
       ** Deals sub-types                                                  CGL009
      ISDDLST    E DSSDDLSTPD                                              CGL009
       /EJECT                                                              CGL009
+      ** Standing Data Area                                                                   CSD101
+     ISDSTAT    E DSSDSTAT                                                                    CSD101
+      **                                                                                      CSD101
+     IPDESCR      DS                           1000                                           CSD101
+      *                                                                                       CSD101
       * Parameter declarations
      IP1PARM      DS                             10
       * KEY: Midas SD Fontis Interface ICD retrieval
@@ -200,8 +207,8 @@
       * Midas User on Fontis Srvr
      I                                        1  20 ZA0005
       * Message data for 'Passwd for Midas User REQ'
-      * Password for Midas User
-     I                                        1  20 ZA0006
+      **Password*for*Midas*User****************************************                       CSD101
+     I**********                              1  20 ZA0006                                    CSD101
       * Message data for 'Server Datafile Path  REQ'
       * Fontis Servr Dtafile Path
      I                                        1  50 ZA0007
@@ -619,18 +626,37 @@
      C                     EXSR ZASNMS
      C                     SETON                     9935  *
       *
+     C                     ELSE                                                               CSD101
+     C           LIBR      CAT  'DMLIB'   PLIBRY                                              CSD101
+     C           'FONTIS_' CAT  #1MUFS    PIDNAM                                              CSD101
+      *                                                                                       CSD101
+     C                     CALL 'SD000404'                                                    CSD101
+     C                     PARM *BLANKS   PRTNCD                                              CSD101
+     C                     PARM 'F'       PACTN                                               CSD101
+     C                     PARM           PVALST                                              CSD101
+     C                     PARM           PLIBRY                                              CSD101
+     C                     PARM           PIDNAM                                              CSD101
+     C                     PARM *BLANKS   PPASS1                                              CSD101
+     C                     PARM *BLANKS   PDESCR                                              CSD101
+      *                                                                                       CSD101
+     C           PRTNCD    IFNE *BLANKS                                                       CSD101
+     C                     MOVEL'PWD0012' ZAMSID                                              CSD101
+     C                     EXSR ZASNMS                                                        CSD101
+     C                     SETON                     9935                                     CSD101
+     C                     ENDIF                                                              CSD101
+      *                                                                                       CSD101
      C                     END                             *FI
-      * Password for Midas User
-      * CASE: DTL.Password for Midas User is Blank
-     C           #1PASW    IFEQ *BLANK                     *IF
-      * Setup message data for message
-     C                     MOVEL#1PASW    ZA0006           Password for Mi
-      * Send message 'Passwd for Midas User REQ'
-     C                     MOVEL'USR3193' ZAMSID
-     C                     EXSR ZASNMS
-     C                     SETON                     9936  *
-      *
-     C                     END                             *FI
+      **Password*for*Midas*User****************************************                       CSD101
+      **CASE:*DTL.Password*for*Midas*User*is*Blank*********************                       CSD101
+     C********** #1PASW    IFEQ *BLANK                     *IF                                CSD101
+      **Setup*message*data*for*message*********************************                       CSD101
+     C**********           MOVEL#1PASW    ZA0006           Password for Mi                    CSD101
+      **Send*message*'Passwd*for*Midas*User*REQ'***********************                       CSD101
+     C**********           MOVEL'USR3193' ZAMSID                                              CSD101
+     C**********           EXSR ZASNMS                                                        CSD101
+     C**********           SETON                     9936  *                                  CSD101
+      **********                                                                              CSD101
+     C**********           END                             *FI                                CSD101
       * Fontis Server Data File Path
       * CASE: DTL.Fontis Servr Dtafile Path is Blank
      C           #1PATH    IFEQ *BLANK                     *IF
@@ -1371,7 +1397,7 @@
      C                     Z-ADD*ZERO     #1HSTP           History Retenti
      C                     MOVEL*BLANK    #1HOST           Fontis Server H
      C                     MOVEL*BLANK    #1MUFS           Midas User on F
-     C                     MOVEL*BLANK    #1PASW           Password for Mi
+     C**********           MOVEL*BLANK    #1PASW           Password for Mi                    CSD101
      C                     MOVEL*BLANK    #1PATH           Fontis Servr Dt
      C           WUGL09    IFEQ 'Y'                                       CGL009
      C                     MOVEL*BLANK    #1BKID                          CGL009
@@ -1407,7 +1433,7 @@
      C                     Z-ADDF8HSTP    #1HSTP           History Retenti
      C                     MOVELF8HOST    #1HOST           Fontis Server H
      C                     MOVELF8MUFS    #1MUFS           Midas User on F
-     C                     MOVELF8PASW    #1PASW           Password for Mi
+     C**********           MOVELF8PASW    #1PASW           Password for Mi                    CSD101
      C                     MOVELF8PATH    #1PATH           Fontis Servr Dt
      C           WUGL09    IFEQ 'Y'                                       CGL009
      C                     MOVELF8BKID    #1BKID                          CGL009
@@ -1501,7 +1527,7 @@
      C                     Z-ADD#1DNFQ    F8DNFQ           Download Freque
      C                     MOVEL#1HOST    F8HOST           Fontis Server H
      C                     MOVEL#1MUFS    F8MUFS           Midas User on F
-     C                     MOVEL#1PASW    F8PASW           Password for Mi
+     C**********           MOVEL#1PASW    F8PASW           Password for Mi                    CSD101
      C                     MOVEL#1PATH    F8PATH           Fontis Servr Dt
      C                     Z-ADD#1RTRY    F8RTRY           Maximum no. of
      C                     Z-ADD#1HSTP    F8HSTP           History Retenti
@@ -1878,6 +1904,14 @@
      C                     MOVEL*BLANK    W0RSF   1
      C                     MOVEL*ZEROS    W0RTW   90
      C                     MOVEL'400'     W0ENV   3
+      *                                                                                       CSD101
+     C                     MOVE *BLANK    PRTNCD  7                                           CSD101
+     C                     MOVE *BLANK    PACTN   1                                           CSD101
+     C                     MOVEL'SDINTFVL'PVALST 10                                           CSD101
+     C                     MOVE *BLANK    PLIBRY 10                                           CSD101
+     C                     MOVE *BLANK    PIDNAM100                                           CSD101
+     C                     MOVE *BLANK    PPASS1128                                           CSD101
+     C                     MOVE *BLANK    PDESCR                                              CSD101
       * Setup job date/time
       *
      C                     Z-ADDUDATE     ##JDT
@@ -2023,6 +2057,11 @@
      C/COPY WNCPYSRC,SD9421RCPG
       * 00/Copy Member SD9421ROPG - Fontis Interface ICD  *
       *================================================================
+      *                                                                                       CSD101
+     C           *NAMVAR   DEFN           SDSTAT                                              CSD101
+     C                     IN   SDSTAT                                                        CSD101
+      *                                                                                       CSD101
+      *                                                                                       CSD101
      CSR         ZZEXIT    ENDSR
       /EJECT
      CSR         *PSSR     BEGSR

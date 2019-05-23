@@ -11,11 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD036356           Date 02Nov15               *
-      *  Prev Amend No. CGL157  *CREATE    Date 17Aug15               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD036356           Date 02Nov15               *
+      *                 CGL157  *CREATE    Date 17Aug15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD036356 - Multiple NAHO FATCA fields does not default values*
       *            from Main NAHO/CRS Details                         *
       *  CGL157 - CRS Reporting                                       *

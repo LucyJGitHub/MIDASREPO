@@ -13,8 +13,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. CSD101             Date 07Dec18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CSD101 - Password Encryption                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
 /*       CSD028 - KYC (Standing Data Authorisations)                 */
@@ -97,7 +99,7 @@
                 CLRPFM     FILE(GLBXSHPD)
                 CLRPFM     FILE(RECMSHPD)
                 CLRPFM     FILE(REIASHPD)
-                CLRPFM     FILE(REPWSHPD)
+/**********     CLRPFM     FILE(REPWSHPD)                            */                   /*CSD101*/
                 CLRPFM     FILE(SDANSHPD)
                 CLRPFM     FILE(SDBRSHPD)
 /**********     CLRPFM     FILE(SDCBSHPD)                                                 /*CSD028*/

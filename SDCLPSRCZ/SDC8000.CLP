@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CGL165             Date 17Feb15              */
+/*       Last Amend No. CSD101             Date 07Dec18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CGL165             Date 17Feb15              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CSD101 - Password Encryption                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CGL165 - Dual Withholding Tax (Recompile)                   */
 /*       BUG6431 - CDL031 Authorisation Log problems                 */
@@ -80,19 +82,19 @@ RUN:
              OVRDBF     FILE(ACCNTL1) TOFILE(ACCNTL0) SHARE(*NO)
              OVRDBF     FILE(REIACXX) TOFILE(REIAC) SHARE(*NO)
              OVRDBF     FILE(RECOMXX) TOFILE(RECOM) SHARE(*NO)
-             OVRDBF     FILE(REAPWDL1) TOFILE(REAPWDL0) SHARE(*NO)
+/**********  OVRDBF     FILE(REAPWDL1) TOFILE(REAPWDL0) SHARE(*NO)    */                  /*CSD101*/
              OVRDBF     FILE(ACCBR) TOFILE(ACCBR) SHARE(*NO)
              OVRDBF     FILE(ACCNTBXC) TOFILE(ACCNTBXC) SHARE(*NO)
              OVRDBF     FILE(REIAC) TOFILE(REIAC) SHARE(*NO)
              OVRDBF     FILE(RECOM) TOFILE(RECOM) SHARE(*NO)
-             OVRDBF     FILE(REAPWDL0) TOFILE(REAPWDL0) SHARE(*NO)
+/**********  OVRDBF     FILE(REAPWDL0) TOFILE(REAPWDL0) SHARE(*NO)    */                  /*CSD101*/
              OVRDBF     FILE(SDNOSTAU) TOFILE(SDNOSTL0) SHARE(*NO)
              OVRDBF     FILE(SDNOSHAU) TOFILE(SDNOSHL0) SHARE(*NO)
              OVRDBF     FILE(SDEXSTAU) TOFILE(SDEXSTL0) SHARE(*NO)
              OVRDBF     FILE(SDEXSHAU) TOFILE(SDEXSHL0) SHARE(*NO)
              OVRDBF     FILE(SDEXSTAX) TOFILE(SDEXSTLA) SHARE(*NO)                       /*BUG6431*/
              OVRDBF     FILE(SDEXSHAX) TOFILE(SDEXSHL2) SHARE(*NO)                       /*BUG6431*/
-             OVRDBF FILE(REPWSHL0) TOFILE(REPWSHL0) SHARE(*NO)                           /*BUG4654*/
+/**********  OVRDBF FILE(REPWSHL0) TOFILE(REPWSHL0) SHARE(*NO)        */      /*BUG4654*/ /*CSD101*/
              STRCMTCTL  LCKLVL(*ALL) NFYOBJ(MNTYF (*FILE)) +
                           CMTSCOPE(*JOB)                                                 /*BUG4654*/
              MONMSG     MSGID(CPF0000)                                                   /*BUG4654*/

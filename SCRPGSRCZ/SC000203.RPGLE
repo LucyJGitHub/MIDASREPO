@@ -14,10 +14,12 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2011            *
       *                                                               *
-      *  Last Amend No. CBF002  *CREATE    Date 04Jul11               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. CBF002  *CREATE    Date 04Jul11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  CBF002 - BF Infrastructure: Backup and Recovery              *
       *                                                               *
       *****************************************************************
@@ -25,7 +27,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSC000203DFCF   E             WORKSTN INFDS(TimeOut)
      F                                     SFILE(SC000203S1:DDSFRN)
      F                                     MAXDEV(*FILE)
@@ -38,7 +40,7 @@
      F                                     RENAME(SCBKLBF:SCBKLBUPD)
       ** Schemas/Libraries File Update index
       *
- 
+
       ** Table of field numbers and names
      FZAFLDNPD  IT   F   15        DISK
       *
@@ -53,25 +55,25 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the error
       ** arrays, including the named constant giving the size of the
@@ -79,86 +81,86 @@
       ** STD_D_SPEC.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,APICTLARR
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** required by the message handler.
      D/COPY ZACPYSRC,MSGHNDDCL
       **---------------------------------------------------------------
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** EXTERNAL DS FOR BANK DETAILS
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Error Flag
      DWErrorFlag       DS             3
      D WErrRstFlg              1      1
      D WErrToLib               2      2
      D WErrSeqNum              3      3
- 
+
       ** Display Timeout Status
      DTimeout          DS
      D TimeOutStat       *STATUS
- 
+
       ** Schemas/Libraries Array
      D WSchLibArr      S             10A   DIM(200)
- 
+
       ** Library Descriptions Array
      D WLibDesArr      S             20A   DIM(400)
- 
+
       ** Save File Names Array
      D WSavFilArr      S             10A   DIM(200)
- 
+
       ** To-Library Array
      D WToLibArr       S             10A   DIM(200)
- 
+
       ** Sequence Numbers Array
      D WSeqNumArr      S             10A   DIM(200)
- 
+
       ** Restore Library Array
      D WRstLibArr      S              1A   DIM(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D WCount          S              5P 0
      D WICT            S              1A
      D WBOB            S              1A
@@ -188,7 +190,7 @@
      D MessageFile     S             10A
      D MessageData     S            132A
      D MessageType     S              7A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -892,12 +894,12 @@
       ** Functions for the message handler, ZAMSGHNDLE.
      D/COPY SDCPYSRC,MSGHNDDATA
       **---------------------------------------------------------------
- 
+
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================
       ** The following /COPY sets these values.
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

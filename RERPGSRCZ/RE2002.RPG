@@ -10,16 +10,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CRE023  *CREATE    Date 29Jul05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CRE023 - 2 O'clock Flag Upgrade to MidasPlus                 *
@@ -40,6 +42,7 @@
      E                    AMSG    1  12 30
      E                    CHEK        8  1
      E                    APAS        8  1
+     E                    DUMY        8  1                                                    CSD101
       *
       ** Data structure to update last transaction number DTAARA
      IDNATN       DS                              5
@@ -65,6 +68,18 @@
      I                                      366 371 SLNBRX
      I                                      372 3770SLNBR
      I                                      378 378 SACTCD
+      *                                                                                       CSD101
+      ** SD Data area                                                                         CSD101
+     ISDSTAT    E DSSDSTAT                                                                    CSD101
+      *                                                                                       CSD101
+      ** Declare CSD101 constant fields                                                       CSD101
+     I              'DMLIB'               C         WDMLIB                                    CSD101
+     I              '2O''CLOCK_'          C         WINTER                                    CSD101
+     I              'SDINTFVL'            C         WVLIST                                    CSD101
+      *                                                                                       CSD101
+      ** CSD101 Validation list additional parameter                                          CSD101
+     IPDESCR      DS                           1000                                           CSD101
+     I                                        1   1 DUMMY2                                    CSD101
       *                                                                   SAR005
       *****************************************************************
       *                                                               *
@@ -72,6 +87,11 @@
       *                                                               *
       *****************************************************************
      C                     MOVEL'99999999'TRAIL   8
+      *                                                                                       CSD101
+     C                     MOVEAECOD,1    DUMY,1                                              CSD101
+     C           *NAMVAR   DEFN           SDSTAT                                              CSD101
+     C                     IN   SDSTAT                                                        CSD101
+      *                                                                                       CSD101
      C                     EXSR P100
      C                     SETON                     LR
      C                     RETRN
@@ -103,10 +123,27 @@
      C           SMSID     CHAINREOSECL0            N99
      C           *IN99     IFEQ '0'
      C           GRECI     ANDEQ'H'
-     C                     MOVEAMPSWD     CHEK
-     C                     EXSR ENCR
-     C                     MOVEAAPAS      WPSWD   8
-     C           WPSWD     IFNE GMPAS
+     C**********           MOVEAMPSWD     CHEK                                                CSD101
+     C**********           EXSR ENCR                                                          CSD101
+     C**********           MOVEAAPAS      WPSWD   8                                           CSD101
+      *                                                                                       CSD101
+      ** Validate Master password against new validation list                                 CSD101
+      *                                                                                       CSD101
+     C           LIBR      CAT  WDMLIB    PLIB   10 P                                         CSD101
+     C           WINTER    CAT  SMSID     PIDNAM100 P                                         CSD101
+     C                     MOVELWVLIST    PVLIST 10 P                                         CSD101
+      *                                                                                       CSD101
+     C                     CALL 'SD000404'                                                    CSD101
+     C                     PARM *BLANKS   PRTNCD  7                                           CSD101
+     C                     PARM 'F'       PACTN   1                                           CSD101
+     C                     PARM           PVLIST                                              CSD101
+     C                     PARM           PLIB                                                CSD101
+     C                     PARM           PIDNAM                                              CSD101
+     C                     PARM *BLANKS   PPASWD128                                           CSD101
+     C                     PARM *BLANKS   PDESCR                                              CSD101
+      *                                                                                       CSD101
+     C********** WPSWD     IFNE GMPAS                                                         CSD101
+     C           MPSWD     IFNE PPASWD
      C                     MOVE '1'       *IN88
      C                     MOVELAMSG,2    ERRMSG
      C                     ENDIF
@@ -121,6 +158,7 @@
       *                                                               *
       *****************************************************************
      C           P200      BEGSR
+     C                     MOVE *BLANKS   SCTYP                                               CSD101
      C           *INKC     DOWEQ'0'
      C                     EXFMTRE2002S2
      C                     MOVE '0'       *IN88
@@ -130,18 +168,27 @@
      C           ACODE     WHEQ 'I'
      C                     EXSR V210
      C  N88                EXSR P600
-     C  N88                MOVE *BLANKS   ACODE
-     C  N88                MOVE *BLANKS   USID
+     C**N88*****           MOVE *BLANKS   ACODE                                               CSD101
+     C**N88*****           MOVE *BLANKS   USID                                                CSD101
+     C  N88NKL             MOVE *BLANKS   ACODE                                               CSD101
+     C  N88NKL             MOVE *BLANKS   USID                                                CSD101
+     C  N88NKL             MOVE *BLANKS   SCTYP                                               CSD101
      C           ACODE     WHEQ 'D'
      C                     EXSR V220
      C  N88                EXSR P700
-     C  N88                MOVE *BLANKS   ACODE
-     C  N88                MOVE *BLANKS   USID
+     C**N88*****           MOVE *BLANKS   ACODE                                               CSD101
+     C**N88*****           MOVE *BLANKS   USID                                                CSD101
+     C  N88NKL             MOVE *BLANKS   ACODE                                               CSD101
+     C  N88NKL             MOVE *BLANKS   USID                                                CSD101
+     C  N88NKL             MOVE *BLANKS   SCTYP                                               CSD101
      C           ACODE     WHEQ 'M'
      C                     EXSR V205
      C  N88                EXSR P500
-     C                     MOVE *BLANKS   ACODE
-     C                     MOVE *BLANKS   USID
+     C**********           MOVE *BLANKS   ACODE                                               CSD101
+     C**********           MOVE *BLANKS   USID                                                CSD101
+     C  N88NKL             MOVE *BLANKS   ACODE                                               CSD101
+     C  N88NKL             MOVE *BLANKS   USID                                                CSD101
+     C                     MOVE *BLANKS   SCTYP                                               CSD101
      C                     OTHER
      C                     MOVE '1'       *IN88
      C                     MOVE AMSG,3    ERRMSG
@@ -180,6 +227,24 @@
      C                     ENDIF
      C                     ENDIF
      C                     ENDIF
+      *                                                                                       CSD101
+      ** Validate class type entry.                                                           CSD101
+      *                                                                                       CSD101
+     C           *IN88     IFEQ '0'                                                           CSD101
+     C           USID      ANDNE*BLANKS                                                       CSD101
+      ** Default to class type = 'A' when no entry of class type.                             CSD101
+     C           SCTYP     IFEQ *BLANKS                                                       CSD101
+     C                     MOVEL'A'       SCTYP                                               CSD101
+     C                     ENDIF                                                              CSD101
+      ** Otherwise, send invalid class type(when entry is < 'A' or > 'Z')                     CSD101
+     C           SCTYP     IFLT 'A'                                                           CSD101
+     C           SCTYP     ORGT 'Z'                                                           CSD101
+     C                     MOVELAMSG,8    ERRMSG                                              CSD101
+     C                     MOVE '1'       *IN88                                               CSD101
+     C                     ENDIF                                                              CSD101
+      *                                                                                       CSD101
+     C                     ENDIF                                                              CSD101
+      *                                                                                       CSD101
      C                     ENDSR
       *****************************************************************
       *                                                               *
@@ -192,6 +257,8 @@
      C           GRECI     ORNE 'D'
      C                     MOVE '1'       *IN88
      C                     MOVELAMSG,4    ERRMSG
+     C                     ELSE                                                               CSD101
+     C                     MOVELGCTYP     SCTYP                                               CSD101
      C                     ENDIF
      C                     ENDSR
       *****************************************************************
@@ -203,7 +270,7 @@
      C           *INKC     DOWEQ'0'
      C           *INKL     ANDEQ'0'
      C                     MOVE *BLANKS   MPSWD
-     C                     MOVE *BLANKS   NMPSWD
+     C**********           MOVE *BLANKS   NMPSWD                                              CSD101
      C                     EXFMTRE2002S5
      C                     MOVE '0'       *IN88
      C                     MOVE *BLANKS   ERRMSG
@@ -212,8 +279,10 @@
      C           *INKL     WHEQ '1'
      C                     OTHER
      C                     EXSR V500
-     C  N88                EXSR P501
-     C  N88                LEAVE
+     C**N88*****           EXSR P501                                                          CSD101
+     C**N88*****           LEAVE                                                              CSD101
+     C  N88NKL             EXSR P501                                                          CSD101
+     C  N88NKL             LEAVE                                                              CSD101
      C                     ENDSL
      C                     ENDDO
      C                     ENDSR
@@ -226,10 +295,27 @@
      C           USID      CHAINREOSECL0            N99
      C           *IN99     IFEQ '0'
      C           GRECI     ANDEQ'H'
-     C                     MOVEAMPSWD     CHEK
-     C                     EXSR ENCR
-     C                     MOVEAAPAS      WPSWD   8
-     C           WPSWD     IFNE GMPAS
+     C**********           MOVEAMPSWD     CHEK                                                CSD101
+     C**********           EXSR ENCR                                                          CSD101
+     C**********           MOVEAAPAS      WPSWD   8                                           CSD101
+      *                                                                                       CSD101
+      ** Validate Master password against new validation list                                 CSD101
+      *                                                                                       CSD101
+     C           LIBR      CAT  WDMLIB    PLIB   10 P                                         CSD101
+     C           WINTER    CAT  USID      PIDNAM100 P                                         CSD101
+     C                     MOVELWVLIST    PVLIST 10 P                                         CSD101
+      *                                                                                       CSD101
+     C                     CALL 'SD000404'                                                    CSD101
+     C                     PARM *BLANKS   PRTNCD  7                                           CSD101
+     C                     PARM 'F'       PACTN   1                                           CSD101
+     C                     PARM           PVLIST                                              CSD101
+     C                     PARM           PLIB                                                CSD101
+     C                     PARM           PIDNAM                                              CSD101
+     C                     PARM *BLANKS   PPASWD128                                           CSD101
+     C                     PARM *BLANKS   PDESCR                                              CSD101
+      *                                                                                       CSD101
+     C********** WPSWD     IFNE GMPAS                                                         CSD101
+     C           MPSWD     IFNE PPASWD
      C                     MOVE '1'       *IN88
      C                     MOVELAMSG,9    ERRMSG
      C                     ENDIF
@@ -238,9 +324,29 @@
      C                     MOVELAMSG,11   ERRMSG
      C                     ENDIF
      C           *IN88     IFEQ '0'
-     C                     MOVEANMPSWD    CHEK
-     C                     EXSR PASCHK
-     C   88                MOVELAMSG,10   ERRMSG
+     C**********           MOVEANMPSWD    CHEK                                                CSD101
+     C**********           EXSR PASCHK                                                        CSD101
+     C***88*****           MOVELAMSG,10   ERRMSG                                              CSD101
+      *                                                                                       CSD101
+     C           WINTER    CAT  USID      PUNIQ  75                                           CSD101
+     C                     MOVELUSID      PUSER  50                                           CSD101
+     C                     CALL 'SD000403'                                                    CSD101
+     C                     PARM *BLANKS   PRTNCD  7                                           CSD101
+     C                     PARM           PUNIQ                                               CSD101
+     C                     PARM *BLANKS   PIDDSC 50                                           CSD101
+     C                     PARM *BLANKS   PINTER 20                                           CSD101
+     C                     PARM           PUSER                                               CSD101
+     C                     PARM *BLANKS   PUSERD 50                                           CSD101
+     C                     PARM 'A'       PSTAT   1                                           CSD101
+     C                     PARM 'M'       PREC    1                                           CSD101
+     C                     PARM *BLANKS   PRTVAL  7                                           CSD101
+     C                     PARM *BLANKS   PAUSER 50                                           CSD101
+     C                     PARM *BLANKS   PAUNIQ 75                                           CSD101
+      *                                                                                       CSD101
+     C           PRTNCD    IFEQ 'F12'                                                         CSD101
+     C                     MOVE '1'       *INKL                                               CSD101
+     C                     ENDIF                                                              CSD101
+      *                                                                                       CSD101
      C                     ENDIF
      C                     ENDSR
       *****************************************************************
@@ -249,45 +355,64 @@
       *                                                               *
       *****************************************************************
      C           P600      BEGSR
-     C                     MOVE *BLANKS   PSWD
-     C                     MOVE *BLANKS   SCTYP
-     C                     EXFMTRE2002S3
-     C                     MOVE '0'       *IN88
-     C                     MOVE *BLANKS   ERRMSG
+     C**********           MOVE *BLANKS   PSWD                                                CSD101
+     C**********           MOVE *BLANKS   SCTYP                                               CSD101
+     C**********           EXFMTRE2002S3                                                      CSD101
+     C**********           MOVE '0'       *IN88                                               CSD101
+     C**********           MOVE *BLANKS   ERRMSG                                              CSD101
+     C                     MOVE '0'       *INKL                                               CSD101
+      *                                                                                       CSD101
+     C           WINTER    CAT  USID      PUNIQ  75                                           CSD101
+     C                     MOVELUSID      PUSER  50                                           CSD101
+     C                     CALL 'SD000403'                                                    CSD101
+     C                     PARM *BLANKS   PRTNCD  7                                           CSD101
+     C                     PARM           PUNIQ                                               CSD101
+     C                     PARM *BLANKS   PIDDSC 50                                           CSD101
+     C                     PARM *BLANKS   PINTER 20                                           CSD101
+     C                     PARM           PUSER                                               CSD101
+     C                     PARM *BLANKS   PUSERD 50                                           CSD101
+     C                     PARM 'I'       PSTAT   1                                           CSD101
+     C                     PARM 'M'       PREC    1                                           CSD101
+     C                     PARM *BLANKS   PRTVAL  7                                           CSD101
+     C                     PARM *BLANKS   PAUSER 50                                           CSD101
+     C                     PARM *BLANKS   PAUNIQ 75                                           CSD101
+      *                                                                                       CSD101
      C                     SELEC
-     C           *INKC     WHEQ '1'
-     C           *INKL     WHEQ '1'
+     C********** *INKC     WHEQ '1'                                                           CSD101
+     C********** *INKL     WHEQ '1'                                                           CSD101
+     C           PRTNCD    WHEQ 'F12'                                                         CSD101
+     C                     MOVE '1'       *INKL                                               CSD101
      C                     OTHER
-     C                     EXSR V600
-     C  N88                EXSR V601
+     C**********           EXSR V600                                                          CSD101
+     C**N88*****           EXSR V601                                                          CSD101
      C  N88                EXSR P602
      C                     ENDSL
      C                     ENDSR
       *****************************************************************
       *                                                               *
-      *  V600 - Validate screen 3 - Password                          *
+      ***V600*-*Validate*screen*3*-*Password***************************                       CSD101
       *                                                               *
       *****************************************************************
-     C           V600      BEGSR
-     C                     MOVEAPSWD      CHEK
-     C                     EXSR PASCHK
-     C   88                MOVELAMSG,7    ERRMSG
-     C                     ENDSR
+     C********** V600      BEGSR                                                              CSD101
+     C**********           MOVEAPSWD      CHEK                                                CSD101
+     C**********           EXSR PASCHK                                                        CSD101
+     C***88*****           MOVELAMSG,7    ERRMSG                                              CSD101
+     C**********           ENDSR                                                              CSD101
       *****************************************************************
       *                                                               *
-      *  V601 - Validate screen 4 - class type                        *
+      ***V601*-*Validate*screen*4*-*class*type*************************                       CSD101
       *                                                               *
       *****************************************************************
-     C           V601      BEGSR
-     C           SCTYP     IFEQ *BLANKS
-     C                     MOVEL'A'       SCTYP
-     C                     ENDIF
-     C           SCTYP     IFLT 'A'
-     C           SCTYP     ORGT 'Z'
-     C                     MOVELAMSG,8    ERRMSG
-     C                     MOVE '1'       *IN88
-     C                     ENDIF
-     C                     ENDSR
+     C********** V601      BEGSR                                                              CSD101
+     C********** SCTYP     IFEQ *BLANKS                                                       CSD101
+     C**********           MOVEL'A'       SCTYP                                               CSD101
+     C**********           ENDIF                                                              CSD101
+     C********** SCTYP     IFLT 'A'                                                           CSD101
+     C********** SCTYP     ORGT 'Z'                                                           CSD101
+     C**********           MOVELAMSG,8    ERRMSG                                              CSD101
+     C**********           MOVE '1'       *IN88                                               CSD101
+     C**********           ENDIF                                                              CSD101
+     C**********           ENDSR                                                              CSD101
       *****************************************************************
       *                                                               *
       *  P700 - Screen-4 (Delete screen)                              *
@@ -303,6 +428,22 @@
      C                     SELEC
      C           *INKC     WHEQ '1'
      C           *INKJ     WHEQ '1'
+     C                     MOVE *BLANKS   PAUNIQ 75                                           CSD101
+     C                     MOVE *BLANKS   PAUSER 50                                           CSD101
+     C           WINTER    CAT  USID      PAUNIQ                                              CSD101
+     C                     MOVELUSID      PAUSER                                              CSD101
+     C                     CALL 'SD000403'                                                    CSD101
+     C                     PARM *BLANKS   PRTNCD  7                                           CSD101
+     C                     PARM *BLANKS   PUNIQ                                               CSD101
+     C                     PARM *BLANKS   PIDDSC 50                                           CSD101
+     C                     PARM *BLANKS   PINTER 20                                           CSD101
+     C                     PARM *BLANKS   PUSER                                               CSD101
+     C                     PARM *BLANKS   PUSERD 50                                           CSD101
+     C                     PARM 'D'       PSTAT   1                                           CSD101
+     C                     PARM 'M'       PREC    1                                           CSD101
+     C                     PARM *BLANKS   PRTVAL  7                                           CSD101
+     C                     PARM           PAUSER 50                                           CSD101
+     C                     PARM           PAUNIQ 75                                           CSD101
      C                     EXSR P701
      C           *INKL     WHEQ '1'
      C                     OTHER
@@ -344,11 +485,11 @@
       *****************************************************************
      C           P602      BEGSR
      C                     MOVE '1'       *IN87
-     C                     MOVEAPSWD      CHEK
-     C                     EXSR ENCR
+     C**********           MOVEAPSWD      CHEK                                                CSD101
+     C**********           EXSR ENCR                                                          CSD101
      C           USID      CHAINREOSECL0             99
      C           *IN99     IFEQ '1'
-     C                     MOVEAAPAS      GPSWD
+     C**********           MOVEAAPAS      GPSWD                                               CSD101
      C                     MOVEL'D'       GRECI
      C                     MOVELUSID      GUSID
      C                     MOVELSCTYP     GCTYP
@@ -363,7 +504,7 @@
      C                     ENDIF
      C                     ELSE
      C           GRECI     IFEQ '*'
-     C                     MOVEAAPAS      GPSWD
+     C**********           MOVEAAPAS      GPSWD                                               CSD101
      C                     MOVEL'D'       GRECI
      C                     MOVELUSID      GUSID
      C                     MOVELSCTYP     GCTYP
@@ -388,18 +529,18 @@
       *                                                               *
       *****************************************************************
      C           P501      BEGSR
-     C                     MOVE '1'       *IN87
-     C                     MOVEANMPSWD    CHEK
-     C                     EXSR ENCR
-     C           USID      CHAINREOSECL0             99
-     C           *IN99     IFEQ '0'
-     C           GRECI     ANDEQ'H'
-     C                     MOVEAAPAS      GMPAS
-     C                     UPDATREOSECA0               87
-     C                     ENDIF
+     C**********           MOVE '1'       *IN87
+     C**********           MOVEANMPSWD    CHEK                                                CSD101
+     C**********           EXSR ENCR                                                          CSD101
+     C********** USID      CHAINREOSECL0             99                                       CSD101
+     C********** *IN99     IFEQ '0'                                                           CSD101
+     C**********  RECI     ANDEQ'H'                                                           CSD101
+     C**********           MOVEAAPAS      GMPAS                                               CSD101
+     C**********           UPDATREOSECA0               87                                     CSD101
+     C**********           ENDIF                                                              CSD101
      C  N87                EXSR CMTUPD
      C  N87      CMTTXT    COMIT
-     C   87                ROLBK
+     C***87*****           ROLBK                                                              CSD101
      C                     ENDSR
       *****************************************************************
       *                                                               *
@@ -453,33 +594,33 @@
      C                     ENDSR
       *****************************************************************
       *                                                               *
-      *  ENCR - PASSWORD ENCRYPTION                                   *
+      ***ENCR*-*PASSWORD*ENCRYPTION************************************                       CSD101
       *                                                               *
       *****************************************************************
-     C           ENCR      BEGSR
+     C********** ENCR      BEGSR                                                              CSD101
       *
-     C                     SETOF                     30
+     C**********           SETOF                     30                                       CSD101
       *
-     C                     Z-ADD1         P       20
-     C           CHEK,8    LOKUPNCHR,P                   30
-     C                     Z-ADD1         N       20
+     C**********           Z-ADD1         P       20                                          CSD101
+     C********** CHEK,8    LOKUPNCHR,P                   30                                   CSD101
+     C**********           Z-ADD1         N       20                                          CSD101
       *
-     C           ENCD      TAG
+     C********** ENCD      TAG                                                                CSD101
       *
-     C                     Z-ADD1         S       20
-     C           CHEK,N    LOKUPNCHR,S                   30
-     C           P         ADD  N         P
-     C           P         ADD  S         P
-     C                     MOVEAECOD,P    APAS,N
-     C                     Z-ADDS         P
-     C           N         ADD  1         N
-     C           N         COMP 8                      3030
+     C**********           Z-ADD1         S       20                                          CSD101
+     C********** CHEK,N    LOKUPNCHR,S                   30                                   CSD101
+     C********** P         ADD  N         P                                                   CSD101
+     C********** P         ADD  S         P                                                   CSD101
+     C**********           MOVEAECOD,P    APAS,N                                              CSD101
+     C**********           Z-ADDS         P                                                   CSD101
+     C********** N         ADD  1         N                                                   CSD101
+     C********** N         COMP 8                      3030                                   CSD101
       *
-     C           *IN30     IFEQ '1'
-     C                     GOTO ENCD
-     C                     ENDIF
+     C********** *IN30     IFEQ '1'                                                           CSD101
+     C**********           GOTO ENCD                                                          CSD101
+     C**********           ENDIF                                                              CSD101
       *
-     C                     ENDSR
+     C**********           ENDSR                                                              CSD101
       *
       ** Obtain last transaction number and set up standard output
       ** information

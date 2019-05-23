@@ -12,15 +12,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CRN001  *CREATE    Date 05Oct05               *
+      *                 CRN001  *CREATE    Date 05Oct05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CRN001 - FRS Regulatory Reporting                            *
       *                                                               *
@@ -58,6 +60,14 @@
      d xRtnCod         s              7
      d pRtnCd          s              7
      d tempLen         s             10  0
+     D Password        S            128                                                       CSD101
+     D PReturnCode     S              7A                                                      CSD101
+     D PAction         S              1A                                                      CSD101
+     D PValidList      S             10A   INZ('SDINTFVL')                                    CSD101
+     D PLibrary        S             10A                                                      CSD101
+     D PIDName         S            100A                                                      CSD101
+     D PPass1          S            128A                                                      CSD101
+     D PDescr          S           1000A                                                      CSD101
  
       * Parameters for AOSVALR0 and GPAOSVALR0
      d pValDs          ds
@@ -101,6 +111,9 @@
      d  pVal19                      200
      d  pValK20                      20
      d  pVal20                      200
+                                                                                              CSD101
+     D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSD101
+      ** SD data area                                                                         CSD101
  
       /copy rncpysrc,ifsio_h
  
@@ -141,22 +154,44 @@
       *****************************************************************
  
      c     main          begsr
- 
+                                                                                              CSD101
+      ** Check if ID exists                                                                   CSD101
+                                                                                              CSD101
+     C                   IF        pVal5 <> *BLANKS                                           CSD101
+     C                   EVAL      PLibrary = LIBR + 'DMLIB'                                  CSD101
+     C                   EVAL      PIDName = 'FRSREGULATORY_' + pVal5                         CSD101
+                                                                                              CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       PReturnCode                                  CSD101
+     C                   PARM      'F'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM      *Blanks       PPass1                                       CSD101
+     C                   PARM      *Blanks       PDescr                                       CSD101
+                                                                                              CSD101
+     C                   IF        PReturnCode = *Blanks                                      CSD101
+     C                   EVAL      Password = PPass1                                          CSD101
+     C                   ENDIF                                                                CSD101
+     C                   ENDIF                                                                CSD101
+                                                                                              CSD101
       * write each FTP command to file
       * Check UserLogin and Password
      c                   if            vRtnCod = *blanks
      c                             and xRtnCod = *blanks
      c                             and pVal5  <> *blanks
-     c                             and pVal6  <> *blanks
+     c**********                   and pVal6  <> *blanks                                      CSD101
+     C                             AND Password <> *Blanks                                    CSD101
      c                   eval      fccmd       = %trim(pVal5)
      c                                         + ' '
-     c                                         + %trim(pVal6)
+     c**********                               + %trim(pVal6)                                 CSD101
+     C                                         + %TRIM(Password)                              CSD101
      c                   write     rnftpcpdf
      c                   else
      c                   eval      wDbFile     = 'rnftpcpd'
      c                   eval      wDBase      = 001
      c                   eval      wDbkey      = pValk5
-     c                                         + pValk6
+     c**********                               + pValk6                                       CSD101
      c                   exsr      *pssr
      c                   endif
  
@@ -334,7 +369,8 @@
      c                   eval      pValK3      = 'CompressFRSData     '
      c                   eval      pValK4      = 'FTPConnection       '
      c                   eval      pValK5      = 'FTPUserLogin        '
-     c                   eval      pValK6      = 'FTPUserPassword     '
+     c**********         eval      pValK6      = 'FTPUserPassword     '                       CSD101
+     c                   eval      pValK6      = *BLANKS                                      CSD101
      c                   eval      pValK7      = 'FTPOption1          '
      c                   eval      pValK8      = 'FTPOption2          '
      c                   eval      pValK9      = 'FTPOption3          '
@@ -396,6 +432,8 @@
      c                   parm                    pVal19
      c                   parm                    pValK20
      c                   parm                    pVal20
+                                                                                              CSD101
+     C                   IN        SDSTAT                                                     CSD101
  
      c                   endsr
  

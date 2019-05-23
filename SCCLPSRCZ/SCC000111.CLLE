@@ -1,21 +1,25 @@
 /*********************************************************************/
 /*STD    CLPBASEBND                                                  */
-/*EXI    TEXT('Midas SC Send DBIC to PEA System via FTP')            */
+/***********EXI****TEXT('Midas*SC*Send*DBIC*to*PEA*System*via*FTP')  */                   /*CSD101*/
+/*EXI    TEXT('Midas SC Send DBICDM to PEA System via FTP')          */                   /*CSD101*/
 /*********************************************************************/
 /*                                                                   */
 /*       Midas - System Control Module                               */
 /*                                                                   */
-/*       SCC000111 - Send DBIC to PEA System via FTP                 */
+/********SCC000111*-*Send DBIC*to*PEA*System*via*FTP******************/                   /*CSD101*/
+/*       SCC000111 - Send DBICDM to PEA System via FTP               */                   /*CSD101*/
 /*                                                                   */
 /*       (c) Finastra International Limited 2012                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD033895           Date 16Apr15              */
+/*       Last Amend No. CSD101             Date 07Dec18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD033895           Date 16Apr15              */
 /*                      AR990834           Date 22Jun12              */
 /*                      CSC054  *CREATE    Date 23Feb12              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CSD101 - Password Encryption                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD033895 - Correct parameters for UT000033.                 */
 /*       AR990834 - Incorrect FTP logs printed. Password should      */
@@ -23,12 +27,12 @@
 /*       CSC054 - Period End Adjustments                             */
 /*                                                                   */
 /*********************************************************************/
- 
+
              PGM
- 
+
              DCL        VAR(&GLOBAL) TYPE(*CHAR) LEN(2)
              DCL        VAR(&SYSTEM) TYPE(*CHAR) LEN(15)
- 
+
              DCL        VAR(&PASSWORD) TYPE(*CHAR) LEN(10)
              DCL        VAR(&OBJECT) TYPE(*CHAR) LEN(10)
              DCL        VAR(&FROMLIB) TYPE(*CHAR) LEN(10)
@@ -45,7 +49,7 @@
              DCL        VAR(&PRFL) TYPE(*CHAR) LEN(2)
              DCL        VAR(&PRFP) TYPE(*CHAR) LEN(2)
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(10)
- 
+
              DCL        VAR(&RETCODE) TYPE(*CHAR) LEN(7)
              DCL        VAR(&ACTION) TYPE(*CHAR) LEN(1)
              DCL        VAR(&VLIST) TYPE(*CHAR) LEN(10)
@@ -55,27 +59,29 @@
 /**********  DCL        VAR(&PASS2) TYPE(*CHAR) LEN(256)                             */ /*MD033895*/
 /**********  DCL        VAR(&DESCR) TYPE(*CHAR) LEN(50)                              */ /*MD033895*/
              DCL        VAR(&USERID) TYPE(*CHAR) LEN(100)                               /*MD033895*/
-             DCL        VAR(&PASS1) TYPE(*CHAR) LEN(600)                                /*MD033895*/
+/**********  DCL        VAR(&PASS1) TYPE(*CHAR) LEN(600)                         /*MD033895 CSD101*/
+             DCL        VAR(&PASS1) TYPE(*CHAR) LEN(128)                                  /*CSD101*/
              DCL        VAR(&PASS2) TYPE(*CHAR) LEN(600)                                /*MD033895*/
              DCL        VAR(&DESCR) TYPE(*CHAR) LEN(1000)                               /*MD033895*/
- 
+
 /*/COPY SDCPYSRC,SDSVALDCL  */
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           Ltd. 2012')
- 
+
 /** Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
-             SNDPGMMSG  MSG('SCC000111 - SC Send DBIC to PEA System +
-                          via FTP') TOMSGQ(MRUNQ)
- 
+
+/**********  SNDPGMMSG  MSG('SCC000111 - SC Send DBIC to PEA System +                  */ /*CSD101*/
+             SNDPGMMSG  MSG('SCC000111 - SC Send DBICDM to PEA System +
+                          via FTP') TOMSGQ(MRUNQ)                                         /*CSD101*/
+
              CHGJOB     SWS(XXXXXX00)
- 
+
 /** Get System values */
- 
+
              CALL       PGM(AOSVALR0) PARM(&RSVALRTNC +
                           'BrgMidasGlobalPrefix' &SVAL1 +
                           'PEAIPAddress' &SVAL2 +
@@ -87,7 +93,7 @@
                           'PEAHandShakingOQ' &SVAL8 +
                           'PEALiveSystemPrefix' &SVAL9 +
                           'PEASystemPrefix' &SVAL10)
- 
+
              CHGVAR     VAR(&GLOBAL) VALUE(%SST(&SVAL1 1 2))
              CHGVAR     VAR(&SYSTEM) VALUE(%SST(&SVAL2 1 15))
              CHGVAR     VAR(&FROMLIB) VALUE(%SST(&SVAL3 1 10))
@@ -98,29 +104,35 @@
              CHGVAR     VAR(&MQOUT) VALUE(&SVAL8)
              CHGVAR     VAR(&PRFL) VALUE(%SST(&SVAL9 1 2))
              CHGVAR     VAR(&PRFP) VALUE(%SST(&SVAL10 1 2))
- 
+
 /** Delete work files */
- 
+
              DLTF       FILE(QTEMP/FTPCOMMAND)
              MONMSG     MSGID(CPF0000)
              DLTF       FILE(QTEMP/FTPLOG)
              MONMSG     MSGID(CPF0000)
- 
+
 /** Recreate FTP command save file */
- 
+
              CRTSRCPF   FILE(QTEMP/FTPCOMMAND) RCDLEN(212)
              ADDPFM     FILE(QTEMP/FTPCOMMAND) MBR(INPUT)
              ADDPFM     FILE(QTEMP/FTPCOMMAND) MBR(OUTPUT)
- 
+
+             CHGVAR     VAR(&RETCODE) VALUE(' ')                                          /*CSD101*/
              CHGVAR     VAR(&ACTION) VALUE('F')
-             CHGVAR     VAR(&VLIST) VALUE('GPLDAPVL')
-             CHGVAR     VAR(&VLIB) VALUE(&GLOBAL *CAT 'GMLIB')
-             CHGVAR     VAR(&USERID) VALUE(&USER)
- 
+/**********  CHGVAR     VAR(&VLIST) VALUE('GPLDAPVL')                                  */ /*CSD101*/
+             CHGVAR     VAR(&VLIST) VALUE('SDINTFVL')                                     /*CSD101*/
+/**********  CHGVAR     VAR(&VLIB) VALUE(&GLOBAL *CAT 'GMLIB')                            /*CSD101*/
+             CHGVAR     VAR(&VLIB) VALUE(&PRFL *CAT 'DMLIB')                              /*CSD101*/
+/**********  CHGVAR     VAR(&USERID) VALUE(&USER)                                         /*CSD101*/
+             CHGVAR     VAR(&USERID) VALUE('PEA_' *CAT &USER)                             /*CSD101*/
+
 /** Get User ID and Password */
- 
-             CALL       PGM(UT000033) PARM(&RETCODE &ACTION &VLIST +
-                          &VLIB &USERID &PASS1 &PASS2 &DESCR)
+
+/**********  CALL       PGM(UT000033) PARM(&RETCODE &ACTION &VLIST +
+                          &VLIB &USERID &PASS1 &PASS2 &DESCR)                          */ /*CSD101*/
+             CALL       PGM(SD000404) PARM(&RETCODE &ACTION &VLIST +
+                          &VLIB &USERID &PASS1 &DESCR)                                    /*CSD101*/
              IF         COND(&RETCODE *NE ' ') THEN(DO)
              CHGVAR     VAR(&MSG) VALUE('Error in validation list +
                           functions.')
@@ -128,35 +140,40 @@
              MONMSG     MSGID(CPF0000)
              GOTO       CMDLBL(ENDP)
              ENDDO
- 
-/** Send DBIC save file to PEA system */
- 
-             CHKOBJ     OBJ(&FROMLIB/DBIC) OBJTYPE(*FILE)
+
+/***Send*DBIC*save*file*to*PEA*system**/                                                  /*CSD101*/
+/** Send DBICDM save file to PEA system */                                                /*CSD101*/
+
+/**********  CHKOBJ     OBJ(&FROMLIB/DBIC) OBJTYPE(*FILE)                              */ /*CSD101*/
+             CHKOBJ     OBJ(&FROMLIB/DBICDM) OBJTYPE(*FILE)                               /*CSD101*/
              MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(ABNOR))
- 
+
              CHGVAR     VAR(&PASSWORD) VALUE(&PASS1)
-             CHGVAR     VAR(&OBJECT) VALUE('DBIC')
+/**********  CHGVAR     VAR(&OBJECT) VALUE('DBIC')                                     */ /*CSD101*/
+             CHGVAR     VAR(&OBJECT) VALUE('DBICDM')                                      /*CSD101*/
              OVRDBF     FILE(INPUT) TOFILE(QTEMP/FTPCOMMAND) MBR(INPUT)
              OVRDBF     FILE(OUTPUT) TOFILE(QTEMP/FTPCOMMAND) +
                           MBR(OUTPUT)
- 
-             CALL       PGM(SC000111) PARM(&USERID &PASSWORD +
-                          &OBJECT &FROMLIB &TOLIB)
- 
+
+/**********  CALL       PGM(SC000111) PARM(&USERID &PASSWORD +
+                          &OBJECT &FROMLIB &TOLIB)                                     */ /*CSD101*/
+             CALL       PGM(SC000111) PARM(&USER &PASSWORD +
+                          &OBJECT &FROMLIB &TOLIB)                                        /*CSD101*/
+
 /** Open remote connection */
- 
+
              FTP        RMTSYS(&SYSTEM)
- 
+
 /** Check if errors were encountered */
- 
+
              CALL       PGM(UTC000011) PARM(&Error)
              IF         COND(&ERROR = '1') THEN(GOTO CMDLBL(ABNOR))
- 
+
              CHGVAR     VAR(&MQMSG) VALUE('DBIC ready')
              CHGVAR     VAR(&SYS) VALUE(&PRFP)
              CHGVAR     VAR(&MQUEUE) VALUE(&MQOUT)
              GOTO       CMDLBL(ENDP)
- 
+
 ABNOR:
              CHGVAR     VAR(&MQMSG) VALUE('FTP error')
              CHGVAR     VAR(&SYS) VALUE(&PRFL)
@@ -166,17 +183,17 @@ ABNOR:
                           SCC000111 ended abnormally - see job log') +
                           TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 ENDP:
- 
+
 /** Send MQ message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000)
              CALL       PGM(ZAMSGTOMQ) PARM(&RTCD &SYS &MQMGR +
                           &MQUEUE &MQMSG)
- 
+
 /** Create logfile, and get rid of command file (contains password) */
- 
+
 /**********  CPYF       FROMFILE(QTEMP/FTPCOMMAND) TOFILE(*PRINT) +                  */ /*AR990834*/
 /**********               MBROPT(*REPLACE) CRTFILE(*YES)                             */ /*AR990834*/
              CPYF       FROMFILE(QTEMP/FTPCOMMAND) TOFILE(*PRINT) +
@@ -184,5 +201,5 @@ ENDP:
              MONMSG     MSGID(CPF0000 MCH0000)
              DLTF       FILE(QTEMP/FTPCOMMAND)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              ENDPGM

@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD052876           Date 27Feb19               *
-      *  Prev Amend No. MD052154           Date 28Jan19               *       
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD052876           Date 27Feb19               *
+      *                 MD052154           Date 28Jan19               *
       *                 MD051725           Date 23Nov18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044506           Date 28Mar17               *
@@ -100,11 +101,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD052876 - Confirmed Holiday indicator must be 'Y' error     *
       *             encountered in CIRS when using Holidays that      *
       *             are set to Working days                           *
       *  MD052154 - IRS - Confirmed Holiday 'Y' flag for principal    *
-      *             changes processing.                               *      
+      *             changes processing.                               *
       *  MD051725 - DL SOAP: Failed component DLC0602                 *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044506 - MT300 98D trade execution date can not be before  *

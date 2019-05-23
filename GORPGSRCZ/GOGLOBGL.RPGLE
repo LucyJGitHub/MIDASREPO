@@ -11,9 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER073A            Date 05Sep17               *
-      *                 CER073             Date 10Jul17               *      
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER073A            Date 05Sep17               *
+      *                 CER073             Date 10Jul17               *
       *                 MD029739           Date 15Aug14               *
       *                 MD033486           Date 27Feb15               *
       *                 MD031974           Date 16Jan15               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CER073A - CER073 Change Control 1 (Recompile)                *
       *  CER073 - AnaCredit Reporting                                 *      
@@ -170,7 +172,7 @@
      C     PFLNAME       CASEQ     'GLJENXPD'    GLOB_GLJENXPD                                246418
      C     PFLNAME       CASEQ     'OLPOSOA'     GLOB_OLPOSOA
      C     PFLNAME       CASEQ     'PRONOPN'     GLOB_PRONOPN
-     C     PFLNAME       CASEQ     'REAPWDPD'    GLOB_REAPWDPD
+     C*****PFLNAME       CASEQ     'REAPWDPD'    GLOB_REAPWDPD                                CSD101
      C     PFLNAME       CASEQ     'RECOMD'      GLOB_RECOMD
      C     PFLNAME       CASEQ     'REIACD'      GLOB_REIACD
      C     PFLNAME       CASEQ     'RSACMTPD'    GLOB_RSACMTPD
@@ -296,11 +298,11 @@
       *****************************************************************
       /SPACE 5
       *****************************************************************
-      * Global Updates - Retail Passwords
+      **Global*Updates*-*Retail*Passwords******************************                       CSD101
       *****************************************************************
-     C     GLOB_REAPWDPD BEGSR
-      /COPY GPCPYSRCG,GPREAPWDPD
-     C                   ENDSR
+     C*****GLOB_REAPWDPD BEGSR                                                                CSD101
+      ***/COPY*GPCPYSRCG,GPREAPWDPD                                                           CSD101
+     C**********         ENDSR                                                                CSD101
       *****************************************************************                       CAP204
       /SPACE 5                                                                                CAP204
       *****************************************************************                       CAP204

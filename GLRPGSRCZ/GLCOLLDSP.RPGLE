@@ -15,18 +15,20 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CGL018             Date 26Sep02               *
+      *                 CGL018             Date 26Sep02               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.02 -----------------------------------------------*
       *                 CGL011  *CREATE    Date 20Sep99               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL018 - Risk Weighted Assets                                *
       *  CGL011 - Collateral Processing for Midas (Phase 1)           *

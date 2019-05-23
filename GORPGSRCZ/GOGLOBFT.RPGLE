@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CAP212             Date 15Sep14               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CAP212             Date 15Sep14               *
       *                 CGP017             Date 06Aug12               *
       *                 CER049             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP212 - FT Nostro Transfer API                              *
       *  CGP017 - Global Layer - GOC0100 Task Split (Recompile)       *

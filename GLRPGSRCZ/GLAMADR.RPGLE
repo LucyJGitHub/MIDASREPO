@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD044880           Date 15Jan18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD044880           Date 15Jan18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD044546           Date 20Mar17               *
       *                 222427             Date 05Dec16               *
       *                 MD039546           Date 26Jan17               *
@@ -67,6 +68,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044546 - Enable the ABC flag when CAP205 is on.            *
@@ -202,7 +204,8 @@
      D ExRIFilex             146    218                                                       TDA084
      D ExCOFilFmt    E DS                  EXTNAME(RECOMD)
      D                                     PREFIX(C_)
-     D ExPWFilFmt    E DS                  EXTNAME(REAPWDPD)
+     D***ExPWFilFmt    E DS                  EXTNAME(REAPWDPD)                                CSD101
+     D ExPWFilFmt    E DS                  EXTNAME(GLVAMPWPD)                                 CSD101
      D                                     PREFIX(D_)
      D ExPPFilFmt    E DS                  EXTNAME(REPENAPD)                                  CRE015
      D                                     PREFIX(P_)                                         CRE015
@@ -271,7 +274,7 @@
      D ##OX1           S              1    DIM(50) CTDATA PERRCD(50)
      D ##OX2           S              1    DIM(50) CTDATA PERRCD(50)
      D ##OX3           S              1    DIM(50) CTDATA PERRCD(50)
-     D ##OX4           S              1    DIM(50) CTDATA PERRCD(50)
+     D***##OX4           S              1    DIM(50) CTDATA PERRCD(50)                        CSD101
  
       ** Input parameters on call to AOPLCSR1
      D I@PARM          DS           256
@@ -949,10 +952,10 @@
      C                   CALL      'QCMDEXC'
      C                   PARM                    ##OX3
      C                   PARM                    MESLEN
-      * Overrride REAPWDL0
-     C                   CALL      'QCMDEXC'
-     C                   PARM                    ##OX4
-     C                   PARM                    MESLEN
+      **Overrride*REAPWDL0*********************************************                       CSD101
+     C**********         CALL      'QCMDEXC'                                                  CSD101
+     C**********         PARM                    ##OX4                                        CSD101
+     C**********         PARM                    MESLEN                                       CSD101
      C/COPY WNCPYSRC,GLH00642
       *                                                                                       CER001
       * Access SAR details file to determine if ULX606 switchable                             CER001
@@ -1064,6 +1067,7 @@
      C                   PARM                    ExRIFilFmt
      C                   PARM                    ExCOFilFmt
      C                   PARM                    ExPWFilFmt
+     C                   PARM                    DDPSWD                                       CSD101
      C                   PARM                    ExPPFilFmt                                   CRE015
      C/COPY OFCPYSRCZ,CRE101_014                                                              CRE101
       * OK - Action code
@@ -1595,6 +1599,7 @@
       **********************************************************************                  CER001
      C/COPY WNCPYSRC,GLH00643
       *****************************************************************
+      *** Physically deleted array ##OX4 OVRDBF FILE(REAPWDL1) TOFILE(REAPWDL0) SHARE(*NO)    CSD101
 **  CPY@
 (c) Finastra International Limited 2003
 ** ##OX1
@@ -1603,5 +1608,3 @@ OVRDBF FILE(ACCNTL1) TOFILE(ACCNTL0) SHARE(*NO)
 OVRDBF FILE(REIACXX) TOFILE(REIAC) SHARE(*NO)
 ** ##OX3
 OVRDBF FILE(RECOMXX) TOFILE(RECOM) SHARE(*NO)
-** ##OX4
-OVRDBF FILE(REAPWDL1) TOFILE(REAPWDL0) SHARE(*NO)

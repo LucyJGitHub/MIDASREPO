@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD032890           Date 18Feb15               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD032890           Date 18Feb15               *
       *                 CRE101             Date 27Aug14               *
       *                 CGL165             Date 23Feb15               *
       *                 CSF011A            Date 28Nov11               *
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption (Recompile)                     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD032890 - Cannot amend Retail account with expired facility *
       *  CRE101 - Interim Interest Statement on a Frequency           *

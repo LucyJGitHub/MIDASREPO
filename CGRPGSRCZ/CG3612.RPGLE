@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CCG016             Date 13Sep06               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CCG016             Date 13Sep06               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -27,6 +28,7 @@
       *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CCG016 - Correspondence Manager for Retail Teller System     *
       *  CSD053 - Correspondence Manager Multilanguage Upgrade.       *
@@ -130,7 +132,8 @@
      D Action          S             10
      D Option          S             50    DIM(15)
      D User            S             20
-     D Password        S             20
+     D***Password        S             20                                                     CSD101
+     D Password        S            128                                                       CSD101
      D Host            S             30
  
       * Parameters for AOCORMR0
@@ -141,6 +144,14 @@
      D WWINPT          S              8A                                                      CCG016
      D WWQUAL          S             26A                                                      CCG016
      D WWINTR          S             16A                                                      CCG016
+                                                                                              CSD101
+     D PReturnCode     S              7A                                                      CSD101
+     D PAction         S              1A                                                      CSD101
+     D PValidList      S             10A   INZ('SDINTFVL')                                    CSD101
+     D PLibrary        S             10A                                                      CSD101
+     D PIDName         S            100A                                                      CSD101
+     D PPass1          S            128A                                                      CSD101
+     D PDescr          S           1000A                                                      CSD101
  
       * Procedures interfaces
      D FullPathName    PR           100
@@ -180,7 +191,29 @@
       * Username
      C                   EVAL      User = CMFUSR
       * Password
-     C                   EVAL      Password = CMFPWD
+     C**********         EVAL      Password = CMFPWD                                          CSD101
+     C                   EVAL      Password = *Blanks                                         CSD101
+                                                                                              CSD101
+      ** Check if ID exists                                                                   CSD101
+                                                                                              CSD101
+     C                   IF        User <> *BLANKS                                            CSD101
+     C                   EVAL      PLibrary = LIBR + 'DMLIB'                                  CSD101
+     C                   EVAL      PIDName = 'CORRMANAGER_' + User                            CSD101
+                                                                                              CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       PReturnCode                                  CSD101
+     C                   PARM      'F'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM      *Blanks       PPass1                                       CSD101
+     C                   PARM      *Blanks       PDescr                                       CSD101
+                                                                                              CSD101
+     C                   IF        PReturnCode = *Blanks                                      CSD101
+     C                   EVAL      Password = PPass1                                          CSD101
+     C                   ENDIF                                                                CSD101
+     C                   ENDIF                                                                CSD101
+     C**********         EVAL      Password = CMFPWD                                          CSD101
       * Host (IP Address)
      C                   EVAL      Host = CMPSIP
  

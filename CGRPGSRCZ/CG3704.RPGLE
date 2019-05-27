@@ -16,18 +16,20 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. CSD053             Date 07Jul06               *
+      *                 CSD053             Date 07Jul06               *
       *                 CCG015  *CREATE    Date 21Feb02               *
       *                 xxxxxx             Date ddmmmyy               *
       *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD053 - Correspondence Manager Multilanguage Upgrade.       *
       *         - Recompile due to SDCORMPD.                          *
@@ -62,6 +64,8 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
      D LDA           E DS           256    EXTNAME(LDA)
+      ** SD data area                                                                         CSD101
+     D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSD101
       *
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
@@ -169,13 +173,23 @@
  
       * Work variables
       * --------------
-     D FTPUser         S             51
+     D***FTPUser         S             51                                                     CSD101
+     D FTPUser         S            256                                                       CSD101
      D SourceDir       S            100
      D DestDir         S            100
      D FTPAction       S            100
      D User            S             20
      D Password        S             20
      D UnixFlag        S              3  0 INZ(0)
+                                                                                              CSD101
+     D PReturnCode     S              7A                                                      CSD101
+     D PAction         S              1A                                                      CSD101
+     D PValidList      S             10A   INZ('SDINTFVL')                                    CSD101
+     D PLibrary        S             10A                                                      CSD101
+     D PIDName         S            100A                                                      CSD101
+     D PPass1          S            128A                                                      CSD101
+     D PDescr          S           1000A                                                      CSD101
+     D WPass1          S            128A                                                      CSD101
  
       * Procedures interfaces
       * ---------------------
@@ -363,8 +377,28 @@
       * ¦ Calls: None                                                     ¦
       * +-----------------------------------------------------------------+
      C     SubrFTPUser   BEGSR
-     C                   EVAL      FTPUser = %TRIM(CMFUSR) + ' ' +
-     C                                       %TRIM(CMFPWD)
+     C**********         EVAL      FTPUser = %TRIM(CMFUSR) + ' ' +                            CSD101
+     C**********                             %TRIM(CMFPWD)                                    CSD101
+     C                   IF        CMFUSR <> *BLANKS                                          CSD101
+     C                   EVAL      PLibrary = LIBR + 'DMLIB'                                  CSD101
+     C                   EVAL      PIDName = 'CORRMANAGER_' + CMFUSR                          CSD101
+                                                                                              CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       PReturnCode                                  CSD101
+     C                   PARM      'F'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM      *Blanks       PPass1                                       CSD101
+     C                   PARM      *Blanks       PDescr                                       CSD101
+                                                                                              CSD101
+     C                   IF        PReturnCode = *Blanks                                      CSD101
+     C                   EVAL      WPass1 = PPass1                                            CSD101
+     C                   ENDIF                                                                CSD101
+     C                   ENDIF                                                                CSD101
+                                                                                              CSD101
+     C                   EVAL      FTPUser = %TRIM(CMFUSR) + ' ' +                            CSD101
+     C                                       %TRIM(WPass1)                                    CSD101
      C                   ENDSR
       * +-----------------------------------------------------------------+
       /EJECT
@@ -435,6 +469,8 @@
      C                   PARM                    FrqParm
      C                   PARM                    RtnParm
  
+     C                   IN        SDSTAT                                                     CSD101
+                                                                                              CSD101
      C                   ENDSR
  
       *****************************************************************

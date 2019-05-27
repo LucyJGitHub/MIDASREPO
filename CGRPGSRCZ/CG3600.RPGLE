@@ -16,17 +16,21 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD053110           Date 29Mar19               *
+      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. CCG015  *CREATE    Date 09Aug01               *
+      *                 CCG015  *CREATE    Date 09Aug01               *
       *                                    Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053110 - Incorrect error message shown for invalid user    *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CCG015 - Correspondence Manager Phase 1                      *
       *                                                               *
@@ -46,21 +50,24 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
+      ** SD data area                                                                         CSD101
+     D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSD101
+
      D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
@@ -72,32 +79,32 @@
       **                                    181 1830DBASE
       **                                    184 193 DBMOD
       **                                    194 203 DBPROC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D BlankChar       C                   ' '
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D PMsgIdArr       S              7    DIM(25)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D PUser           S             20
      D PPassword       S             20
      D PRtnCode        S              7
@@ -105,30 +112,37 @@
      D WLen            S              2S 0
      D WPosition       S              2S 0
      D Idx             S              2S 0
- 
+     D PReturnCode     S              7A                                                      CSD101
+     D PAction         S              1A                                                      CSD101
+     D PValidList      S             10A   INZ('SDINTFVL')                                    CSD101
+     D PLibrary        S             10A                                                      CSD101
+     D PIDName         S            100A                                                      CSD101
+     D PPass1          S            128A                                                      CSD101
+     D PDescr          S           1000A                                                      CSD101
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically:             ¦
       ** ¦ *INZSR is executed at program activation                   ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
      C                   EXSR      SRINIT
- 
+
       ** FTP user name must not be blanks
- 
+
      C                   IF        PUser = *BLANKS
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      PMsgIdArr(Idx) = 'CGD2575'
      C                   EVAL      PRtnCode = '*ERROR '
      C                   ELSE
- 
+
       ** FTP user name must not have interleaving blanks
- 
+
      C     BlankChar     CHECKR    PUser         WLen
      C     BlankChar     SCAN      PUser         WPosition
      C                   IF        WPosition <> 0 AND WPosition < WLen
@@ -136,11 +150,34 @@
      C                   EVAL      PMsgIdArr(Idx) = 'CGD2576'
      C                   EVAL      PRtnCode = '*ERROR '
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
+      ** Check if ID exists                                                                   CSD101
+                                                                                              CSD101
+     C                   IF        PUser <> *BLANKS                                           CSD101
+     C                   EVAL      PLibrary = LIBR + 'DMLIB'                                  CSD101
+     C                   EVAL      PIDName = 'CORRMANAGER_' + PUser                           CSD101
+                                                                                              CSD101
+     C                   CALL      'SD000404'                                                 CSD101
+     C                   PARM      *Blanks       PReturnCode                                  CSD101
+     C                   PARM      'F'           PAction                                      CSD101
+     C                   PARM                    PValidList                                   CSD101
+     C                   PARM                    PLibrary                                     CSD101
+     C                   PARM                    PIDName                                      CSD101
+     C                   PARM      *Blanks       PPass1                                       CSD101
+     C                   PARM      *Blanks       PDescr                                       CSD101
+                                                                                              CSD101
+     C                   IF        PReturnCode <> *Blanks                                     CSD101
+     C                   EVAL      Idx = Idx + 1                                              CSD101
+     C**********         EVAL      PMsgIdArr(Idx) = 'CGD2627'                        CSD101 MD053110
+     C                   EVAL      PMsgIdArr(Idx) = 'CGD2629'                               MD053110
+     C                   EVAL      PRtnCode = '*ERROR '                                       CSD101
+     C                   ENDIF                                                                CSD101
+     C                   ENDIF                                                                CSD101
+                                                                                              CSD101
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -152,15 +189,15 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRINIT        BEGSR
- 
+
      C                   RESET                   PMsgIdArr
      C                   EVAL      PRtnCode = *BLANKS
      C                   EVAL      Idx = 0
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -172,17 +209,19 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *Entry        PLIST
      C                   PARM                    PUser
      C                   PARM                    PPassword
      C                   PARM                    PMsgIdArr
      C                   PARM                    PRtnCode
- 
+
+     C                   IN        SDSTAT                                                     CSD101
+                                                                                              CSD101
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -197,23 +236,23 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
- 
+
      C                   CALLB     'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************

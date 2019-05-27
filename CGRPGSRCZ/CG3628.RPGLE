@@ -13,17 +13,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD101             Date 07Dec18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. CCG015  *CREATE    Date 21Aug01               *
+      *                 CCG015  *CREATE    Date 21Aug01               *
       *                                    Date DDMmmYY               *
       *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CCG015 - Correspondence Manager Phase 1                      *
       *                                                               *
@@ -45,9 +47,9 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FCGFTPCPD  O    E             DISK
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -72,30 +74,30 @@
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
       * QUIT FTP command
      D Quit            C                   'QUIT'
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
- 
+
       * Entry Parameters
      D RtnCode         S             10
      D SourceDir       S            100
@@ -103,11 +105,12 @@
      D Action          S             10
      D Option          S             50    DIM(15)
      D User            S             20
-     D Password        S             20
- 
+     D****Password        S             20                                                    CSD101
+     D Password        S            128                                                       CSD101
+
       * Index for option array
      D i               S              2  0
- 
+
       * Work variable
      D WOpt            S            104
       *****************************************************************
@@ -120,15 +123,15 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       * Login Information
      C                   EVAL      FCCMD = %TRIM(User) + ' ' + %TRIM(Password)
      C                   WRITE(E)  CGFTPCD0
- 
+
      C                   IF        %ERROR
      C                   EVAL      RtnCode = '*ERROR'
      C                   EVAL      DBFILE =  'CGFTPCPD'
@@ -137,15 +140,15 @@
      C                   EVAL      DBMOD  =  PSProcMod
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       * Options (eg ASCII..)
      C                   EVAL      i = 1
- 
+
      C                   DOW       Option(i) <> *BLANKS
- 
+
      C                   EVAL      FCCMD = %TRIM(Option(i))
      C                   WRITE(E)  CGFTPCD0
- 
+
      C                   IF        %ERROR
      C                   EVAL      RtnCode = '*ERROR'
      C                   EVAL      DBFILE =  'CGFTPCPD'
@@ -154,16 +157,16 @@
      C                   EVAL      DBMOD  =  PSProcMod
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      i = i + 1
      C                   ENDDO
- 
+
       * Command to retrieve/send data from/to destination directory
      C                   EVAL      WOpt = %TRIM(Action) + ' ' + %TRIM(SourceDir)
      C                   EVAL      FCCMD = %TRIM(WOpt) + ' ' + %TRIM(DestDir)
- 
+
      C                   WRITE(E)  CGFTPCD0
- 
+
      C                   IF        %ERROR
      C                   EVAL      RtnCode = '*ERROR'
      C                   EVAL      DBFILE =  'CGFTPCPD'
@@ -172,12 +175,12 @@
      C                   EVAL      DBMOD  =  PSProcMod
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       * Quit FTP command
      C                   EVAL      FCCMD = Quit
- 
+
      C                   WRITE(E)  CGFTPCD0
- 
+
      C                   IF        %ERROR
      C                   EVAL      RtnCode = '*ERROR'
      C                   EVAL      DBFILE =  'CGFTPCPD'
@@ -186,10 +189,10 @@
      C                   EVAL      DBMOD  =  PSProcMod
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   SETON                                        LR
- 
- 
+
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -201,9 +204,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    RtnCode
      C                   PARM                    SourceDir
@@ -212,11 +215,11 @@
      C                   PARM                    Option
      C                   PARM                    User
      C                   PARM                    Password
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
- 
+
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -231,23 +234,23 @@
       * Calls: None                                                       *
       *                                                                   *
       *********************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
- 
+
      C                   CALLB     'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       ********************************************************************

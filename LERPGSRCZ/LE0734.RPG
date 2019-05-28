@@ -11,8 +11,9 @@
 0007 F*                                                                  *LE0734
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                                  *LE0734
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD050457           Date 06Mar19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 260507             Date 01Jun09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -37,6 +38,8 @@
      F*                                                                  *
      F*------------------------------------------------------------------*
      F*                                                                  *
+      *  MD050457 - Use AOCUSTR1 instead of AOCUSTR0. Patterned fix   *
+      *             from 263371 and 261272.                           *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  260507 - Unnecessary accesses to AOBRCHR1 and AOCURRR0.      *
@@ -328,6 +331,9 @@
       **   CURRENCY TYPE                                                  S01194
      I              A6NBDP                          CDP                   S01194
       *                                                                   S01194
+     ISCSARD    E DSSCSARDPD                                                                MD050457
+      ** SARS INSTALLED                                                                     MD050457
+      *                                                                                     MD050457
      ISDCUST    E DSSDCUSTPD                                              S01194
       **   CUSTOMER                                                       S01194
       *                                                                   S01194
@@ -426,6 +432,19 @@
 0290 C                     Z-ADD1         DBASE            DBASE 1        S01194
      C                     GOTO END                                       S01194
      C                     END                                            S01194
+      *                                                                                     MD050457
+      ** Check if CSD007 is switched on.                                                    MD050457
+      *                                                                                     MD050457
+     C                     CALL 'AOSARDR0'                                                  MD050457
+     C                     PARM '       ' @RTCD                                             MD050457
+     C                     PARM '*VERIFY' @OPTN                                             MD050457
+     C                     PARM 'CSD007'  @SARD   6                                         MD050457
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD050457
+      *                                                                                     MD050457
+     C                     MOVE 'N'       CSD007  1                                         MD050457
+     C           @RTCD     IFEQ *BLANKS                                                     MD050457
+     C                     MOVE 'Y'       CSD007                                            MD050457
+     C                     ENDIF                                                            MD050457
 0292 C**                                                                  S01194
 0293 C**********           MOVE 'A'       A                               S01194
 0294 C**********           MOVE '20'      TBKY1                           S01194
@@ -508,7 +527,11 @@
 0328 C                     EXSR CLNCHN                                    LE0734
 0329 C**N06*****           GOTO END                        D/B ERROR      S01194
      C           @RTCD     IFNE *BLANKS                                   S01194
+     C           CSD007    IFEQ 'N'                                                         MD050457
+     C           CSD007    OREQ 'Y'                                                         MD050457
+     C           @RTCD     ANDNE'*CUSCLS'                                                   MD050457
 0329 C                     GOTO END                        D/B ERROR      S01194
+     C                     ENDIF                                                            MD050457
      C                     END                                            S01194
 0330 C***********          MOVE CNUM      SAVC    60                      S01194
 0330 C**********           MOVE BBCUST    SAVC    60                                   S01194 CSD027
@@ -525,7 +548,11 @@
 0335 C                     EXSR CLNCHN                     * PARENT DETS  LE0734
 0336 C**N06*****           GOTO END                                       S01194
      C           @RTCD     IFNE *BLANKS                                   S01194
+     C           CSD007    IFEQ 'N'                                                         MD050457
+     C           CSD007    OREQ 'Y'                                                         MD050457
+     C           @RTCD     ANDNE'*CUSCLS'                                                   MD050457
 0329 C                     GOTO END                        D/B ERROR      S01194
+     C                     ENDIF                                                            MD050457
      C                     END                                            S01194
 0337 C**********           MOVE ACOC      SAVACP  2                       S01194
 0332 C                     MOVE BBACOC    SAVACP  2                       S01194
@@ -759,6 +786,13 @@
      C                     MOVELCNUM      KEYC                            S01194
      C                     CALL 'AOCUSTR0'PLIST3                          S01194
      C           @RTCD     IFNE *BLANKS                                   S01194
+      *                                                                                     MD050457
+      ** Allow processing of closed records                                                 MD050457
+      *                                                                                     MD050457
+     C           CSD007    IFEQ 'N'                                                         MD050457
+     C           CSD007    OREQ 'Y'                                                         MD050457
+     C           @RTCD     ANDNE'*CUSCLS'                                                   MD050457
+      *                                                                                     MD050457
 0436 C**N06*****           SETON                     U7U8LR               S01194
 0437 C**N06*****           MOVE 'CLINT'   DBFILE                          S01194
 0436 C                     SETON                     U7U8LR               S01194
@@ -766,6 +800,8 @@
 0438 C**N06*****           MOVE CLNKEY    DBKEY                           S01194
 0439 C**N06*****           Z-ADD2         DBASE            DBASE 2        S01194
 0439 C                     Z-ADD2         DBASE            DBASE 2        S01194
+      *                                                                                     MD050457
+     C                     ENDIF                                                            MD050457
      C                     ELSE                                           S01194
      C                     MOVE BBACOC    ACOC                            S01194
 0440 C                     END                                            S01194

@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD050212           Date 02Apr18               *
-      *  Prev Amend No. MD041527           Date 22Sep16               *
+      *  Last Amend No. MD050457           Date 06Mar19               *
+      *  Prev Amend No. MD050212           Date 02Apr18               *
+      *                 MD041527           Date 22Sep16               *
       *                 MD041337           Date 16Sep16               *
       *                 MD039670           Date 26Jul16               *
       *                 CGL177             Date 11Jan16               *
@@ -144,6 +145,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050457 - Customer deletion: Issue detailed error message   *
+      *             Patterned fix from 261272.                        *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD041527 - Customer cannot be amended after deleting         *
       *             Additional Customer Details                       *
@@ -3265,6 +3268,47 @@
      C                   MOVEL     '5045923'     MsgIdArr(Ix)                               MD019261
      C                   GOTO      EVALAC                                                   MD019261
      C                   ENDIF                                                              MD019261
+      *                                                                                     MD050457
+      ** Customer has a facility closed today.                                              MD050457
+      ** CASE: WRK.Customer Deln Flag 210 is Do not close                                   MD050457
+      *                                                                                     MD050457
+     C     WDS2010       IFEQ      'F'                                                      MD050457
+     C                   MOVEL     '5049259'     MsgIdArr(Ix)                               MD050457
+     C                   GOTO      EVALAC                                                   MD050457
+     C                   ENDIF                                                              MD050457
+      *                                                                                     MD050457
+      ** Customer defined on GTEES.                                                         MD050457
+      ** CASE: WRK.Customer Deln Flag 205 is Do not delete                                  MD050457
+      ** Customer defined on LEREF.                                                         MD050457
+      *                                                                                     MD050457
+     C     WDS2005       IFEQ      'F'                                                      MD050457
+     C                   MOVEL     'USR1124'     MsgIdArr(Ix)                               MD050457
+     C                   GOTO      EVALAC                                                   MD050457
+     C                   ENDIF                                                              MD050457
+      *                                                                                     MD050457
+      ** Customer defined on LEREF.                                                         MD050457
+      ** CASE: WRK.Customer Deln Flag 206 is Do not delete                                  MD050457
+      *                                                                                     MD050457
+     C     WDS2006       IFEQ      'F'                                                      MD050457
+     C                   MOVEL     '5049260'     MsgIdArr(Ix)                               MD050457
+     C                   GOTO      EVALAC                                                   MD050457
+     C                   ENDIF                                                              MD050457
+      *                                                                                     MD050457
+      ** Customer defined on CLOANCL.                                                       MD050457
+      ** CASE: WRK.Customer Deln Flag 230 is Do not delete                                  MD050457
+      *                                                                                     MD050457
+     C     WDS2030       IFEQ      'F'                                                      MD050457
+     C                   MOVEL     '5049261'     MsgIdArr(Ix)                               MD050457
+     C                   GOTO      EVALAC                                                   MD050457
+     C                   ENDIF                                                              MD050457
+      *                                                                                     MD050457
+      ** Customer defined on LEFEEDL1                                                       MD050457
+      ** CASE: WRK.Customer Deln Flag 240 is Do not delete                                  MD050457
+      *                                                                                     MD050457
+     C     WDS2041       IFEQ      'F'                                                      MD050457
+     C                   MOVEL     '5049262'     MsgIdArr(Ix)                               MD050457
+     C                   GOTO      EVALAC                                                   MD050457
+     C                   ENDIF                                                              MD050457
       *                                                                                       246639
       ** Customer defined as a parent on SDCUSTPD.                                            246639
       ** CASE: WRK.Customer Deln Flag 006 is Do not delete                                    246639

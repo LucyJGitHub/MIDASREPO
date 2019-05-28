@@ -11,8 +11,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD050457           Date 06Mar19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       *                 AR814485           Date 15Aug11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 260507             Date 01Jun09               *
@@ -56,6 +57,8 @@
    7 F*                                                               *
 0007 F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD050457 - Do not process DBERR when received *CUSCLS from   *
+      *             AOCUSTR0. Patterned fix from 263371 and 261272.   *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference                                *
       *  AR814485 - Align total amount of the report and apply        *
@@ -473,6 +476,9 @@
       ****EXTERNAL*DS*FOR*TRADING*DETAILS**************************S01194 S01339
      I**************BLUSCY                          USCY           S01194 S01339
       *                                                                   S01194
+     ISCSARD    E DSSCSARDPD                                                                MD050457
+      ** SARS INSTALLED                                                                     MD050457
+      **                                                                                    MD050457
      ISDCUST    E DSSDCUSTPD                                              S01194
       **  EXTERNAL DS FOR CUSTOMER DETAILS                                S01194
      I              BBACOC                          ACOC                  S01194
@@ -736,6 +742,19 @@
      C                     EXSR ##ADDC                                                        260507
      C                     END                                            S01194
      C                     ENDIF                                                              260507
+      *                                                                                     MD050457
+      ** Check if CSD007 is switched on.                                                    MD050457
+      *                                                                                     MD050457
+     C                     CALL 'AOSARDR0'                                                  MD050457
+     C                     PARM '       ' @RTCD                                             MD050457
+     C                     PARM '*VERIFY' @OPTN                                             MD050457
+     C                     PARM 'CSD007'  @SARD   6                                         MD050457
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD050457
+      *                                                                                     MD050457
+     C                     MOVE 'N'       CSD007  1                                         MD050457
+     C           @RTCD     IFEQ *BLANKS                                                     MD050457
+     C                     MOVE 'Y'       CSD007                                            MD050457
+     C                     ENDIF                                                            MD050457
       *                                                                   S01194
 0283 C**N06*****           SETON                     U7U8LRNOT FOUND      S01194
 0284 C**N06*****           SETON                     OF45  O/P HEADINGS   S01194
@@ -1039,12 +1058,21 @@ Where *INLn is the Branch or Company level break indicator.               S01117
 0344 C                     MOVELPARN      CKEY                            S01194
      C                     CALL 'AOCUSTR0'PLIST1                          S01194
      C           @RTCD     IFNE *BLANKS                                   S01194
+      *                                                                                     MD050457
+      ** Allow processing of closed records                                                 MD050457
+      *                                                                                     MD050457
+     C           CSD007    IFEQ 'N'                                                         MD050457
+     C           CSD007    OREQ 'Y'                                                         MD050457
+     C           @RTCD     ANDNE'*CUSCLS'                                                   MD050457
+      *                                                                                     MD050457
 0347 C                     SETON                     U7U8LR               S01194
 0348 C                     MOVE CKEY      DBKEY                           S01194
 0349 C                     MOVE 'SDCUSTPD'DBFILE                          S01194
 0350 C                     Z-ADD5         DBASE            DBASE 5        S01194
 0351 C                     GOTO END                                       S01194
 0352 C********NOF          SETON                     OF4546         S01194BHF305
+      *                                                                                     MD050457
+     C                     ENDIF                                                            MD050457
      C                     END                                            S01194
 0352 C        NOF          SETON                     OF4546               BHF305
      C                     END                                            S01194
@@ -1072,11 +1100,20 @@ Where *INLn is the Branch or Company level break indicator.               S01117
 0363 C                     MOVELCNUM      CKEY                            S01194
      C                     CALL 'AOCUSTR0'PLIST1                          S01194
      C           @RTCD     IFNE *BLANKS                                   S01194
+      *                                                                                     MD050457
+      ** Allow processing of closed records                                                 MD050457
+      *                                                                                     MD050457
+     C           CSD007    IFEQ 'N'                                                         MD050457
+     C           CSD007    OREQ 'Y'                                                         MD050457
+     C           @RTCD     ANDNE'*CUSCLS'                                                   MD050457
+      *                                                                                     MD050457
 0347 C                     SETON                     U7U8LR               S01194
 0348 C                     MOVE CKEY      DBKEY                           S01194
 0349 C                     MOVE 'SDCUSTPD'DBFILE                          S01194
 0350 C                     Z-ADD6         DBASE            DBASE 6        S01194
 0351 C                     GOTO END                                       S01194
+      *                                                                                     MD050457
+     C                     ENDIF                                                            MD050457
      C                     END                                            S01194
      C                     END                                            S01194
 0365 C**  CUST. NOT FOUND D/B ERROR

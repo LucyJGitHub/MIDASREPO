@@ -14,8 +14,9 @@
       *        VOLUME 1 FOR THE USE OF DATA STRUCTURES PCDS2          *
       *        AND PCDS3.                                             *
       *                                                               *
-      *  Last Amend No. MD046248           Date 05Feb18               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD050457           Date 06Mar19               *
+      *  Prev Amend No. MD046248           Date 05Feb18               *
+      *                 CDL099             Date 06Oct17               *
       *                 AR906833           Date 22Aug17               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
@@ -66,6 +67,9 @@
       *                                                               *   S01117
       *****************************************************************   S01117
       *                                                               *   S01117
+      *  MD050457 - customer closure do not include checking of       *
+      *             expired or closed facilities. Patterned fix from  *
+      *             261272.                                           *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  AR906833 - Allows deletion of Sec. Trading Customers that    *
@@ -180,6 +184,8 @@
      FEMLIML2 IF  E                    DISK                               063444
      FCLOANCL IF  E                    DISK                               063444
      F*DPTMVD**IF  E                    DISK                        063444077335
+     FSDBANKPDIF  E                    DISK                                                 MD050457
+     FLEFEEDL1IF  E           K        DISK                                                 MD050457
      F/COPY WNCPYSRC,SD0010UF01
       *
      I*OANSCRF*****                                                       E23879
@@ -274,12 +280,14 @@
       *****************************************************************   063444
       * Indicators:                                                   *   063444
       **99*-*End*of*processing*for*FACIL*******************************                063444 CPK014
+      * 89 - End of processing for LEFEEDL1                           *                     MD050457
       * 98 - End of processing for FCLTY                              *   063444
       * 97 - End of processing for ACCNT                              *   063444
       * 96 - End of processing for LEREF                              *   063444
       * 95 - End of processing for CUSDL                              *   063444
       * 94 - End of processing for GTEES                              *   063444
       *  92 - End of processing for GTEESV1                           *   181864
+      * 91 - End of processing for FCLTYFM                            *                     MD050457
       **93*-*End*of*processing*for*SECTI*************************** 063444077335
       **92*-*End*of*processing*for*CDEPPD************************** 063444077335
       **91*-*End*of*processing*for*CUDEP*************************** 063444077335
@@ -1118,6 +1126,7 @@
      C                     END                                            077335
       *                                                                   077335
      C           RECI      IFEQ 'C'                                       077335
+     C           PACTN     ANDNE'C'                                                         MD050457
      C                     MOVEL'REJECT'  W0RTN                           077335
      C                     MOVE 'F'       WUD208                          077335
      C           QUIT      IFEQ 'Y'                                       077335
@@ -1127,6 +1136,7 @@
      C                     END                                            077335
       *                                                                   077335
      C           RECI      IFEQ 'E'                                       077335
+     C           PACTN     ANDNE'C'                                                         MD050457
      C                     MOVEL'REJECT'  W0RTN                           077335
      C                     MOVE 'F'       WUD209                          077335
      C           QUIT      IFEQ 'Y'                                       077335
@@ -1145,6 +1155,36 @@
      C           NCNUM     READEFCLTY                    97               077335
       *                                                                   077335
      C                     END                                            077335
+      *                                                                                     MD050457
+      ** Check if there is a facility closed today.                                         MD050457
+      *                                                                                     MD050457
+     C                     READ SDBANKPD                 91                                 MD050457
+     C                     MOVE '0'       *IN91                                             MD050457
+     C           NCNUM     SETLLFCLTYFMF             9191                                   MD050457
+     C           *IN91     IFEQ '0'                                                         MD050457
+     C           NCNUM     READEFCLTYFMF                 91                                 MD050457
+     C                     ENDIF                                                            MD050457
+      *                                                                                     MD050457
+     C           *IN91     DOWEQ'0'                                                         MD050457
+      *                                                                                     MD050457
+      ** Do not close if Change Type is Close ('C') and Last Action Date is today.          MD050457
+      *                                                                                     MD050457
+     C           PACTN     IFEQ 'C'                                                         MD050457
+     C           LCD       ANDEQBJRDNB                                                      MD050457
+     C           CHTP      ANDEQ'C'                                                         MD050457
+     C                     MOVEL'REJECT'  W0RTN                                             MD050457
+     C                     MOVE 'F'       WUD210                                            MD050457
+     C           QUIT      IFEQ 'Y'                                                         MD050457
+     C                     GOTO PRETRN                                                      MD050457
+     C                     ENDIF                                                            MD050457
+     C                     ENDIF                                                            MD050457
+      *                                                                                     MD050457
+     C           WUD210    IFEQ 'F'                                                         MD050457
+     C                     GOTO ESC97                                                       MD050457
+     C                     ENDIF                                                            MD050457
+     C           NCNUM     READEFCLTYFMF                 91                                 MD050457
+     C                     ENDDO                                                            MD050457
+      *                                                                                     MD050457
      C           ESC97     TAG                                            077335
       *                                                                   077335
      C/COPY WNCPYSRC,SD0010UL04                                           077335
@@ -1183,8 +1223,15 @@
      C           *IN95     DOWEQ'0'                                       077335
       *                                                                   077335
      C           CNUM      IFEQ NCNUM                                     077335
-     C                     MOVEL'REJECT'  W0RTN                           077335
+     C**********           MOVEL'REJECT'  W0RTN                                      077335 MD050457
      C                     MOVE 'F'       WUD230                          077335
+     C           PACTN     IFEQ 'C'                                                         MD050457
+     C           RECI      ANDEQ'M'                                                         MD050457
+     C                     MOVE ' '       WUD230                                            MD050457
+     C                     ENDIF                                                            MD050457
+     C                     ENDIF                                                            MD050457
+     C           WUD230    IFEQ 'F'                                                         MD050457
+     C                     MOVEL'REJECT'  W0RTN                                             MD050457
      C           QUIT      IFEQ 'Y'                                       077335
      C**********           RETRN                                                     077335 AR897319
      C                     GOTO PRETRN                                                      AR897319
@@ -1198,6 +1245,34 @@
      C           ESC95     TAG                                            077335
       *                                                                   077335
      C/COPY WNCPYSRC,SD0010UL08                                           077335
+      *                                                                                     MD050457
+      ** Check for customer references in LEFEEDL1.                                         MD050457
+      *                                                                                     MD050457
+     C           NCNUM     SETLLLEFEEDL1             8989                                   MD050457
+     C  N89      NCNUM     READELEFEEDL1                 89                                 MD050457
+     C           *IN89     DOWEQ'0'                                                         MD050457
+      *                                                                                     MD050457
+     C           FECNUM    IFEQ NCNUM                                                       MD050457
+     C                     MOVE 'F'       WUD241                                            MD050457
+     C           PACTN     IFEQ 'C'                                                         MD050457
+     C           FERECI    ANDEQ'M'                                                         MD050457
+     C           PACTN     OREQ 'C'                                                         MD050457
+     C           FERECI    ANDEQ'*'                                                         MD050457
+     C                     MOVE ' '       WUD241                                            MD050457
+     C                     ENDIF                                                            MD050457
+     C                     ENDIF                                                            MD050457
+     C           WUD241    IFEQ 'F'                                                         MD050457
+     C                     MOVEL'REJECT'  W0RTN                                             MD050457
+     C           QUIT      IFEQ 'Y'                                                         MD050457
+     C                     GOTO PRETRN                                                      MD050457
+     C                     END                                                              MD050457
+     C                     GOTO ESC89                                                       MD050457
+     C                     END                                                              MD050457
+      *                                                                                     MD050457
+     C           NCNUM     READELEFEEDL1                 89                                 MD050457
+      *                                                                                     MD050457
+     C                     END                                                              MD050457
+     C           ESC89     TAG                                                              MD050457
       *                                                                   077335
       ** Check for customer references in GTEES.                          077335
       *                                                                   077335

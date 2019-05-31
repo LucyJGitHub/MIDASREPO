@@ -16,8 +16,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 215959             Date 21Mar16               *
+      *  Last Amend No. 262293             Date 31May19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 215959             Date 21Mar16               *
       *                 226449             Date 24Jun15               *
       *                 MD034776           Date 09Jul15               *
       *                 AR847937           Date 25Nov14               *
@@ -166,6 +167,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  262293 - Wrong LCPN in ZLCD when BCNV is NE ' ' or 'N' and   *
+      *           Coupon date falls on a bank holiday, but not a      *
+      *           holiday on the Nominal Currency. Do not recalculate *
+      *           LCPN if from PF/SNDEVD. Applied fix for MD052461.   *
       *  MD046248 - Finastra Rebranding                               *
       *  215959 - Truncation error on event amount in SE2450P3.       *
       *           Recompiled due to changes in PF/SEKEYD.             *
@@ -1399,6 +1404,18 @@ SP   C                     Z-ADD1         Z
      C                     ELSE                                           CSE006
      C                     MOVEL'N'       CSE006                          CSE006
      C                     ENDIF                                          CSE006
+      *                                                                                       262293
+      **  Determine if feature CSE031 is installed.                                           262293
+      *                                                                                       262293
+     C                     MOVE 'N'       CSE031  1                                           262293
+     C                     CALL 'AOSARDR0'                                                    262293
+     C                     PARM '       ' @RTCD                                               262293
+     C                     PARM '*VERIFY' @OPTN                                               262293
+     C                     PARM 'CSE031'  @SARD                                               262293
+      *                                                                                       262293
+     C           @RTCD     IFEQ *BLANK                                                        262293
+     C                     MOVE 'Y'       CSE031                                              262293
+     C                     ENDIF                                                              262293
       *                                                                   CSE032
       **  Determine if feature CSE032 is installed.                       CSE032
       *                                                                   CSE032
@@ -3378,6 +3395,17 @@ SP   C                     Z-ADD1         Z
       ***  Define and zeroize the Total Accrued Interest Field.           E20085
       *                                                                   E20085
      C                     Z-ADD0         TOTACC 150                      E20085
+      *                                                                                       262293
+     C                     MOVE '0'       *IN10                                               262293
+      *                                                                                       262293
+      ** If CSE031 is installed, use the LCPN in PF/SECTYD instead,                           262293
+      ** unless BCNV is ' ' or 'N'                                                            262293
+      *                                                                                       262293
+     C           CSE031    IFEQ 'N'                                                           262293
+     C           CSE031    OREQ 'Y'                                                           262293
+     C           BCNV      ANDEQ' '                                                           262293
+     C           CSE031    OREQ 'Y'                                                           262293
+     C           BCNV      ANDEQ'N'                                                           262293
      C*                                                                   148124
      C                     MOVE 'CP'      SNET                            148124
      C                     MOVE *HIVAL    SNDT                            148124
@@ -3387,14 +3415,22 @@ SP   C                     Z-ADD1         Z
      C           SNSN      ANDEQSESN                                      148124
      C           SNET      ANDEQ'CP'                                      148124
      C                     Z-ADDSNDT      LCPN                            148124
-     C                     ELSE                                           148124
+     C                     MOVE '1'       *IN10                                               262293
+     C                     ENDIF                                                              262293
+     C                     ENDIF                                                              262293
+     C**********           ELSE                                                        148124 262293
+     C           *IN10     IFEQ '0'                                                           262293
      C                     Z-ADDECD       ZECD                            148124
      C                     EXSR ZLCD                                      148124
      C                     Z-ADDZZLCD     LCPN                            148124
      C                     ENDIF                                          148124
+      *                                                                                       262293
+      ** If LCPN is from PF/SNDEVD do not re-calculate LCPN                                   262293
       *                                                                                       199421
      C           BCNV      IFNE ' '                                                           199421
+     C           BCNV      ANDNE'N'                                                           262293
      C           LCPN      ANDGTRUND                                                          199421
+     C           *IN10     ANDEQ'0'                                                           262293
      C                     MOVE RUND      ZECD                                                199421
      C                     EXSR ZLCD                                                          199421
      C                     Z-ADDZZLCD     LCPN                                                199421

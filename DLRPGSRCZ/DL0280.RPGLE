@@ -29040,7 +29040,7 @@
       /EJECT                                                                                  CAS005
       *Externalisation of SR/SRRSAC                                                           CPK024
      C/COPY DLCPYSRC,DL0280RSAC
- 
+
       /EJECT                                                                                  CAS005
       *Externalisation of SR/SRRSIN                                                           CPK021
      C/COPY DLCPYSRC,DL0280RSIN
@@ -31771,7 +31771,7 @@
      C                                                                                        CRE105
      C                   ENDSR                                                                CRE105
       ****************************************************************                        CRE105
- 
+
      C/COPY DLCPYSRC,DL0280MMCF                                                               CAS009
      C/COPY DLCPYSRC,DL0280HIST                                                               232928
      C/COPY DLCPYSRC,DL0280HSTQ                                                               232928

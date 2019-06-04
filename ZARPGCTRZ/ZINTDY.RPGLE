@@ -41,8 +41,10 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 05Feb18               *
-      *  Prev Amend No. MD047993           Date 23Sep17               *
+      *  Last Amend No. MD053295           Date 13Apr19               *
+      *  Prev Amend No. MD028207           Date 13Apr19               *
+      *                 MD046248           Date 05Feb18               *
+      *                 MD047993           Date 23Sep17               *
       *                 MD035545           Date 11Sep15               *
       *                 AR996895           Date 25Nov12               *
       *                 263666             Date 01Feb10               *
@@ -67,6 +69,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053295 - Lending loan with Interest Calculation Basis      *
+      *             method 3 (30/360) has wrong interest payment      *
+      *             amount for month of March                         *
+      *  MD028207 - Incorrect treatment for calc basis 3 and February.*
+      *           - Re-apply cancelled fix MD022792 + MD027042A       *
+      *           - Applied for MD053295.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
       *             on Last Day indicator.                            *
@@ -374,7 +382,8 @@
       *                                                                                       164847
      C     ZZCALC        IFEQ      '3'                                                        164847
      C     ZZMM1         ANDEQ     2                                                          263666
-     C     ZZDD1         ANDEQ     1                                                          164847
+     C*****ZZDD1         ANDEQ     1                                                 164847 MD028207
+     C     ZZMM2         ANDEQ     2                                                        MD028207
      C     ZZCALC        OREQ      '0'                                                       CER016A
      C     CER016        ANDEQ     'N'                                                       CER016A
      C     ZZMM1         ANDEQ     2                                                          263666
@@ -389,16 +398,19 @@
       *                                                                                       164847
      C     *IN80         IFEQ      '1'                                                        164847
      C     ZZDD2         ANDEQ     29                                                         164847
+     C     ZZDD1         ANDNE     ZZDD2                                                    MD028207
       *                                                                                       164847
       ** Not a leap year and the last day of the month is 28                                  164847
       *                                                                                       164847
      C     *IN80         OREQ      '0'                                                        164847
      C     ZZDD2         ANDEQ     28                                                         164847
+     C     ZZDD1         ANDNE     ZZDD2                                                    MD028207
       *                                                                                       164847
       ** Start day of Feb to last day Feb should be 29 days                                   164847
       ** (30Feb - 01Feb)                                                                      164847
       *                                                                                       164847
-     C                   Z-ADD     29            ZZINDY                                       164847
+     C**********         Z-ADD     29            ZZINDY                              164847 MD028207
+     C     30            SUB       ZZDD1         ZZINDY                                     MD028207
      C                   ENDIF                                                                164847
       *                                                                                       164847
      C                   ENDIF                                                                164847
@@ -599,6 +611,14 @@
      C*****************************************************************                     AR996895
      C****TEST*IF*LEAP*YEAR********************************************                     AR996895
      C*****ZZYY1         DIV       4             ZZWN5                                      AR996895
+      *                                                                                     MD053295
+      ** FOR FEB TEST IF DAY EQUAL TO END OF MONTH                                          MD053295
+      *                                                                                     MD053295
+     C     ZZMM1         IFEQ      2                                                        MD053295
+      *                                                                                     MD053295
+      ** TEST IF LEAP YEAR                                                                  MD053295
+      *                                                                                     MD053295
+     C     ZZYY1         DIV       4             ZZWN5                                      MD053295
      C**********         MVR                     ZZWN5                                       CER016A
      C**********         MVR                     ZZWN5                    80        CER016A AR996895
      C*****************************************************************                     AR996895
@@ -621,6 +641,27 @@
      C**********         END                                                                AR996895
      C*****************************************************************                     AR996895
      C**********         END                                                                AR996895
+     C                   MVR                     ZZWN5                    80                MD053295
+      *                                                                                     MD053295
+      ** STORE DAY NUMBER                                                                   MD053295
+     C                   Z-ADD     ZZDD1         ZZSTO1            5 0                      MD053295
+      *                                                                                     MD053295
+      ** FOR LAST DAY OF MONTH ---> INITIALISE WITH 30                                      MD053295
+     C     *IN80         IFEQ      '1'                                                      MD053295
+      *                                                                                     MD053295
+     C     ZZDD1         IFEQ      29                                                       MD053295
+     C                   Z-ADD     30            ZZDD1                                      MD053295
+     C                   ENDIF                                                              MD053295
+      *                                                                                     MD053295
+     C                   ELSE                                                               MD053295
+      *                                                                                     MD053295
+     C     ZZDD1         IFEQ      28                                                       MD053295
+     C                   Z-ADD     30            ZZDD1                                      MD053295
+     C                   ENDIF                                                              MD053295
+      *                                                                                     MD053295
+     C                   ENDIF                                                              MD053295
+      *                                                                                     MD053295
+     C                   ENDIF                                                              MD053295
       *                                                                                      CER016A
      C                   ENDIF                                                               CER016A
      C*
@@ -635,6 +676,12 @@
      C*****ZZMM1         IFEQ      2                                                        AR996895
      C**********         Z-ADD     ZZSTO1        ZZDD1                                      AR996895
      C**********         END                                                                AR996895
+      *                                                                                     MD053295
+      ** RESTORE START DATE DAY NUMBER                                                      MD053295
+      *                                                                                     MD053295
+     C     ZZMM1         IFEQ      2                                                        MD053295
+     C                   Z-ADD     ZZSTO1        ZZDD1                                      MD053295
+     C                   ENDIF                                                              MD053295
      C*
      C**  CALC NO. DAYS IN LAST MONTH
      C     ZZDD2         IFLE      30

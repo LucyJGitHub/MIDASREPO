@@ -17,13 +17,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR847818           Date 26Apr13               *
+      *  Last Amend No. MD053295           Date 13Apr19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR847818           Date 26Apr13               *
       *                 AR996895           Date 25Nov12               *
       *                 CER042  *CREATE    Date 11May11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053295 - Lending loan with Interest Calculation Basis      *
+      *             method 3 (30/360) has wrong interest payment      *
+      *             amount for month of March (Recompile)             *
       *  MD046248 - Finastra Rebranding                               *
       *  AR847818 - Remove zero interest amount (Child:AR847819)      *
       *  AR996895 - Incorrect accrual interest calculation            *

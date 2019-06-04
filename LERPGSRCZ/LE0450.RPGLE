@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1097303          Date 16May19               *
-      *  Prev Amend No. MD047693           Date 30Jan18               *
+      *  Last Amend No. MD053295           Date 13Apr19               *
+      *  Prev Amend No. AR1097303          Date 16May19               *
+      *                 MD047693           Date 30Jan18               *
       *                 MD050018           Date 05Nov18               *
       *                 MD050007           Date 05Nov18               *
       *                 MD050139           Date 23Mar18               *
@@ -403,6 +404,9 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053295 - Lending loan with Interest Calculation Basis      *
+      *             method 3 (30/360) has wrong interest payment      *
+      *             amount for month of March (Recompile)             *
       *  AR1097303 - After Loan Rollover Date, the fields ISDT and    *
       *              FMDT on CLOANCL are changed.  Rename ISDT and    *
       *              FMDT (Initial start/Final maturity date).        *

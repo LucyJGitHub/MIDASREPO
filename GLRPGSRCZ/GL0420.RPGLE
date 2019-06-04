@@ -14,8 +14,9 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. CGL188             Date 19Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 220877             Date 22Mar19               * 
+      *  Prev Amend No. CGL188             Date 19Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL184             Date 07Dec16               *
       *                 MD037536           Date 26Apr16               *
       *                 MD033999           Date 29Jun15               *
@@ -158,6 +159,9 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  220877 - GL0420 Statements produced do not include the       *
+      *           IBAN even if CFT004 is switched on.                 *
+      *         - Applied for MD052224.                               *
       *  CGL188 - COB Optimisation of GL0420                          *
       *           Used /Copys:  GL0420FFP2, GL0420FFP3, GL0420I017,   *
       *                         GL0420IIP4, GL0420IIP5, GL0420CP21,   *
@@ -6341,6 +6345,8 @@
 1752 O                       RUNA                87
      O/COPY WNCPYSRC,GL0420O055
 1753 O                       STPA          3    108
+     O          E    62 84 05                 11                                              220877
+     O                       RIBAN               60                                           220877
      O*                                                                   S01408
      O** Core hook for externalisation.                                   S01408
      O/COPY WNCPYSRC,GL0420OOP7                                           S01408
@@ -6648,6 +6654,8 @@
 1839 O                                           93 'PAGE'
      O/COPY WNCPYSRC,GL0420O064
 1840 O                       STPA          3     98
+     O          E    64 84 05                 11                                              220877
+     O                       RIBAN               70                                           220877
      O** Core hook for externalisation.                                   S01408
      O/COPY WNCPYSRC,GL0420OOP8                                           S01408
      O*                                                                   S01408
@@ -6927,6 +6935,8 @@
 1930 O                       RUNA                85
      O/COPY WNCPYSRC,GL0420O065
 1931 O                       STPA          3     98
+     O          E    66 84 05                 11                                              220877
+     O                       RIBAN               70                                           220877
      O** Core hook for externalisation.                                   S01408
      O/COPY WNCPYSRC,GL0420OOP9                                           S01408
      O*                                                                   S01408
@@ -7183,6 +7193,8 @@
 2015 O                                          102 'PAGE'
      O/COPY WNCPYSRC,GL0420O066
 2016 O                       STPA          3    108
+     O          E    80 84 05                 11                                              220877
+     O                       RIBAN               60                                           220877
      O** Core hook for externalisation.                                   S01408
      O/COPY WNCPYSRC,GL0420OO10                                           S01408
      O*                                                                   S01408
@@ -7526,6 +7538,8 @@
 2119 O                       RUNA                87
      O/COPY WNCPYSRC,GL0420O067
 2120 O                       STPA          3    107
+     O          E    87 84 05                 11                                              220877
+     O                       RIBAN               60                                           220877
      O** Core hook for externalisation.                                   S01408
      O/COPY WNCPYSRC,GL0420OO11                                           S01408
      O*                                                                   S01408

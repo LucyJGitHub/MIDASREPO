@@ -11,13 +11,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD044378           Date 03Mar17               *
+      *  Last Amend No. MD052581           Date 23Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD044378           Date 03Mar17               *
       *                 MD043672           Date 19Jan17               *
       *                 CGL154  *CREATE    Date 13Oct14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052581 - Missing Credit capitalized interests of Retail    *
+      *             A/Cs in file GLCAPAPD                             *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044378 - Capitalised interest is being reported as payment *
       *             by the alternate account                          *
@@ -218,6 +221,14 @@
      C                   EXSR      SRWrite
      C                   ENDIF                                                              MD044378
  
+     C                   ELSE                                                               MD052581
+     C                   IF        WFTPT = ' '                                              MD052581
+     C                             AND ACACNO <> 0                                          MD052581
+     C                             AND ACTRAT = '91060'                                     MD052581
+     C                             AND ACSPOS = '  GE-IC'                                   MD052581
+     C                             AND ACDRCR = '1'                                         MD052581
+     C                   EXSR      SRWrite                                                  MD052581
+     C                   ENDIF                                                              MD052581
      C                   ENDIF
  
      C                   ENDIF

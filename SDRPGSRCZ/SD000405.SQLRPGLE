@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. MD053450           Date 11May19               *
-      *  Prev Amend No. MD053394           Date 08May19               *
+      *  Last Amend No. MD053487           Date 28May19               *
+      *  Prev Amend No. MD053450           Date 11May19               *
+      *                 MD053394           Date 08May19               *
       *                 MD053109           Date 03Apr19               *
       *                 MD053146           Date 02Apr19               *
       *                 MD053090           Date 26Mar19               *
@@ -23,6 +24,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053487 - Audit Report should be available for Interface    *
+      *             Password Maintenance                              *
       *  MD053450 - No profile and password defined but reflected on  *
       *             take on report                                    *
       *  MD053394 - Same profile migrated during data take on         *
@@ -110,6 +113,7 @@
      D Wwrite          S              1A                                                    MD053394
      D PDescr          S           1000A
      D WTimestamp      S             26A   INZ('0001-01-01-00.00.00.000000')
+     D WChangeType     S              1A                                                    MD053487
 
      D Stmt            S            500A
      D Result          S             50A
@@ -556,6 +560,7 @@
      C                   EVAL      PUser = WUser
      C                   EVAL      PUniq = PIDName
      C                   EVAL      PUserDesc = *BLANKS
+     C                   EVAL      WChangeType = 'I'                                        MD053487
 
      C/exec SQL
      C+ insert into SDFACXTD
@@ -565,6 +570,7 @@
      C+  ,INUNIQ
      C+  ,INUSRD
      C+  ,INTMST
+     C+  ,INTYLC                                                                            MD053487
      C+ )
      C+ values
      C+ (
@@ -573,6 +579,7 @@
      C+  ,:PUniq
      C+  ,:PUserDesc
      C+  ,:WTimeStamp
+     C+  ,:WChangeType                                                                      MD053487
      C+ )
      C/end-exec
 

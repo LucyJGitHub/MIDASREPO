@@ -14,11 +14,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. MD053140           Date 03Apr19               *
-      *  Prev Amend No. CSD101 *CREATE     Date 07Dec18               *
+      *  Last Amend No. MD053487           Date 28May19               *
+      *  Prev Amend No. MD053140           Date 03Apr19               *
+      *                 CSD101 *CREATE     Date 07Dec18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053487 - Audit Report should be available for Interface    *
+      *             Password Maintenance                              *
       *  MD053140 - F3 Exit and F12 Previous have the same function   *
       *             which makes it duplicate                          *
       *  CSD101 - Password Encryption                                 *
@@ -74,6 +77,7 @@
       ** Indicator data structure.
      D Indicators      DS                  BASED(IndPointer)
      D  Exit                  03     03
+     D  Print                 04     04                                                     MD053487
      D  Refresh               05     05
      D  RollUp                27     27
      D  SflDsp                30     30
@@ -349,6 +353,10 @@
      C                   WHEN      D0SIDE <> WSearch
      C                   EVAL      Exit = True
       *
+     C                   WHEN      Print = True                                             MD053487
+     C                   CALL      'SD000406'                                               MD053487
+     C                   EVAL      Print = False                                            MD053487
+      *                                                                                     MD053487
      C                   ENDSL
       *
      C                   ENDDO
@@ -390,6 +398,11 @@
       ** Reset and build.
      C                   EXSR      SrReset
      C                   EXSR      SrRefresh
+      *                                                                                     MD053487
+     C                   WHEN      Print = True                                             MD053487
+     C                   CALL      'SD000406'                                               MD053487
+     C                   EVAL      Print = False                                            MD053487
+      *                                                                                     MD053487
       *
       ** When Page Down is pressed.
      C                   WHEN      Rollup = True

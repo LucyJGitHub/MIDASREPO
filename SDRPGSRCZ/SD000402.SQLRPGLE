@@ -15,13 +15,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. MD053314           Date 30Apr19               *
-      *  Prev Amend No. MD053140           Date 03Apr19               *
+      *  Last Amend No. MD053487           Date 28May19               *
+      *  Prev Amend No. MD053314           Date 30Apr19               *
+      *                 MD053140           Date 03Apr19               *
       *                 MD053114           Date 28Mar19               *
       *                 CSD101 *CREATE     Date 07Dec18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053487 - Audit Report should be available for Interface    *
+      *             Password Maintenance                              *
       *  MD053314 - Ensure user cannot be deleted when attached to    *
       *             an Interface.                                     *
       *  MD053140 - F3 Exit and F12 Previous have the same function   *
@@ -192,7 +195,10 @@
      D TmStamp         S             14  0
      D wSqlStr         S            200A
      D wSqlStr1        S            200A
-      *
+      ** ZAGENTS parameters.                                                                MD053487
+     D PTimeStamp      S               Z                                                    MD053487
+     D PChangeType     S              1A                                                    MD053487
+     D PLUser          S             10A                                                    MD053487
       *
       /EJECT
       *****************************************************************
@@ -842,11 +848,21 @@
      C     RRNKy1        CHAIN     SD000402S0
      C                   IF        %FOUND AND
      C                             D0HDES <> D0DESC
+      ** Generate TimeStamp                                                                 MD053487
+     C                   CALL      'ZAGENTS'                                                MD053487
+     C                   PARM                    PTimeStamp                                 MD053487
+     C                   EVAL      PChangeType = 'A'                                        MD053487
+      ** Get User Name                                                                      MD053487
+     C                   CALL      'SFC000026'                                              MD053487
+     C                   PARM      *BLANKS       PLUSER                                     MD053487
       *
       ** Update description if user cancel the deletion.
      C/exec SQL
      C+ update SDFACXTD set
-     C+   INUSRD = :D0DESC
+     C+   INUSRD = :D0DESC,                                                                 MD053487
+     C+   INTMST = :PTimeStamp,                                                             MD053487
+     C+   INTYLC = :PChangeType,                                                            MD053487
+     C+   INUSER = :PLUSER                                                                  MD053487
      C+ where
      C+   INUNIQ = :D0UNIQ
      C/end-exec
@@ -917,9 +933,19 @@
       *****************************************************************
      C     SrAmendDesc   BEGSR
       *
+      ** Generate TimeStamp                                                                 MD053487
+     C                   CALL      'ZAGENTS'                                                MD053487
+     C                   PARM                    PTimeStamp                                 MD053487
+     C                   EVAL      PChangeType = 'A'                                        MD053487
+      ** Get User Name                                                                      MD053487
+     C                   CALL      'SFC000026'                                              MD053487
+     C                   PARM      *BLANKS       PLUSER                                     MD053487
      C/exec SQL
      C+ update SDFACXTD set
-     C+   INUSRD = :D0DESC
+     C+   INUSRD = :D0DESC,                                                                 MD053487
+     C+   INTMST = :PTimeStamp,                                                             MD053487
+     C+   INTYLC = :PChangeType,                                                            MD053487
+     C+   INUSER = :PLUSER                                                                  MD053487
      C+ where
      C+   INUNIQ = :D0UNIQ
      C/end-exec

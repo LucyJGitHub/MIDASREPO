@@ -14,11 +14,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. MD053289           Date 15Apr19               *
-      *  Prev Amend No. CSD101 *CREATE     Date 07Dec18               *
+      *  Last Amend No. MD053487           Date 28May19               *
+      *  Prev Amend No. MD053289           Date 15Apr19               *
+      *                 CSD101 *CREATE     Date 07Dec18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053487 - Audit Report should be available for Interface    *
+      *             Password Maintenance                              *
       *  MD053289 - Password double capture process is missing in the *
       *             Password Maintenance.                             *
       *  CSD101 - Password Encryption                                 *
@@ -171,6 +174,8 @@
      D TmStamp         S             14  0
      D wSqlStr         S            200A
      D wSqlStr1        S            200A
+     D PChangeType     S              1A                                                    MD053487
+     D PLUser          S             10A                                                    MD053487
       *
       /EJECT
       *****************************************************************
@@ -583,10 +588,16 @@
       ** Generate TimeStamp
      C                   CALL      'ZAGENTS'
      C                   PARM                    PTimeStamp
+     C                   EVAL      PChangeType = 'A'                                        MD053487
+      ** Get User Name                                                                      MD053487
+     C                   CALL      'SFC000026'                                              MD053487
+     C                   PARM      *BLANKS       PLUSER                                     MD053487
       *
      C/exec SQL
      C+ update SDFACXTD set
-     C+   INTMST = :PTimeStamp
+     C+   INTMST = :PTimeStamp,                                                             MD053487
+     C+   INTYLC = :PChangeType,                                                            MD053487
+     C+   INLCUS = :PLUSER                                                                  MD053487
      C+ where
      C+   INUNIQ = :PUniq
      C/end-exec
@@ -627,6 +638,11 @@
       ** Generate TimeStamp
      C                   CALL      'ZAGENTS'
      C                   PARM                    PTimeStamp
+      *                                                                                     MD053487
+     C                   EVAL      PChangeType = 'I'                                        MD053487
+      ** Get User Name                                                                      MD053487
+     C                   CALL      'SFC000026'                                              MD053487
+     C                   PARM      *BLANKS       PLUSER                                     MD053487
       *
      C/exec SQL
      C+ insert into SDFACXTD
@@ -636,6 +652,8 @@
      C+  ,INUNIQ
      C+  ,INUSRD
      C+  ,INTMST
+     C+  ,INTYLC                                                                            MD053487
+     C+  ,INLCUS                                                                            MD053487
      C+ )
      C+ values
      C+ (
@@ -644,6 +662,8 @@
      C+  ,:PUniq
      C+  ,:PUserDesc
      C+  ,:PTimeStamp
+     C+  ,:PChangeType                                                                      MD053487
+     C+  ,:PLUser                                                                           MD053487
      C+ )
      C/end-exec
       *

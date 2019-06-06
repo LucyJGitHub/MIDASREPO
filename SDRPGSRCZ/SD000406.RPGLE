@@ -90,7 +90,8 @@
      D PrintNew        S              1A
      D WWINTF          S             20A
      D WWLCTP          S              6A
-     D WWLCDT          S              7A
+     D WWLCDT          S             10A
+     D WWTMST          S             26A
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -196,6 +197,12 @@
 
      C                   IF        INTYLC = 'A'
      C                   EVAL      WWLCTP = 'Amend'
+     C                   ENDIF
+
+     C                   MOVEL     INTMST        WWTMST
+     C                   MOVEL     WWTMST        WWLCDT
+     C                   IF        WWLCDT = '0001-01-01'
+     C                   EVAL      WWLCDT = *Blanks
      C                   ENDIF
 
       ** Write Details

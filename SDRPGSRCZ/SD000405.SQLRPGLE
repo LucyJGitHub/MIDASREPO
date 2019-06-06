@@ -167,6 +167,7 @@
      D WFFile          S             10A
      D POptn           S              7A                                                    MD053109
      D PRtcd           S              7A                                                    MD053109
+     D WLastChgUser    S             10A                                                    MD053487
 
 
       *****************************************************************
@@ -561,6 +562,7 @@
      C                   EVAL      PUniq = PIDName
      C                   EVAL      PUserDesc = *BLANKS
      C                   EVAL      WChangeType = 'I'                                        MD053487
+     C                   EVAL      WLastChgUser = *Blanks                                   MD053487
 
      C/exec SQL
      C+ insert into SDFACXTD
@@ -571,6 +573,7 @@
      C+  ,INUSRD
      C+  ,INTMST
      C+  ,INTYLC                                                                            MD053487
+     C+  ,INLCUS                                                                            MD053487
      C+ )
      C+ values
      C+ (
@@ -580,6 +583,7 @@
      C+  ,:PUserDesc
      C+  ,:WTimeStamp
      C+  ,:WChangeType                                                                      MD053487
+     C+  ,:WLastChgUser                                                                     MD053487
      C+ )
      C/end-exec
 

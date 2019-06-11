@@ -9,13 +9,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2018                     */
 /*                                                                   */
-/*       Last Amend No. MD053109           Date 03Apr19              */
-/*       Prev Amend No. MD053146           Date 03Apr19              */
+/*       Last Amend No. MD053594A          Date 10Jun19              */
+/*       Prev Amend No. MD053109           Date 03Apr19              */
+/*                      MD053146           Date 03Apr19              */
 /*                      MD053090           Date 26Mar19              */
 /*                      CSD101  *CREATE    Date 07Dec18              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*        MD053594A - Migration program did not run automatically    */
 /*        MD053109 - Data Take-On Reconciliation Issues              */
 /*        MD053146 - Incorrect account key format was migrated on    */
 /*                   validation list after data take on              */
@@ -31,6 +33,9 @@
              DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
              DCL        VAR(&DTALIB) TYPE(*CHAR) LEN(8) VALUE('  DTALIB')
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)                                /*MD053594A*/
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)                               /*MD053594A*/
+             DCL        VAR(&BRGDTA) TYPE(*CHAR) LEN(10)                               /*MD053594A*/
 
              DCLF       FILE(SDINTFTD)
 
@@ -57,6 +62,17 @@
 
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
              CHGVAR     VAR(%SUBSTRING(&DTALIB 1 2)) VALUE(&SYSID)
+                                                                                       /*MD053594A*/
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                          'BrgDeliveredDtaLib' &SVAL1 ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ')                                             /*MD053594A*/
+             CHGVAR     VAR(&BRGDTA) VALUE(&SVAL1)                                     /*MD053594A*/
+/** Copy file from deliverable data library. */                                        /*MD053594A*/
+             CPYF       FROMFILE(&BRGDTA/SDINTFTD) +
+                          TOFILE(SDINTFTD) TOMBR(*FROMMBR) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)                          /*MD053594A*/
+             MONMSG     MSGID(CPF0000)                                                 /*MD053594A*/
 
              CHKOBJ     OBJ(&DPLIB/XSDCORMPD) OBJTYPE(*FILE)
              MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(CHECK1))

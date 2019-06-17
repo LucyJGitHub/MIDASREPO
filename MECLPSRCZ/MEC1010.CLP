@@ -9,19 +9,25 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. JMI113             Date 22May18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 097252             Date 02Jan97              */
+/*                      097252             Date 02Jan97              */
 /*                      089180             Date 19Oct95              */
 /*                      S01435             DATE 19AUG93              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       JMI113 - Midas GCMS Interface. Upgrade to FBM 2.1           */
+/*                Addition of hook JMI113_009                        */
+/*                Addition of hook JMI113_010                        */
+/*                Addition of hook JMI113_011                        */
+/*                Addition of hook JMI113_012                        */
 /*       MD046248 - Finastra Rebranding                              */
 /*      097252 - COMPLETE 089180 FOR RESTRICTED MODE                 */
 /*      089180 - Allocation problem on MSPECIAL.                     */
@@ -50,8 +56,10 @@
              DCL        VAR(&FT_PROC) TYPE(*CHAR) LEN(2)
              DCL        VAR(&DATA) TYPE(*CHAR) LEN(50)
              DCL        VAR(&SPECMSG) TYPE(*CHAR) LEN(6)
-             DCL        VAR(&JOBNM) TYPE(*CHAR) LEN(10) +
-                          VALUE('          ')                       /* 089180 */
+             DCL        VAR(&JOBNM) TYPE(*CHAR) LEN(10) VALUE('          ') /* +
+                          089180 */
+/*/COPY WNCPYSRC,JMI113_009                                          */                   /*JMI113*/
+
 /* */
 /* Global Monitor Message */
 /* */
@@ -70,6 +78,8 @@
 /* Create data LDA in QTEMP  */
 /* */
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+/*/COPY WNCPYSRC,JMI113_010                                          */                   /*JMI113*/
+
 /* */
 /* Allocate TSTATUS to show job is active  */
 /* */
@@ -116,6 +126,9 @@
              ENDDO
 /* */
              RCVMSG     MSGQ(MSPECIAL) RMV(*NO) MSG(&SPECMSG)
+
+
+/*/COPY WNCPYSRC,JMI113_011                                          */                   /*JMI113*/
              IF         COND(&SPECMSG *NE '      ') THEN(DO)
              SNDPGMMSG  MSGID(MIN0229) MSGF(MEMSG) TOMSGQ(MOPERQ MRUNQ)
  /* Check initiating program                                            097252*/
@@ -130,6 +143,9 @@
              ENDDO                                                    /*097252*/
              GOTO       CMDLBL(ENDCLPGM)
              ENDDO
+/*/COPY WNCPYSRC,JMI113_012                                          */                   /*JMI113*/
+
+
 /* */
 /* Run MLC0020 - Set up overrides  */
 /* */

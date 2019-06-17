@@ -1,0 +1,1767 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL GCMS i/f - intra-day proj. mvmts.')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Midas-GCMS Interface                                 *
+      *                                                               *
+      ***GLJ008*-*Intra-day Proj. Mvmts Generation*********************                   JMI113
+      *  XX113008 - Intra-day proj. movements generation              *                   JMI113
+      *                                                               *
+      *  Function:  To process the real time posting file for all     *
+      *             active GCMS accounts and generate a MT942         *
+      *             message for each active account.                  *
+      *                                                               *
+      *  Close of Business                                            *
+      *                                                               *
+      ***Called*By:*GLCJ008 - Clears member GCMS942 in PF/GLGDTAPD*****                   JMI113
+      *  Called By: XXC113008 - Clears member GCMS942 in PF/XXGDTAPD  *                   JMI113
+      *                       and replaces it with an updated copy    *
+      *                                                               *
+      ***(c)*Misys*International*Banking*Systems*Ltd.*2003*************                   JMI113
+      *  (c) Finastra International Limited 2018                      *                   JMI113
+      *                                                               *
+      *  Last Amend No. JMI113             Date 22May18               *
+      *  Prev Amend No. JMI019             Date 06Sep07               *
+      *                 JMI019             Date 22Feb07               *
+      *                 JMI019B (CHG001)   Date 13Oct05               *
+      *                 JMI019 (C03)       Date 25Aug05               *
+      *                 230578             Date 19Apr05               *
+      *                 JMI019 (C02)       Date 29Jun05               *
+      *                 JMI019 (C01)       Date 21Jun05               *
+      *                 JMI019B            Date 28Apr05               *
+      *                 229756             Date 10Nov04               *
+      *                 228622             Date 22Sep04               *
+      *                 225651             Date 11Mar04               *
+      *                 JMI019 *CREATE     Date 16Jun03               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  JMI113 - Midas GCMS Interface. Upgrade to FBM 2.1            *
+      *  JMI019 - Additional codes to upgrade                         *
+      *  JMI019 - change definition of K#ACOD 4,0 to 10,0             *
+      *         - K#ACMT, change definition of K#ACOD 4,0 to 10,0     *
+      *         - Adjust G1FULA to accommodate new length of K#ACOD   *
+      *         - Change definition of field ACCT1 18 to 24           *
+      *  JMI019 - Incomplete information on FLD61                     *
+      *  JMI019B - (CHG001) Need to include CR LF at the end of each  *
+      *            line                                               *
+      *  JMI019 (C03) - Insert MHCB BIC in data header of MT940/942   *
+      *  230578 - Removed unneccessary coding re moving of narrative. *
+      *  JMI019 (C02) - Division of pages for MT940/MT942s            *
+      *  JMI019 (C01) - Midas-GCMS Interface Change Control 01        *
+      *                 Non-accumulation of MT942                     *
+      *  JMI019 - JMI019B - GCMS. File Name and Confirmation File     *
+      *  229756 - Recompiled due to changes done in /cpy GL2805C001   *
+      *           and ensure that Beneficiary/Odering customer is     *
+      *           shown on field tag 86.                              *
+      *  228622 - Applied enhancements BFI003, BFI004 and JMI016 to   *
+      *           resolve the missing field tag86 in MT942 and also   *
+      *           differentiate the DR/CR narrative for Outgoing      *
+      *           payment with settlement type '01'.                  *
+      *  225651 - Job GLCJ005 creating many joblogs during COB        *
+      *  JMI019 - Midas-GCMS Interface                                *
+      *                                                               *
+      *****************************************************************
+     F**********GLGCACL0UF  E           K        DISK                                         JMI113
+     FXXGCACL0UF  E           K        DISK                                                   JMI113
+     F                                              KINFSR *PSSR
+     F                                              KCOMIT
+     F**********RSACMTL1IF  E           K        DISK                                         JMI019
+     F**********  APOSTPDF                          KIGNORE                                   JMI019
+     F**********GLGCAMV1IF  E           K        DISK                                  JMI019 JMI113
+     FXXGCAMV1IF  E           K        DISK                                                   JMI113
+     FACCNT   IF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     FOTPAY   IF  E           K        DISK                                                   JMI019
+     FINPAY   IF  E           K        DISK                                                   JMI019
+     F**********DEALS   IF  E           K        DISK                                         JMI019
+     FDEALSALLIF  E           K        DISK                                                   JMI019
+     FCLOAN   IF  E           K        DISK                                                   JMI019
+     F            CLOANCKF                          KIGNORE                                   JMI019
+     F            CLOANZ1F                          KIGNORE                                   JMI019
+     FFDDTSTL1IF  E           K        DISK                                                   JMI019
+     FSDLOANL1IF  E           K        DISK                                                   JMI019
+     FSDCUSTL0IF  E           K        DISK                                                   JMI019
+     F**********GLGREFL0UF  E           K        DISK                      A                  JMI113
+     F**********GLGDTAPDO   E                    DISK                                         JMI113
+     F**********GLC942PDO   E                    DISK                                 JMI019B JMI113
+     F**********GLGCM1PPO   E                    DISK                                  JMI019 JMI113
+     F**********GLJ008AUO   E                    PRINTER      KINFDS SPOOLU     UC            JMI113
+     FXXGREFL0UF  E           K        DISK                      A                            JMI113
+     FXXGDTAPDO   E                    DISK                                                   JMI113
+     FXXC942PDO   E                    DISK                                                   JMI113
+     FXXGCM1PPO   E                    DISK                                                   JMI113
+     FXX1138AUO   E                    PRINTER      KINFDS SPOOLU     UC                      JMI113
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   Indicator Usage                                             *
+      *   ---------------                                             *
+      *                                                               *
+      ****21********Member not found on message ref. file GLGREFL0    *                       JMI113
+      *   21        Member not found on message ref. file XXGREFL0    *                       JMI113
+      ****22********No Record Found/Last record on GLGCACL0           *                       JMI113
+      *   22        No Record Found/Last record on XXGCACL0           *                       JMI113
+      *   23        Account not found on account master file ACCNT    *
+      ****25********Acc not found on today's posting file GLGCAMV1    *                JMI019 JMI113
+      *   25        Acc not found on today's posting file XXGCAMV1    *                       JMI113
+      *   26        No Rec Found/Last rec on Narrative file GLFNARL0  *
+      *   30        No Records found on 1 or more files               *
+      *   31        Error on write of detail line                     *
+      *                                                               *
+      *   U7 & U8   Database error                                    *
+      *   nn        X                                                 *
+      *                                                               *
+      *****************************************************************
+      *****************************************************************
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E                    @FM       256  1
+     E                    @TO       256  1
+      *                                                                                       JMI019
+      ** Array to check '//' in tag 61 SF7.                                                   JMI019
+      *                                                                                       JMI019
+     E                    @S71        8  2                                                    JMI019
+     E                    @S72        7  2                                                    JMI019
+      *
+      ** Rename MARG
+     ICLOANCLF
+     I              MARG                            CLMARG
+      *
+     I***RSACMT****E*DSGLRSSVPD**                                                             JMI019
+     I**********                              1  15 ACCTNO                                    JMI019
+     IACCTNO      DS                             21
+     I**********                              1   60#CUSTN                                    JMI113
+     I                                        1   6 #CUSTN                                    JMI113
+     I                                        7   9 #CCYD
+     I                                       10  19 #ACDE
+     I                                       20  210#SEQN
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** LDA for database error reporting
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+     I                                      264 269 @NUM
+      *
+      ** Program Status Data Structure - gives Job name, user and
+      ** number
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Data structure for bank details table
+      *
+     ISDMMOD    E DSSDMMODPD
+      *
+      ** Data Structure for Midas Module Details Access Program
+      *
+     ISDRETL    E DSSDRETLPD
+      *
+      ** Data Structure for Retail Data Access Program
+      *
+     ISDCURR    E DSSDCURRPD
+      *
+      ** Data structure for currency details
+      *
+     ISDCUST    E DSSDCUSTPD
+      *
+      ** Data structure for customer details
+      *
+     I**********GLGCMS    E DSGLGCMSDA                    256                             JMI113
+     IGLGCMS    E DSXXGCMGDA                    256                                       JMI113
+      *
+      ** GCMS Data Area
+      *
+     IMNM         DS
+     I                                        1  10 W@MNM
+     I                                        2   70W@MDAT
+      *
+      ** Member name - date
+      *
+     ISPOOLU      DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      *
+      ***File*Information*Data*Structure*for*GLJ008AU                                     JMI113
+      ** File Information Data Structure for XX1138AU                                     JMI113
+      *
+     I@20         DS
+     I                                        1   2 @PFX
+     I                                        3   80@DAT
+     I                                        9  120@TIM
+     I                                       13  150@SEQ
+      *
+      ** Transaction Reference Number data structure
+      *
+     I            DS
+     I                                        1  24 G1FULA                                    JMI019
+     I**********                              1  18 G1FULA                                    JMI019
+     I                                        1   3 K#BRCA
+     I**********                              4   90K#CNUM                                    JMI113
+     I                                        4   9 K#CNUM                                    JMI113
+     I                                       10  12 K#CCY
+     I                                       13  220K#ACOD                                    JMI019
+     I                                       23  240K#ACSQ                                    JMI019
+     I**********                             13  160K#ACOD                                    JMI019
+     I**********                             17  180K#ACSQ                                    JMI019
+      *
+      ** Full Account Data Structure(GLFONAPD)
+      *
+      ***Full*Account*Data*Structure(RSACMTL1)                                                JMI019
+      ***Full*Account*Data*Structure(GLGCAMV1)                                         JMI019 JMI113
+      ** Full Account Data Structure(XXGCAMV1)                                                JMI113
+      *
+     I            DS
+     I                                        1 256 @DATA
+     I                                        1 256 @TO
+     I                                        1   4 @TAG4
+     I                                        1   5 @TAG5
+     I                                        5 256 @DAT4
+     I                                        5  11 @DAT4A                                    JMI019
+     I                                       12 256 @DAT4B                                    JMI019
+     I                                        6 256 @DAT5
+     I**********                             22 256 @DAT6                                     229756
+     I                                       21 256 @DAT6                              229756 JMI019
+      *
+      ** Message data
+      *
+     I            DS
+     I                                        1   7 SPOS
+     I                                        6   7 @SPID
+      *
+      ** Source of posting
+      *
+     I            DS
+     I                                        1   9 @28
+     I                                        1   50@28S1
+     I I            '/'                       6   6 @28SL
+     I                                        7   9 @28S2
+      ** Field :28:
+     I            DS
+     I                                        1   5 @34F
+     I                                        1   3 @34FS1
+     I                                        4   5 @34FS2
+      *
+      ** Field :34F:
+      *
+     I            DS
+     I                                        1  15 @13
+     I                                        1   6 @13S1
+     I                                        7  10 @13S2
+     I                                       11  15 @13S3
+      *
+      ** Field :13:
+      *
+     I            DS
+     I**********                              1  55 @61                                       JMI019
+     I                                        1  64 @61                                       JMI019
+     I                                        1   6 @61S1
+     I                                        7  10 @61S2
+     I                                       11  11 @61S3
+      ** SWIFT Currency field (@61S4) not required
+     I                                       12  26 @61S5
+     I                                       27  30 @61S6
+     I                                       27  27 @61S6A
+     I                                       28  30 @61S6B
+     I                                       31  46 @61S7
+     I                                       31  31 @61S7A                                    JMI019
+     I                                       32  46 @61S7B                                    JMI019
+     I                                       32  45 @61S7C                                    JMI019
+     I**********                             47  55 @61S8                                     JMI019
+     I                                       47  64 @61S8                                     JMI019
+     I                                       47  48 @61S8A
+     I                                       49  49 @61S8B
+     I                                       50  55 @61S8C
+     I                                       49  55 @61S8D
+     I                                       49  64 @61S8F                                    JMI019
+      *
+      ** Field :61: subfields 1 to 8
+      *
+     I            DS
+     I                                        1  23 @90D
+     I                                        1   50@90DS1
+     I                                        6   8 @90DS2
+     I                                        9  23 @90DS3
+      *
+      ** Field :90D:
+      *
+     I            DS
+     I                                        1  23 @90C
+     I                                        1   50@90CS1
+     I                                        6   8 @90CS2
+     I                                        9  23 @90CS3
+      *
+      ** Field :90C:
+      *
+     I            DS
+     I                                        1   7 @ASIR
+     I                                        1   1 @MODI
+     I                                        2   7 @TNMR
+      *                                                                                       CHG001
+     IDSDLIM      DS                                                                          CHG001
+      *                                                                                       CHG001
+      *  To define carriage return delimiters for message scanning                            CHG001
+      *                                                                                       CHG001
+      *  Hex value  '  '   = CRLF  Start of text/Field Separator                              CHG001
+      *              00                                                                       CHG001
+      *              DA                                                                       CHG001
+      *                                                                                       CHG001
+     I                                        1   1 CRLFC                                     CHG001
+     I                                        1   1 BTA                                       CHG001
+      *
+      ** GL posting reference for field :61: subfield 8
+      *
+     I            DS
+     I                                        1 256 @G4DAT
+     I I            '{1:F01'                  1   6 @G4S1
+     I                                        7  18 @G4S2
+     I I            '0000000000}{2:I942'     19  36 @G4S3
+     I*I********    '            '           37  48 @G4S4                                     JMI019
+     I*I********    'U3003}{4:'              49 128 @G4S5                                     JMI019
+     I I            'MHCBJPJ4XXXX'           37  48 @G4S4                                     JMI019
+     I*I********    'N}{4:'                  49 128 @G4S5                              JMI019 CHG001
+     I I            'N}{4:'                  49  53 @G4S5                                     CHG001
+     I                                       54 128 @G4S6                                     CHG001
+      *
+      ** Swift Header
+      *
+     I            DS
+     I                                        1   60W#NEWT
+     I                                        1   40W#NEW2
+      *
+     I              'GCMS942'             C         GCMS
+      *
+      /EJECT
+      *
+      *****************************************************************
+      *                                                               *
+      *   Index to subroutines                                        *
+      *   --------------------                                        *
+      *                                                               *
+      *   INIT      Initial process                                   *
+      *   MAIN      Main detail process                               *
+      *   CREATE    Create ISO MT942                                  *
+      *   FLD20     Create field :20: (Transaction Reference Number)  *
+      *   FLD25     Create field :25: (Account i/d)                   *
+      *   FLD28C    Create field :28C:(Statement number/sequence)     *
+      *   FLD34F    Create field :34F:(Floor Limit Indicator)         *
+      *   FLD13     Create field :13: (Date/Time Indicator)           *
+      *   FLD61     Create all field :61:s (Postings)                 *
+      *   SF6       Format field :61:, subfield 6                     *
+      *   SF7       Format field :61:, subfield 7                     *
+      *   SF8       Format field :61:, subfield 8                     *
+      *   SF9       Format field :61:, subfield 9                     *
+      *   FLD90D    Create field :90D: (No. & sum of debit entries)   *
+      *   FLD90C    Create field :90C: (No. & sum of credit entries)  *
+      *   AUDIT     Audit Report and End Program                      *
+      *   *PSSR     Process errors                                    *
+      *                                                               *
+      *****************************************************************
+      *
+      /EJECT
+      *
+      *================================================================
+      *  P R O G R A M    S T A R T                                   *
+      *================================================================
+      *
+      ** Receive Parameter List
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MNM    10
+     C                     PARM           ANUM   24                                           JMI019
+     C**********           PARM           ANUM   18                                           JMI019
+      *
+      ** Execute initial process
+      *
+     C                     EXSR INIT
+      *
+      ** Execute main detail process
+      *
+     C                     EXSR MAIN
+      *
+      ** Output Audit Report and End Program
+      *
+     C                     EXSR AUDIT
+      *                                                                                       225651
+     C                     COMIT                                                              225651
+      *
+      ** Terminate RPG program
+     C                     SETON                     LR
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  INIT                                           *
+      * Function    :  Perform initial processing                     *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  AOBANKR0                                       *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Initialise object copyright statement
+      *
+     C                     MOVEACPY@      MKI@   80
+      *
+      ** Initialise LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBASE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVEL'XX113008'DBPGM
+     C                     OUT  LDA
+      *
+      ** Initialise record counters
+      *
+     C                     Z-ADD0         W@RED
+     C                     Z-ADD0         W@WRI
+     C                     Z-ADD0         XXNREC
+      *
+      ** Initialise work field for value date
+      *
+     C                     MOVE *BLANKS   W@61S2  6
+      *
+      ** Set up key list for full account id.
+      *
+     C           K#ACID    KLIST
+     C**********           KFLD           K#CNUM  60                                          JMI113
+     C                     KFLD           K#CNUM  6                                           JMI113
+     C                     KFLD           K#CCY   3
+     C                     KFLD           K#ACOD 100                                          JMI019
+     C**********           KFLD           K#ACOD  40                                          JMI019
+     C                     KFLD           K#ACSQ  20
+     C                     KFLD           K#BRCA  3
+      *
+      ***Set*up*key*list*for*full*account*id.*(for*rsacmtl1*&GLRSSVL1)                        JMI019
+      ***Set*up*key list for full account id. (for GLGCAMV1 &GLRSSVL1)                 JMI019 JMI113
+      ** Set up key list for full account id. (for XXGCAMV1 &GLRSSVL1)                        JMI113
+      *
+     C           K#ACMT    KLIST
+     C                     KFLD           K#BRCA  3
+     C**********           KFLD           K#CNUM  60                                          JMI113
+     C                     KFLD           K#CNUM  6                                           JMI113
+     C                     KFLD           K#CCY   3
+     C                     KFLD           K#ACOD 100                                          JMI019
+     C**********           KFLD           K#ACOD  40                                          JMI019
+     C                     KFLD           K#ACSQ  20
+      *
+      ** Access SDBANKPD for bank ICD
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C                     PARM           SDBANK
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '001'     DBASE            * * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY            *  DBERR 001  *
+     C                     MOVEL'SDBANKPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check whether Retail installed and Retail A/C Numbers supported
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C                     PARM           SDMMOD
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '007'     DBASE            * * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY            *  DBERR 007  *
+     C                     MOVEL'SDMMODPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           BGRTBN    IFEQ 'Y'
+     C           BGNXST    OREQ 'Y'
+     C                     CALL 'AORETLR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C                     PARM           SDRETL
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '008'     DBASE            * * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY            *  DBERR 008  *
+     C                     MOVEL'SDRETLPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Check whether switchable feature CSW020, SWIFT decimal
+      ** places is switched on.
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CSW020'  @SAR    6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CSW020  1
+     C                     MOVE 'N'       WSWDPC  1
+     C                     ELSE
+     C                     MOVE ' '       WSWDPC
+     C                     ENDIF
+      *                                                                                       CHG001
+      ** Setup field for 'CRLF'                                                               CHG001
+     C                     BITOF'01236'   BTA                                                 CHG001
+     C                     BITON'457'     BTA                                                 CHG001
+      *
+     C                     ENDSR                           INIT
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  MAIN                                           *
+      * Function    :  Perform main detail processing                 *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  CREATE                                         *
+      *****************************************************************
+      *
+     C           MAIN      BEGSR
+      *
+     C           ANUM      IFNE *BLANKS                    B01
+     C********** ANUM      CHAINGLGCACL0             22                                       JMI113
+     C           ANUM      CHAINXXGCACL0             22                                       JMI113
+     C                     ELSE                            I01
+     C**********           READ GLGCACL0                 22                                   JMI113
+     C                     READ XXGCACL0                 22                                   JMI113
+     C                     ENDIF                           E01
+      *
+      ** No records found
+      *
+     C           *IN22     IFEQ '1'                        B01
+     C                     MOVE *ON       *IN30
+     C                     ELSE                            I01
+      *
+      ** Do while not EOF
+      *
+     C           *IN22     DOWEQ'0'                        B02
+     C                     ADD  1         W@RED
+      *
+      ** Next working day
+      *
+     C           G1WD42    IFLT BJDNWD                     B03
+     C           G1GN42    ANDEQ'Y'
+      *
+     C           K#ACID    CHAINACCNT                23
+      *
+      ** If record not found perform standard DB Error processing
+      *
+     C           *IN23     IFEQ '1'                        B04
+     C           *LOCK     IN   LDA
+     C                     MOVE '002'     DBASE            * * * * * * * *
+     C                     MOVEL'PROGRAM' DBKEY            *  DBERR 002  *
+     C                     MOVEL'ACCNT   'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE                            I04
+      *
+      ** Live account details are found
+      *
+     C           RECI      IFEQ 'D'                        B05
+     C           G1FONA    ANDEQ'Y'
+     C           G1ATVD    ANDLTBJDNWD
+     C           G1DATV    ANDEQ*ZEROS
+     C           RECI      OREQ 'D'                        I05
+     C           G1FONA    ANDEQ'Y'
+     C           G1ATVD    ANDLTBJDNWD
+     C           G1DATV    ANDGEBJDNWD
+      *
+      ** Generate MT942 message
+      *
+     C                     EXSR CREATE
+      *
+     C                     ENDIF                           E05
+     C                     ENDIF                           E04
+     C                     ENDIF                           E03
+     C*********            READ GLGCACL0                 22                                   JMI113
+     C                     READ XXGCACL0                 22                                   JMI113
+      *
+     C           ANUM      IFNE *BLANKS                    B03
+     C                     SETON                     22
+     C                     ENDIF                           E03
+      *
+     C                     ENDDO                           E02
+      *
+      ***Add*a*new*record in GLC942PD with                                           JMI019B JMI113
+      ** Add a new record in XXC942PD with                                                   JMI113
+      ** XXNREC is the number of accounts in the message and                                 JMI019B
+      ** XXMTYP is '942'                                                                     JMI019B
+      *                                                                                      JMI019B
+     C           XXNREC    IFGT 0                                                            JMI019B
+     C                     MOVEL'942'     XXMTYP                                             JMI019B
+     C*********            WRITEGLC942D0                                             JMI019B JMI113
+     C                     WRITEXXC942D0                                                     JMI113
+     C                     ENDIF                                                             JMI019B
+      *                                                                                      JMI019B
+     C                     ENDIF                           E01
+      *
+     C                     ENDSR                           MAIN
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  CREATE                                         *
+      * Function    :  Create ISO MT942 message for transmission      *
+      *                to GCMS                                        *
+      *                                                               *
+      * Called by   :  MAIN                                           *
+      * Calls       :  FLD20      Create field :20:                   *
+      *                FLD25      Create field :25:                   *
+      *                FLD34F     Create field :34F:                  *
+      *                FLD13      Create field :13:                   *
+      *                FLD61      Create all field :61:s              *
+      *                FLD86      Create field :86:                   *
+      *                FLD90D     Create field :90D:                  *
+      *                FLD90C     Create field :90C:                  *
+      *****************************************************************
+      *
+     C           CREATE    BEGSR
+      *
+      ** Set up & initialise total amount, and number of debit/credit's
+      *
+     C                     Z-ADD*ZERO     W@DRNO  30
+     C                     Z-ADD*ZERO     W@CRNO  30
+     C                     Z-ADD*ZERO     W@DRAM 130
+     C                     Z-ADD*ZERO     W@CRAM 130
+     C                     Z-ADD*ZERO     W@NO    30                                          JMI019
+     C                     Z-ADD1         F28CNO  30                                          JMI019
+     C                     MOVE 'N'       NEWMSG                                              JMI019
+      *
+      ** Access first posting for this account
+      *
+     C                     SETOF                     25
+     C********** K#ACMT    SETLLRSACMTPO                 80                                   JMI019
+     C*********  K#ACMT    SETLLGLGCAMPO                 80                            JMI019 JMI113
+     C           K#ACMT    SETLLXXGCAMPO                 80                                   JMI113
+      *
+     C           ACCT1     DOUNEG1FULA
+     C           *IN25     OREQ '1'
+     C           PTDT      ORGE BJRDNB
+     C           VUDT      ANDLTBJDNWD
+     C           NEWPST    ANDEQ'Y'
+     C**********           READ RSACMTPO                 25                                   JMI019
+     C*********            READ GLGCAMPO                 25                            JMI019 JMI113
+     C                     READ XXGCAMPO                 25                                   JMI113
+      *                                                                                       JMI019
+     C**********           Z-ADDCUSN      #CUSTN                                       JMI019 JMI113
+     C                     MOVE CUSN      #CUSTN                                              JMI113
+     C                     MOVELCCYD      #CCYD     P                                         JMI019
+     C                     MOVELACDE      #ACDE     P                                         JMI019
+     C                     Z-ADDASNC      #SEQN                                               JMI019
+      *                                                                                       JMI019
+     C                     MOVE ACCTNO    ACCT1  24                                           JMI019
+     C**********           MOVE ACCTNO    ACCT1  18
+     C                     MOVELBRCA      ACCT1
+     C                     MOVE 'Y'       NEWPST  1
+      *
+     C                     ENDDO
+      *
+     C           ACCT1     IFEQ G1FULA
+     C           *IN25     ANDEQ'0'
+      *
+      ***Write*Swift*Header*to*PF/GLGDTAPD                                                    JMI113
+      ** Write Swift Header to PF/XXGDTAPD                                                    JMI113
+      *
+     C*********  *NAMVAR   DEFN GLGCMSDA  GLGCMS                                              JMI113
+     C           *NAMVAR   DEFN XXGCMGDA  GLGCMS                                              JMI113
+     C           *LOCK     IN   GLGCMS
+     C                     MOVE G6FNBC    @G4S2
+     C                     MOVELCRLFC     @G4S6                                               CHG001
+     C                     MOVEL@G4DAT    G4DATA
+     C*********            WRITEGLGDTAD0                                                      JMI113
+     C                     WRITEXXGDTAD0                                                      JMI113
+     C                     OUT  GLGCMS
+      *
+      ** Create field :20: (Transaction Reference Number)
+      *
+     C                     EXSR FLD20
+      *
+      ** Create field :25: (Account i/d)
+      *
+     C                     EXSR FLD25
+      *
+      ** Create field :28C:, if CGL005 switched on.
+      *
+     C                     EXSR FLD28C
+      *
+      ** Create field :34F:(Floor Limit Indicator)
+      *
+     C                     EXSR FLD34F
+      *
+      ** Create field :13: (Date/Time Indicator)
+      *
+     C                     EXSR FLD13
+     C                     ENDIF
+      *
+      ***If*found*then*account*id*read*from*RSACMTL0*is*the*same*as                           JMI019
+      ***If*found*then*account*id*read*from*GLGCAMV1*is*the*same*as                    JMI019 JMI113
+      ** If found then account id read from XXGCAMV1 is the same as                           JMI113
+      ***that*being*processed*on*GLGCACL0                                                     JMI113
+      ** that being processed on XXGCACL0                                                     JMI113
+      *
+     C           ACCT1     DOWEQG1FULA
+     C           *IN25     ANDEQ'0'
+      *
+     C           PTDT      IFGE BJRDNB
+     C           VUDT      ANDLTBJDNWD
+     C           NEWPST    ANDEQ'Y'
+      *
+      * If new message flag is 'Y', means a message with 10 postings                          JMI019
+      * has been output. Want to complete this message and create another.                    JMI019
+     C           NEWMSG    IFEQ 'Y'                                                           JMI019
+      *                                                                                       JMI019
+     C           W@DRNO    IFGT 0                                                             JMI019
+     C           W@CRNO    ORGT 0                                                             JMI019
+     C                     EXSR FLD90D                                                        JMI019
+     C                     EXSR FLD90C                                                        JMI019
+     C                     ENDIF                                                              JMI019
+      *                                                                                       JMI019
+      ***Write*Swift*Trailer*to*PF/GLGDTAPD                                            JMI019 JMI113
+      ** Write Swift Trailer to PF/XXGDTAPD                                                   JMI113
+      *                                                                                       JMI019
+     C           W@DRNO    IFGT 0                                                             JMI019
+     C           W@CRNO    ORGT 0                                                             JMI019
+     C                     MOVE *BLANKS   G4DATA                                              JMI019
+     C**********           MOVEL'-}'      G4DATA                                       JMI019 CHG001
+     C           '-}'      CAT  CRLFC     G4DATA                                              CHG001
+     C*********            WRITEGLGDTAD0                                               JMI019 JMI113
+     C                     WRITEXXGDTAD0                                                      JMI113
+     C                     ADD  1         XXNREC                                              JMI019
+     C                     ENDIF                                                              JMI019
+      *                                                                                       JMI019
+     C                     Z-ADD*ZERO     W@DRNO  30                                          JMI019
+     C                     Z-ADD*ZERO     W@CRNO  30                                          JMI019
+     C                     Z-ADD*ZERO     W@DRAM 130                                          JMI019
+     C                     Z-ADD*ZERO     W@CRAM 130                                          JMI019
+     C                     Z-ADD*ZERO     W@NO    30                                          JMI019
+     C                     ADD  1         F28CNO                                              JMI019
+      *                                                                                       JMI019
+      ***Write*Swift*Header*to*PF/GLGDTAPD                                             JMI019 JMI113
+      ** Write Swift Header to PF/XXGDTAPD                                                    JMI113
+      *                                                                                       JMI019
+     C           *LOCK     IN   GLGCMS                                                        JMI019
+     C                     MOVE G6FNBC    @G4S2                                               JMI019
+     C                     MOVELCRLFC     @G4S6                                               CHG001
+     C                     MOVEL@G4DAT    G4DATA                                              JMI019
+     C*********            WRITEGLGDTAD0                                               JMI019 JMI113
+     C                     WRITEXXGDTAD0                                                      JMI113
+     C                     OUT  GLGCMS                                                        JMI019
+      *                                                                                       JMI019
+      ** Create field :20: (Transaction Reference Number)                                     JMI019
+      *                                                                                       JMI019
+     C                     EXSR FLD20                                                         JMI019
+      *                                                                                       JMI019
+      ** Create field :25: (Account i/d)                                                      JMI019
+      *                                                                                       JMI019
+     C                     EXSR FLD25                                                         JMI019
+      *                                                                                       JMI019
+      ** Create field :28C:, if CGL005 switched on.                                           JMI019
+      *                                                                                       JMI019
+     C                     EXSR FLD28C                                                        JMI019
+      *                                                                                       JMI019
+      ** Create field :34F:(Floor Limit Indicator)                                            JMI019
+      *                                                                                       JMI019
+     C                     EXSR FLD34F                                                        JMI019
+      *                                                                                       JMI019
+      ** Create field :13: (Date/Time Indicator)                                              JMI019
+      *                                                                                       JMI019
+     C                     EXSR FLD13                                                         JMI019
+      *                                                                                       JMI019
+     C                     MOVE 'N'       NEWMSG                                              JMI019
+     C                     ENDIF                                                              JMI019
+      *                                                                                       JMI019
+      ** Maintain Debit or Credit count and totals
+      *
+     C           DORC      IFEQ 0
+     C                     ADD  1         W@DRNO
+     C                     ADD  MVAM      W@DRAM
+     C                     ELSE
+     C                     ADD  1         W@CRNO
+     C                     ADD  MVAM      W@CRAM
+     C                     ENDIF
+      *
+      ** Create all field :61:s (Postings)
+      *
+     C                     EXSR FLD61
+      *
+      ** Create field :86: (Narrative)  : Condition as per SF9
+      *
+     C********** @DATA     IFNE *BLANKS                                                       228622
+     C                     EXSR FLD86
+     C**********           ENDIF                                                              228622
+      *                                                                                       JMI019
+     C                     ADD  1         W@NO                                                JMI019
+     C                     ENDIF
+      *
+      ** Read next record
+      *
+     C**********           READ RSACMTPO                 25                                   JMI019
+     C**********           READ GLGCAMPO                 25                            JMI019 JMI113
+     C                     READ XXGCAMPO                 25                                   JMI113
+      *                                                                                       JMI019
+     C**********           Z-ADDCUSN      #CUSTN                                       JMI019 JMI113
+     C                     MOVE CUSN      #CUSTN                                              JMI113
+     C                     MOVELCCYD      #CCYD     P                                         JMI019
+     C                     MOVELACDE      #ACDE     P                                         JMI019
+     C                     Z-ADDASNC      #SEQN                                               JMI019
+      *                                                                                       JMI019
+     C                     MOVE ACCTNO    ACCT1                                               JMI019
+     C**********           MOVE ACCTNO    ACCT1  18                                           JMI019
+     C                     MOVELBRCA      ACCT1
+     C                     MOVE 'Y'       NEWPST
+      *
+      *                                                                                       JMI019
+     C           W@NO      IFEQ 10                                                            JMI019
+     C                     MOVE 'Y'       NEWMSG  1                                           JMI019
+     C                     ELSE                                                               JMI019
+     C                     MOVE 'N'       NEWMSG                                              JMI019
+     C                     ENDIF                                                              JMI019
+      *                                                                                       JMI019
+     C                     ENDDO
+      *
+     C           W@DRNO    IFGT 0
+     C           W@CRNO    ORGT 0
+     C                     EXSR FLD90D
+     C                     EXSR FLD90C
+     C                     ENDIF
+      *
+      ***Write*Swift*Trailer*to*PF/GLGDTAPD                                                   JMI113
+      ** Write Swift Trailer to PF/XXGDTAPD                                                   JMI113
+      *
+     C           W@DRNO    IFGT 0
+     C           W@CRNO    ORGT 0
+     C                     MOVE *BLANKS   G4DATA
+     C**********           MOVEL'-}'      G4DATA                                              CHG001
+     C           '-}'      CAT  CRLFC     G4DATA                                              CHG001
+     C**********           WRITEGLGDTAD0                                                      JMI113
+     C                     WRITEXXGDTAD0                                                      JMI113
+     C                     ADD  1         XXNREC
+     C                     ENDIF
+      *
+     C                     ENDSR                           CREATE
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD20                                          *
+      * Function    :  Create field :20: (Transaction Reference       *
+      *                Number)                                        *
+      *                                                               *
+      * Called by   :  CREATE                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLD20     BEGSR
+      *
+      ** Set up field tag and data
+      *
+     C                     CLEAR@DATA
+     C                     MOVEL':20:'    @TAG4
+     C                     MOVEL'MF'      @PFX
+      *
+     C           MNM       IFEQ GCMS
+     C                     CALL 'ZM0060'
+     C                     PARM BJRDNB    ZMDAY   50
+     C                     PARM           ZSDATE  6
+     C                     MOVELZSDATE    @DAT
+     C                     ELSE
+     C                     MOVELW@MDAT    @DAT
+     C                     ENDIF
+      *
+      ** Initialise Transaction Reference time subfield
+      *
+     C                     TIME           W#NEWT  60
+     C           W#NEW2    IFEQ W#OLDT                     B01
+     C                     ADD  1         @SEQ
+     C                     ELSE                            I01
+     C                     Z-ADD1         @SEQ
+     C                     Z-ADDW#NEW2    W#OLDT  40
+     C                     MOVE W#OLDT    @TIM
+     C                     ENDIF                           E01
+      *
+     C**********           MOVEL@20       @DAT4                                               CHG001
+     C           @20       CAT  CRLFC     @DAT4                                               CHG001
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+      *
+     C**********           WRITEGLGDTAD0                                                      JMI113
+     C                     WRITEXXGDTAD0                                                      JMI113
+      *
+      ***Keep*a*count*of the number of records written to GLGDTAPD                            JMI113
+      ** Keep a count of the number of records written to XXGDTAPD                            JMI113
+      *
+     C                     ADD  1         W@WRI
+      *
+     C                     ENDSR                           FLD20
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD25                                          *
+      * Function    :  Create field :25: (Account i/d)                *
+      *                                                               *
+      * Called by   :  CREATE                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLD25     BEGSR
+      *
+      ** Set up field tag and data
+      *
+     C                     CLEAR@DATA
+     C                     MOVEL':25:'    @TAG4
+     C           ATYP      IFEQ 'R'
+     C           BMRANR    ANDEQ'Y'
+     C           ACNO      ANDNE*ZEROS
+     C**********           MOVELACNO      @DAT4                                               CHG001
+     C                     MOVE ACNO      WACNO  10                                           CHG001
+     C           WACNO     CAT  CRLFC:0   @DAT4                                               CHG001
+     C                     ELSE
+     C**********           MOVELG1FULA    @DAT4                                               CHG001
+     C           G1FULA    CAT  CRLFC:0   @DAT4                                               CHG001
+     C                     END
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+      *
+     C**********           WRITEGLGDTAD0                                                      JMI113
+     C                     WRITEXXGDTAD0                                                      JMI113
+      *
+     C                     ENDSR                           FLD25
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD28C                                         *
+      * Function    :  Create field :28C:                             *
+      *                                                               *
+      * Called by   :  CREATE                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FLD28C    BEGSR
+      *
+      ** Set up field tag and data
+      *
+     C                     CLEAR@DATA
+     C                     MOVEL':28C:'   @TAG5
+     C           NEWMSG    IFNE 'Y'                                                           JMI019
+     C           G1FNSQ    ADD  1         @28S1
+     C                     ENDIF                                                              JMI019
+     C                     MOVELF28CNO    W@28S2  3                                           JMI019
+     C*********************MOVEL'1 '      @28S2                                               JMI019
+     C                     MOVELW@28S2    @28S2                                               JMI019
+     C**********           MOVEL@28       @DAT5                                               CHG001
+     C           @28       CAT  CRLFC:0   @DAT5                                               CHG001
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+      *
+     C**********           WRITEGLGDTAD0                                                     JMI113
+     C                     WRITEXXGDTAD0                                                     JMI113
+      *
+      ** Update sequence number
+      *
+     C           NEWMSG    IFNE 'Y'                                                           JMI019
+     C                     ADD  1         G1FNSQ
+     C**********           UPDATGLGCACD0                                                    JMI113
+     C                     UPDATXXGCACD0                                                    JMI113
+     C                     ENDIF                                                              JMI019
+      *
+     C                     ENDSR                           FLD28C
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD34F                                         *
+      * Function    :  Create field :34F:(Floor Limit Indicator)      *
+      *                                                               *
+      * Called by   :  CREATE                                         *
+      * Calls       :  ZM0040     Return ccy/amount in ISO format     *
+      *****************************************************************
+      *
+     C           FLD34F    BEGSR
+      *
+      ** Set up field tag and data
+      *
+     C                     CLEAR@DATA
+     C                     MOVEL':34F:'   @TAG5
+     C                     MOVEL'0,'      @34FS2
+      *
+      ** Determine SWIFT currency
+      *
+     C                     CALL 'ZM0040'
+     C                     PARM           ZAMNT  130
+     C                     PARM K#CCY     ZCCY    3
+     C                     PARM           ZSAMNT 15
+     C           @34FS1    PARM           ZSCCY   3
+     C                     PARM *BLANKS   ZERR    1
+      *
+      ** If program fails, report database error
+      *
+     C           ZERR      IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '003'     DBASE            * * * * * * * *
+     C                     MOVEL'PROGRAM' DBKEY            *  DBERR 003  *
+     C                     MOVEL'ZM0040  'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C**********           MOVEL@34F      @DAT5                                               CHG001
+     C           @34F      CAT  CRLFC:0   @DAT5                                               CHG001
+     C                     MOVEL@DATA     G4DATA
+      *
+      ** Write record to file
+      *
+     C*********            WRITEGLGDTAD0                                                      JMI113
+     C                     WRITEXXGDTAD0                                                      JMI113
+      *
+     C                     ENDSR                           FLD34F
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD13                                          *
+      * Function    :  Create field :13: (Date/Time Indicator)        *
+      *                                                               *
+      * Called by   :  CREATE                                         *
+      * Calls       :  ZM0060     Return date in ISO format           *
+      *                ZM0040     Return ccy/amount in ISO format     *
+      *****************************************************************
+      *
+     C           FLD13     BEGSR
+      *
+      ** Set up field tag and data
+      *
+     C                     CLEAR@DATA
+     C                     MOVEL':13D:'   @TAG5
+      *
+     C           MNM       IFEQ GCMS
+     C                     CALL 'ZM0060'
+     C                     PARM BJRDNB    ZMDAY   50
+     C                     PARM           ZSDATE  6
+     C                     MOVELZSDATE    @13S1
+     C                     ELSE
+     C                     MOVELW@MDAT    @13S1
+     C                     ENDIF
+      *
+     C                     MOVEL@TIM      @13S2
+     C           @13S2     IFEQ *BLANK                                                        JMI019
+     C                     MOVEL'0000'    @13S2                                               JMI019
+     C                     ENDIF                                                              JMI019
+     C                     MOVEL'+0700'   @13S3
+      *
+      ** Move data to output record
+      *
+     C**********           MOVEL@13       @DAT5                                               CHG001
+     C           @13       CAT  CRLFC:0   @DAT5                                               CHG001
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+      *
+     C**********           WRITEGLGDTAD0                                                      JMI113
+     C                     WRITEXXGDTAD0                                                      JMI113
+      *
+     C                     ENDSR                           FLD13
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD61                                          *
+      * Function    :  Create all field :61:s (postings)              *
+      *                                                               *
+      * Called by   :  CREATE                                         *
+      * Calls       :  ZM0060     Return date in ISO format           *
+      *                ZM0040     Return ccy/amount in ISO format     *
+      *                SF6        Create subfield 6                   *
+      *                SF7        Create subfield 7                   *
+      *                SF8        Create subfield 8                   *
+      *                SF9        Create subfield 9                   *
+      *****************************************************************
+      *
+     C           FLD61     BEGSR
+      *
+      ** Format all field :61:s
+      *
+      ** Set up field tag and data
+     C                     CLEAR@DATA
+     C                     CLEAR@61
+     C                     MOVEL':61:'    @TAG4
+      *
+      ** Set up subfield 1 (value date, YYMMDD)
+      *
+     C                     CALL 'ZM0060'
+     C                     PARM VUDT      ZMDAY   50
+     C           @61S1     PARM           ZMDATE  6
+      *
+      ** Set up subfield 2 (posting date, MMDD)
+      *
+     C           PTDT      IFNE 0
+     C                     CALL 'ZM0060'
+     C                     PARM PTDT      ZMDAY   50
+     C           W@61S2    PARM           ZMDATE  6
+     C                     MOVE W@61S2    @61S2
+     C                     ENDIF
+      *
+      ** Set up subfield 3 (debit/credit indicator)
+      *
+     C           DORC      IFEQ 0
+     C                     MOVE 'D'       @61S3
+     C                     ELSE
+     C                     MOVE 'C'       @61S3
+     C                     ENDIF
+      *
+      ** Set up subfield 5 (posting amount)
+      *
+     C                     Z-ADDMVAM      @WKAMT 130
+     C                     CALL 'ZM0040'
+     C                     PARM @WKAMT    ZAMNT  130
+     C                     PARM K#CCY     ZCCY    3
+     C           @61S5     PARM           ZSAMNT 15
+     C                     PARM           ZSCCY   3
+     C                     PARM *BLANKS   ZERR    1
+      *
+      ** If program fails, report database error
+      *
+     C           ZERR      IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '004'     DBASE            * * * * * * * *
+     C                     MOVEL'PROGRAM' DBKEY            *  DBERR 004  *
+     C                     MOVEL'ZM0040  'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Format subfield 6
+      *
+     C                     EXSR SF6
+      *
+      ** Format subfield 7
+      *
+     C                     EXSR SF7
+      *
+      ** Format subfield 8
+      *
+     C                     EXSR SF8
+      *
+     C           @61S8D    IFEQ *BLANKS
+     C                     CLEAR@61S8
+     C                     ENDIF
+      *
+      ** When all subfields for this line formatted, compress and
+      ** output to file.
+      *
+     C           @DAT4     CAT  @61S1:0   @DAT4                                               JMI019
+     C           @DAT4     CAT  @61S2:0   @DAT4                                               JMI019
+     C           @DAT4     CAT  @61S3:0   @DAT4                                               JMI019
+     C           @DAT4     CAT  @61S5:0   @DAT4                                               JMI019
+     C           @DAT4     CAT  @61S6:0   @DAT4                                               JMI019
+     C           @DAT4     CAT  @61S7:0   @DAT4                                               JMI019
+     C           @DAT4     CAT  @61S8:0   @DAT4                                               JMI019
+     C           @DAT4     CAT  CRLFC:0   @DAT4                                               CHG001
+      *                                                                                       JMI019
+     C**********           Z-ADD4         T       50                                          JMI019
+     C**********           CLEAR@FM                                                           JMI019
+     C**********           MOVEA@61       @FM                                                 JMI019
+     C********** 1         DO   55        S       50                                          JMI019
+     C********** 1         DO   64        S       50                                   JMI019 JMI019
+     C********** @FM,S     IFNE ' '                                                           JMI019
+     C**********           ADD  1         T                                                   JMI019
+     C**********           MOVE @FM,S     @TO,T                                               JMI019
+     C**********           ENDIF                                                              JMI019
+     C**********           ENDDO                                                              JMI019
+     C**********           ADD  1         T                                            CHG001 JMI019
+     C**********           MOVE BTA       @TO,T                                        CHG001 JMI019
+     C**********           ADD  1         T                                            CHG001 JMI019
+      *
+      ** Move data to output record
+      *
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+      *
+     C*********            WRITEGLGDTAD0                                                      JMI113
+     C                     WRITEXXGDTAD0                                                      JMI113
+      *                                                                                       JMI019
+      ** Write record for posting to be repported in MT942 to a work file                     JMI019
+     C**********           WRITEGLGCM1PO                                               JMI019 JMI113
+     C                     WRITEXXGCM1PO                                                      JMI113
+      *
+      ** Format subfield 9
+      *
+     C                     EXSR SF9
+      *
+     C                     ENDSR                           FLD61
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  SF6                                            *
+      * Function    :  Create subfield 6 for field :61:               *
+      *                                                               *
+      * Called by   :  FLD61                                          *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SF6       BEGSR
+      *
+      ** First character of subfield 6 should always be 'F'
+      *
+     C                     MOVE 'F'       @61S6A
+      *
+      ** If unable to set up code, default to 'MSC' - miscellaneous
+      *
+     C                     MOVE 'MSC'     @61S6B
+      *
+     C                     ENDSR                           SF6
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  SF7                                            *
+      * Function    :  Create subfield 7 for field :61:               *
+      *                                                               *
+      * Called by   :  FLD61                                          *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SF7       BEGSR
+      *                                                                                       JMI019
+     C                     MOVEL*BLANKS   WTAG                                                JMI019
+      *
+      ** Use first 16 characters of narrative description
+      *
+     C                     MOVELNRTD      @61S7
+      *                                                                                       JMI019
+     C           FUND      IFEQ *BLANK                                                        JMI019
+      *                                                                                       JMI019
+      ** Format SF7 for Deal or Loan                                                          JMI019
+      *                                                                                       JMI019
+      ** If transaction type is not specified,                                                JMI019
+      ** get transaction number and chk if a deal or a loan                                   JMI019
+      *                                                                                       JMI019
+     C           TRYP      IFEQ *BLANK                                                        JMI019
+     C                     MOVELTNMR      WDEAL                                               JMI019
+     C           WDEAL     CHAINDEALSALL             91                                       JMI019
+     C           *IN91     IFEQ *OFF                                                          JMI019
+     C                     MOVEL*BLANK    @61S7                                               JMI019
+     C                     MOVEL'D'       @61S7A                                              JMI019
+     C                     MOVELTNMR      @61S7B                                              JMI019
+     C                     MOVEL'DEAL'    WTAG                                                JMI019
+     C                     MOVELCNUM      WCUSN                                               JMI019
+     C                     ELSE                                                               JMI019
+     C                     MOVELTNMR      WLOAN                                               JMI019
+     C                     MOVEL'A'       KRCDT                                               JMI019
+     C           LKEY2     CHAINCLOANCLF             91                                       JMI019
+     C           *IN91     IFEQ *OFF                                                          JMI019
+     C                     MOVEL*BLANK    @61S7                                               JMI019
+     C                     MOVEL'L'       @61S7A                                              JMI019
+     C                     MOVELTNMR      @61S7B                                              JMI019
+     C                     MOVEL'LOAN'    WTAG                                                JMI019
+     C                     MOVELCNUM      WCUSN                                               JMI019
+     C                     ENDIF                                                              JMI019
+     C                     ENDIF                                                              JMI019
+     C                     ELSE                                                               JMI019
+      *                                                                                       JMI019
+      ** For Deal, 'D' + deal number                                                          JMI019
+      *                                                                                       JMI019
+     C           DKEY      KLIST                                                              JMI019
+     C                     KFLD           KTPE11  2                                           JMI019
+     C                     KFLD           KLST11  2                                           JMI019
+     C                     MOVELTRYP      KTPE11                                              JMI019
+      *                                                                                       JMI019
+     C           DKEY      SETLLFDDTSTPD                                                      JMI019
+     C                     READ FDDTSTPD                 90                                   JMI019
+     C           *IN90     IFEQ *OFF                                                          JMI019
+     C           KTPE11    ANDEQDTPE11                                                        JMI019
+     C                     MOVEL*BLANK    @61S7                                               JMI019
+     C                     MOVEL'D'       @61S7A                                              JMI019
+     C                     MOVELTNMR      @61S7B                                              JMI019
+     C                     MOVELTNMR      WDEAL   60                                          JMI019
+     C                     MOVEL'DEAL'    WTAG    4                                           JMI019
+     C********** WDEAL     CHAINDEALS                91                                       JMI019
+     C           WDEAL     CHAINDEALSALL             91                                       JMI019
+     C           *IN91     IFEQ *OFF                                                          JMI019
+     C                     MOVELCNUM      WCUSN                                               JMI019
+     C                     ELSE                                                               JMI019
+     C                     MOVEL*BLANK    WCUSN                                               JMI019
+     C                     ENDIF                                                              JMI019
+     C                     ELSE                                                               JMI019
+      *                                                                                       JMI019
+      ** For Loan, 'L' + loan number                                                          JMI019
+      *                                                                                       JMI019
+     C           LKEY      KLIST                                                              JMI019
+     C                     KFLD           KYLNTY  2                                           JMI019
+     C                     KFLD           KYLNST  2                                           JMI019
+     C                     MOVELTRYP      KYLNTY                                              JMI019
+      *                                                                                       JMI019
+     C           LKEY      SETLL@AYRECL                                                       JMI019
+     C                     READ @AYRECL                  90                                   JMI019
+     C           *IN90     IFEQ *OFF                                                          JMI019
+     C           KYLNTY    ANDEQAYLNTY                                                        JMI019
+     C                     MOVEL*BLANK    @61S7                                               JMI019
+     C                     MOVEL'L'       @61S7A                                              JMI019
+     C                     MOVELTNMR      @61S7B                                              JMI019
+     C*********************MOVELTNMR      WLOAN   60                                   JMI019 JMI113
+     C                     MOVELTNMR      WLOAN   6                                           JMI113
+     C                     MOVEL'LOAN'    WTAG                                                JMI019
+      *                                                                                       JMI019
+     C           LKEY2     KLIST                                                              JMI019
+     C                     KFLD           WLOAN                                               JMI019
+     C                     KFLD           KRCDT   1                                           JMI019
+     C                     MOVEL'A'       KRCDT                                               JMI019
+     C           LKEY2     CHAINCLOANCLF             91                                       JMI019
+     C           *IN91     IFEQ *OFF                                                          JMI019
+     C                     MOVELCNUM      WCUSN   6                                           JMI019
+     C                     ELSE                                                               JMI019
+     C                     MOVEL*BLANK    WCUSN                                               JMI019
+     C                     ENDIF                                                              JMI019
+      *                                                                                       JMI019
+     C                     ENDIF                                                              JMI019
+     C                     ENDIF                                                              JMI019
+     C                     ENDIF                                                              JMI019
+      *                                                                                       JMI019
+     C                     ELSE                                                               JMI019
+      *                                                                                       JMI019
+      ** For OP, use Rel Payment Ref field if entered                                         JMI019
+      *                                                                                       JMI019
+     C           TRYP      IFEQ 'OP'                                                          JMI019
+     C                     MOVELFUND      FND15  15                                           JMI109
+     C           FND15     CHAINOTPAY                90                                JMI019 JMI019
+     C********** FUND      CHAINOTPAY                90                                JMI019 JMI019
+     C           *IN90     IFEQ *OFF                                                          JMI019
+     C           RLPR      ANDNE*BLANK                                                        JMI019
+     C                     MOVELRLPR      @61S7                                               JMI019
+     C                     ENDIF                                                              JMI019
+     C                     ENDIF                                                              JMI019
+      *                                                                                       JMI019
+      ** For IN, use Rel Payment Ref field if entered                                         JMI019
+      *                                                                                       JMI019
+     C           TRYP      IFEQ 'IN'                                                          JMI019
+     C                     MOVELFUND      FND15                                               JMI109
+     C           FND15     CHAININPAY                90                                JMI019 JMI019
+     C********** FUND      CHAININPAY                90                                JMI019 JMI019
+     C           *IN90     IFEQ *OFF                                                          JMI019
+     C           RLPR      ANDNE*BLANK                                                        JMI019
+     C                     MOVELRLPR      @61S7                                               JMI019
+     C                     ENDIF                                                              JMI019
+     C                     ENDIF                                                              JMI019
+      *                                                                                       JMI019
+     C                     ENDIF                                                              JMI019
+      *                                                                                       JMI019
+      ** If SF7 is *BLANK and TT, default to value in FLD86                                   JMI019
+     C           @61S7     IFEQ *BLANK                                                        JMI019
+     C           TRYP      ANDEQ'TT'                                                          JMI019
+     C                     MOVEL'Teller T'DAT416 16                                           JMI019
+     C                     MOVE 'ransacti'DAT416                                              JMI019
+     C                     MOVELDAT416    @61S7                                               JMI019
+     C                     ENDIF                                                              JMI019
+      *                                                                                       JMI019
+      ** Check if any char '//'                                                               JMI019
+     C           @61S7     IFNE *BLANK                                                        JMI019
+     C                     CLEAR@S71                                                          JMI019
+     C                     MOVEA@61S7     @S71,1                                              JMI019
+     C                     Z-ADD1         X       20                                          JMI019
+     C                     SETOF                       7778                                   JMI019
+     C           #CHK1     TAG                                                                JMI019
+     C           '//'      LOKUP@S71,X                   77                                   JMI019
+     C   77                MOVE '/ '      @S71,X                                              JMI019
+     C   77      X         COMP 8                      78                                     JMI019
+     C   77 78             ADD  1         X                                                   JMI019
+     C   77 78             GOTO #CHK1                                                         JMI019
+     C                     MOVEA@S71      @61S7                                               JMI019
+     C*                                                                                       JMI019
+     C                     CLEAR@S72                                                          JMI019
+     C                     MOVEA@61S7C    @S72,1                                              JMI019
+     C                     Z-ADD1         X                                                   JMI019
+     C                     SETOF                       7778                                   JMI019
+     C           #CHK2     TAG                                                                JMI019
+     C           '//'      LOKUP@S72,X                   77                                   JMI019
+     C   77                MOVE '/ '      @S72,X                                              JMI019
+     C   77      X         COMP 7                      78                                     JMI019
+     C   77 78             ADD  1         X                                                   JMI019
+     C   77 78             GOTO #CHK2                                                         JMI019
+     C                     MOVEA@S72      @61S7C                                              JMI019
+     C                     ENDIF                                                              JMI019
+      *                                                                                       JMI019
+      ** If at the end SF7 is *BLANK ---> NONREF                                              JMI019
+     C           @61S7     IFEQ *BLANK                                                        JMI019
+     C                     MOVEL'NONREF'  @61S7                                               JMI019
+     C                     ENDIF                                                              JMI019
+      *
+     C                     ENDSR                           SF7
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  SF8                                            *
+      * Function    :  Create subfield 8 for field :61:               *
+      *                                                               *
+      * Called by   :  FLD61                                          *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SF8       BEGSR
+      *
+      ** Subfield 8 should always begin with '//'
+      *
+     C                     MOVE '//'      @61S8A
+      *
+      ** Narrative details found
+      *
+     C********** TNMR      IFNE *BLANKS                                                       JMI019
+     C**********           MOVE TNMR      @61S8D                                              JMI019
+     C**********           ENDIF                                                              JMI019
+      *
+      ** SF8 should always reflect the reference number of the transaction                    JMI019
+     C           FUND      IFEQ *BLANKS                                                       JMI019
+     C********** TNMR      IFNE @61S7B                                                 JMI019 JMI019
+     C                     MOVELTNMR      @61S8F                                              JMI019
+     C**********           ENDIF                                                       JMI019 JMI019
+     C                     ELSE                                                               JMI019
+     C********** FUND      IFNE @61S7                                                  JMI019 JMI019
+     C                     MOVELFUND      @61S8F                                              JMI019
+     C**********           ENDIF                                                       JMI019 JMI019
+     C                     ENDIF                                                              JMI019
+      *                                                                                       JMI019
+     C                     ENDSR                           SF8
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  SF9                                            *
+      * Function    :  Create subfield 9 for field :61:               *
+      *                                                               *
+      * Called by   :  FLD61                                          *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SF9       BEGSR
+      *
+      ** Clear tag & data fields for writing of subfield 9
+      *
+     C                     CLEAR@DATA
+      *
+      ** If data in subfield 9, write to file
+      *
+     C           @DATA     IFNE *BLANKS
+     C                     MOVE @DATA     G4DATA
+     C*********            WRITEGLGDTAD0                                                  JMI113
+     C                     WRITEXXGDTAD0                                                  JMI113
+     C                     ENDIF
+      *
+     C                     ENDSR                           SF9
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  FLD86                                          *
+      * Function    :  Create field :86: (narrative)                  *
+      *                                                               *
+      * Called by   :  CREATE                                         *
+      * Calls       :                                                 *
+      *****************************************************************
+      *
+     C           FLD86     BEGSR
+      *
+      ** Set up field tag and data
+      *
+     C                     CLEAR@DATA
+     C                     MOVEL':86:'    @TAG4
+      *                                                                                       JMI019
+      ** If Deal or Loan, format is deal/loan no. + cust report desc                          JMI019
+      *                                                                                       JMI019
+     C           WTAG      IFEQ 'DEAL'                                                        JMI019
+     C           WTAG      OREQ 'LOAN'                                                        JMI019
+     C                     MOVELTNMR      @DAT4A                                              JMI019
+     C**********           MOVE CUSN      WCUSN   6                                           JMI019
+     C           WCUSN     CHAIN@BBREBG              90                                       JMI019
+     C           *IN90     IFEQ *OFF                                                          JMI019
+     C                     MOVELBBCRNM    @DAT4B                                              JMI019
+     C                     ENDIF                                                              JMI019
+      *                                                                                       JMI019
+     C                     ELSE                                                               JMI019
+      *
+      ** Use first 16 characters of narrative description
+      *
+     C**********           MOVEL@61S7     @DAT4                                               JMI019
+     C                     MOVELNRTD      @DAT4                                               JMI019
+     C           FUND      IFNE *BLANK                                                        JMI019
+     C/COPY WNCPYSRC,GL2805C001                                                               228622
+     C                     ENDIF                                                              JMI019
+     C           @DAT4     IFEQ *BLANK                                                        228622
+     C           TRYP      ANDEQ'TT'                                                          228622
+     C                     MOVEL'Teller T'DAT416 16                                           228622
+     C                     MOVE 'ransacti'DAT416                                              228622
+     C                     MOVELDAT416    DAT418 18                                           228622
+     C                     MOVE 'on'      DAT418                                              228622
+     C                     MOVELDAT418    @DAT4                                               228622
+     C                     ENDIF                                                              228622
+     C* if at the end Tag86 is blank, use Tag61 Subfield 8                                    JMI019
+     C           @DAT4     IFEQ *BLANK                                                        JMI019
+     C                     MOVEL@61S8F    DAT416 16                                           JMI019
+     C                     MOVELDAT416    @DAT4                                               JMI019
+     C                     ENDIF                                                              JMI019
+     C                     ENDIF                                                              JMI019
+     C                     MOVE BTA       @TO,66                                              CHG001
+     C                     MOVEL@DATA     G4DATA
+     C**********           WRITEGLGDTAD0                                                      JMI113
+     C                     WRITEXXGDTAD0                                                      JMI113
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      * Subroutine  :  FLD90D                                         *
+      * Function    :  Create field :90D: (number and sum             *
+      *                                           of debit entries)   *
+      * Called by   :  CREATE                                         *
+      * Calls       :  ZM0040     Return ccy/amount in ISO format     *
+      *****************************************************************
+      *
+     C           FLD90D    BEGSR
+      *
+      ** Set up field tag and data
+      *
+     C                     CLEAR@DATA
+     C                     MOVEL':90D:'   @TAG5
+      *
+      ** Number of debit entries
+      *
+     C                     Z-ADDW@DRNO    @90DS1
+      *
+      ** Set up subfield 3 (Sum of debit entries)
+      *
+     C                     CALL 'ZM0040'
+     C                     PARM W@DRAM    ZAMNT  130
+     C                     PARM K#CCY     ZCCY    3
+     C********** @90DS3    PARM           ZSAMNT 15                                           CHG001
+     C                     PARM           ZSAMNT 15                                           CHG001
+     C           @90DS2    PARM           ZSCCY   3
+     C                     PARM *BLANKS   ZERR    1
+      *
+      ** If program fails, report database error
+      *
+     C           ZERR      IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '005'     DBASE            * * * * * * * *
+     C                     MOVEL'PROGRAM' DBKEY            *  DBERR 005  *
+     C                     MOVEL'ZM0040  'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                                       CHG001
+     C                     Z-ADD1         T       50                                          CHG001
+     C                     CLEAR@FM                                                           CHG001
+     C                     MOVEAZSAMNT    @FM                                                 CHG001
+     C           ' '       LOKUP@FM,T                    63                                   CHG001
+     C                     MOVE BTA       @FM,T                                               CHG001
+     C                     MOVEA@FM       @90DS3                                              CHG001
+      *
+      ** Move data to output record
+      *
+     C                     MOVEL@90D      @DAT5
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+      *
+     C**********           WRITEGLGDTAD0                                                      JMI113
+     C                     WRITEXXGDTAD0                                                      JMI113
+      *
+     C                     ENDSR                           FLD90D
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  FLD90C                                         *
+      * Function    :  Create field :90C: (number and sum             *
+      *                                           of credit entries)  *
+      * Called by   :  CREATE                                         *
+      * Calls       :  ZM0040     Return ccy/amount in ISO format     *
+      *****************************************************************
+      *
+     C           FLD90C    BEGSR
+      *
+      ** Set up field tag and data
+      *
+     C                     CLEAR@DATA
+     C                     MOVEL':90C:'   @TAG5
+      *
+      ** Number of credit entries
+      *
+     C                     Z-ADDW@CRNO    @90CS1
+      *
+      *
+      ** Set up subfield 3 (Sum of debit entries)
+      *
+     C                     CALL 'ZM0040'
+     C                     PARM W@CRAM    ZAMNT  130
+     C                     PARM K#CCY     ZCCY    3
+     C********** @90CS3    PARM           ZSAMNT 15                                           CHG001
+     C                     PARM           ZSAMNT 15                                           CHG001
+     C           @90CS2    PARM           ZSCCY   3
+     C                     PARM *BLANKS   ZERR    1
+      *
+      ** If program fails, report database error
+      *
+     C           ZERR      IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '006'     DBASE            * * * * * * * *
+     C                     MOVEL'PROGRAM' DBKEY            *  DBERR 006  *
+     C                     MOVEL'ZM0040  'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                                       CHG001
+     C                     Z-ADD1         T                                                   CHG001
+     C                     CLEAR@FM                                                           CHG001
+     C                     MOVEAZSAMNT    @FM                                                 CHG001
+     C           ' '       LOKUP@FM,T                    63                                   CHG001
+     C                     MOVE BTA       @FM,T                                               CHG001
+     C                     MOVEA@FM       @90CS3                                              CHG001
+      *
+      ** Move data to output record
+      *
+     C                     MOVEL@90C      @DAT5
+     C                     MOVE @DATA     G4DATA
+      *
+      ** Write record to file
+      *
+     C**********           WRITEGLGDTAD0                                                      JMI113
+     C                     WRITEXXGDTAD0                                                      JMI113
+      *
+     C                     ENDSR                           FLD90C
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  AUDIT                                          *
+      * Function    :  Produce Audit Report                           *
+      *                                                               *
+      * Called by   :  CREATE                                         *
+      * Calls       :                                                 *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR
+      *
+      ** Check for an index record for that day's member
+      *
+     C********** MNM       CHAINGLGREFL0             21                                   JMI113
+     C           MNM       CHAINXXGREFL0             21                                   JMI113
+      *
+     C                     MOVE MNM       F3MBRN
+     C                     MOVE 'P'       F3DNLS
+     C                     Z-ADD0         F3RSTN
+     C                     MOVE *BLANKS   F3RSTU
+     C                     Z-ADD0         F3RSTD
+     C                     Z-ADD0         F3RTIM
+     C                     Z-ADD0         F3DLDL
+     C                     Z-ADD0         F3TDNL
+      *
+     C           *IN21     IFEQ '1'
+     C**********           WRITEGLGREFD0                                                    JMI113
+     C                     WRITEXXGREFD0                                                    JMI113
+     C                     ELSE
+     C**********           UPDATGLGREFD0                                                    JMI113
+     C                     UPDATXXGREFD0                                                    JMI113
+     C                     ENDIF
+      *
+      ***Open*Audit*printer*file*PRTF/GLJ008AU                                              JMI113
+      ** Open Audit printer file PRTF/XX1138AU                                              JMI113
+      *
+     C*********            OPEN GLJ008AU                                                    JMI113
+     C                     OPEN XX1138AU                                                    JMI113
+      *
+      ** Write title header
+      *
+     C**********           WRITEGLJ008A1                                                     JMI113
+     C                     WRITEXX1138A1                                                     JMI113
+      *
+      ***If*no*record*found*on*the*file*PF/GLGCACPD                                          JMI113
+      ** If no record found on the file PF/XXGCACPD                                          JMI113
+      ***OR*no*record*found*on*the*file*PF/RSACMTL1                                           JMI019
+      ***OR*no*record*found*on*the*file*LF/GLGCAMV1                                   JMI019 JMI113
+      ** OR no record found on the file LF/XXGCAMV1                                          JMI113
+      *
+     C           *IN30     IFEQ '1'                        B01
+     C           W@RED     ANDEQ0
+      *
+      ** Write 'no messages to report'
+      *
+     C*********            WRITEGLJ008A3                                                     JMI113
+     C                     WRITEXX1138A3                                                     JMI113
+     C                     ELSE                            I01
+      *
+      ** Write out details
+      *
+     C*********            WRITEGLJ008A2               31                                    JMI113
+     C                     WRITEXX1138A2               31                                    JMI113
+     C                     ENDIF                           E01
+      *
+      ** Write out 'End of Report'
+      *
+     C**********           WRITEGLJ008A5                                                     JMI113
+     C                     WRITEXX1138A5                                                     JMI113
+      *
+      ***Close*Audit*printer*file*PRTF/GLJ008AU                                              JMI113
+      ** Close Audit printer file PRTF/XX1138AU                                              JMI113
+      *
+     C**********           CLOSEGLJ008AU                                                     JMI113
+     C                     CLOSEXX1138AU                                                     JMI113
+      *
+     C                     ENDSR                           AUDIT
+      /EJECT
+      *
+      *****************************************************************
+      * Subroutine  :  *PSSR                                          *
+      * Function    :  Called autmatically if a program error occurs  *
+      *                or directly in case of database errors.        *
+      *                This program DUMPs the program just once.      *
+      *                                                               *
+      * Called by   :  Automatically                                  *
+      *                INIT                                           *
+      *                                                               *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ** Check to see if *PSSR has been already called
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+      ** DUMP and write database error report
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C*********            OPEN GLJ008AU                                                  JMI113
+     C*********            WRITEGLJ008A4                                                  JMI113
+     C*********            WRITEGLJ008A5                                                  JMI113
+     C                     OPEN XX1138AU                                                  JMI113
+     C                     WRITEXX1138A4                                                  JMI113
+     C                     WRITEXX1138A5                                                  JMI113
+      *
+      ***Close*Audit*printer*file*PRTF/GLJ008AU                                           JMI113
+      ** Close Audit printer file PRTF/XX1138AU                                           JMI113
+      *
+     C**********           CLOSEGLJ008AU                                                  JMI113
+     C                     CLOSEXX1138AU                                                  JMI113
+      *
+     C                     ENDIF
+      *
+      ** If *PSSR already run, end program.
+      *
+     C                     RETRN
+      *
+     C                     ENDSR                           *PSSR
+      *
+      ********************************************************************
+** CPY@
+(c) Finastra International Limited 2018

@@ -16,8 +16,9 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL182             Date 11May17               *
+      *  Last Amend No. JMI111             Date 18May18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL182             Date 11May17               *
       *                 246752             Date 29Oct15               *
       *                 MD027587           Date 19Jun14               *
       *                 AR1078953          Date 18Jan13               *
@@ -62,6 +63,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI111 - Midas-OPICS Interface. Upgrade to FBM 2.1           *
+      *           Added hooks JMI111_007, JMI111_008, JMI111_009      *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL182 - Journal Entry via the Interface File - Java Version *
       *  246752 - Batches remain Held after Accepting. Wrong valida-  *
@@ -145,6 +148,9 @@
       ** JE Items file                                                                       BUG3546
      FGLJENPL1  IF   E           K DISK    INFSR(*PSSR)                                      BUG3546
       *                                                                                      BUG3546
+      /COPY WNCPYSRC,JMI111_007                                                               JMI111
+      *                                                                                       JMI111
+      *****************************************************************
       ** Hook to enable non-core files to be included
       /COPY WNCPYSRC,GLBITHV001
       *
@@ -254,13 +260,14 @@
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSC024
                                                                                               CSC024
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CSC024
+      *                                                                                       JMI111
+      /COPY WNCPYSRC,JMI111_008                                                               JMI111
       *                                                                                       248749
       ** Externally described DS for Account Code details                                     248749
      D SDACOD        E DS                  EXTNAME(SDACODPD)                                  248749
       *                                                                                       248749
       ** DS for Access Programs - long data structure                                         248749
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     248749
-      *
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -362,12 +369,12 @@
      C                   MOVE      'Y'           BTNBINS           1                          CAP084
      C                   ENDIF                                                                CAP084
      C                   ENDIF                                                                CAP084
- 
+
       ** If system is multi-branching, validate Branch Code.
       ** Else, default Branch Code to Bank's Single Branch Code.
- 
+
       /COPY WNCPYSRC,GLBITHV004
- 
+
      C     BJSBRC        IFEQ      *BLANKS
       * Amend mode                                                                           BUG3546
      C     JAVAUSER      IFEQ      'Y'                                                       BUG3546
@@ -385,23 +392,23 @@
      C**********         EVAL      DDBCDA = *BLANKS                                           246752
      C                   EVAL      DDBCDA = BJSBRC                                            246752
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,GLBITHV005
- 
+
       ** Validate Department Code.
- 
+
       /COPY WNCPYSRC,GLBITHV006
- 
+
      C                   EXSR      SRDPCD
- 
+
       /COPY WNCPYSRC,GLBITHV007
- 
+
       ** If system is multi-branching, validate Multiple
       ** Branch Batch Indicator.  Else, default Multiple
       ** Branch Batch Indicator to 'N'.
- 
+
       /COPY WNCPYSRC,GLBITHV008
- 
+
      C     BJSBRC        IFEQ      *BLANKS
      C                   EXSR      SRMBRB
      C                   ELSE
@@ -409,31 +416,31 @@
      C**********         EVAL      DDMBRB = *BLANKS                                           246752
      C                   EVAL      DDMBRB = 'N'                                               246752
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,GLBITHV009
- 
+
       ** Validate Batch Description.
- 
+
       /COPY WNCPYSRC,GLBITHV010
- 
+
      C                   EXSR      SRBDES
- 
+
       /COPY WNCPYSRC,GLBITHV011
- 
+
       ** Validate Batch Total.
- 
+
       /COPY WNCPYSRC,GLBITHV012
- 
+
      C                   EXSR      SRBTOT
- 
+
       /COPY WNCPYSRC,GLBITHV013
- 
+
       ** Validate No. of Items.
- 
+
       /COPY WNCPYSRC,GLBITHV014
- 
+
      C                   EXSR      SRNOIS
- 
+
       ***Validate*Month*End*Adjustment*Batch                                           CSC024 CSC054
       ** Validate Period End Adjustments Batch                                                CSC054
                                                                                               CSC024
@@ -441,11 +448,11 @@
      C                   EXSR      SRPEAB                                                     CSC054
                                                                                               CSC024
       /COPY WNCPYSRC,GLBITHV015
- 
+
       ** Validate Batch Held/Accepted Indicator.
- 
+
       /COPY WNCPYSRC,GLBITHV016
- 
+
       ** If coming from a java user then allow held/accept indicator to be 'D'                CAP084
       ** so that the batch header can be deleted.                                             CAP084
                                                                                               CAP084
@@ -610,6 +617,8 @@
      C                   ENDIF                                                                CAP084
       *                                                                                       CAP084
      C                   ENDIF                                                                CAP084
+      *                                                                                       JMI111
+      /COPY WNCPYSRC,JMI111_009                                                               JMI111
       *                                                                                       CAP084
       ** If batch has been requested to be accepted then check currency totals and if the     CAP084
       ** batch is valid then change status to Accepted.                                       CAP084
@@ -636,17 +645,17 @@
      C                   ENDIF                                                                CAP084
       *                                                                                       CAP804
       /COPY WNCPYSRC,GLBITHV017
- 
+
       ** If invalid Branch Code, default Branch to User Branch
       ** Code to enable the batch to be corrected through the
       ** existing maintenance.
- 
+
      C     DDBcdaOK      IFEQ      'N'
      C                   EVAL      B1BCDA = WBrch
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,GLBITHV018
- 
+
      C                   RETURN
       *
       *****************************************************************

@@ -1,0 +1,119 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas Non-OPICS Position Updates Extract')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/********GLCJ20001*-*Positions*Extract*Program************************/                 /* JMI111 */
+/*       XXC000330 - Positions Extract Program                       */                 /* JMI111 */
+/*                                                                   */
+/********(c)*Misys*International*Banking*Systems*Ltd.*2007************/                 /* JMI111 */
+/*       (c) Finastra International Limited 2018                     */                 /* JMI111 */
+/*                                                                   */
+/*       Last Amend No. JMI111             Date 16May18              */
+/*       Prev Amend No. CGL019  *CREATE    Date 20Apr07              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       JMI111 - OPICS-Midas GL Interface. Upgrade to FBM 2.1       */
+/*       CGL019 - OPICS-Midas GL Interface                           */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+/*                                                                            */
+/**Declare*variable*CGL019*-*flag*for*switchable*feature***********************/        /* JMI111 */
+/* Declare variable JMI111 - flag for switchable feature                      */
+/*                                                                            */
+/************DCL        VAR(&CGL019) TYPE(*CHAR) LEN(7)                       */        /* JMI111 */
+             DCL        VAR(&JMI111) TYPE(*CHAR) LEN(7)                                 /* JMI111 */
+             DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)
+
+/************DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                          Copyright Misys International Banking +
+                          Systems')                                           */        /* JMI111 */
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                          Copyright Finastra International Limited +
+                          2018')                                                        /* JMI111 */
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/************CALL       PGM(AOSARDR0) PARM(&CGL019 '*VERIFY' +
+                          'CGL019' &AOFMT)                                    */        /* JMI111 */
+/************IF         COND(&CGL019 *NE '      ') THEN(GOTO +
+                          CMDLBL(END))                                        */        /* JMI111 */
+             CALL       PGM(AOSARDR0) PARM(&JMI111 '*VERIFY' +
+                          'JMI111' &AOFMT)                                              /* JMI111 */
+             IF         COND(&JMI111 *NE '      ') THEN(GOTO +
+                          CMDLBL(END))                                                  /* JMI111 */
+/* Create LDA if it's not existing */
+
+             CHKOBJ     OBJ(LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ') TEXT('Midas Local Data Area'))
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+
+/* Reset Job Switches */
+             CHGJOB     SWS(XXXXXX00)
+
+/* Create LDA if it's not existing */
+             CHKOBJ     OBJ(LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ') TEXT('Midas Local Data Area'))
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+
+             CALL       PGM(QCLRDTAQ) PARM('GLESPUDTAQ' '*LIBL ')
+
+/* Get all spot trade account postings; ignore any postings  */
+/* in local currency                                         */
+             OVRDBF     FILE(ACBRC) SHARE(*YES)
+             OPNQRYF    FILE((ACBRC) (SDTRADPD) (SDBANKPD)) +
+                          FORMAT(ACBRC) QRYSLT('ACODA  *EQ BLSPTA +
+                          *AND CCY *NE BJCYCD') KEYFLD((BRCA) (CCY) +
+                          (ACOD)) MAPFLD((ACODA 'ACOD' *CHAR 10))
+
+/* Call Extract program to send to Data Queue */
+/************CALLPRC    PRC(GLJ20001)                                         */        /* JMI111 */
+             CALLPRC    PRC(XX000330)                                                   /* JMI111 */
+
+/* Extract program terminated abnormally */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+
+/* Abnormal termination - batch job */
+/************SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLCJ20001 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ)                                    */        /* JMI111 */
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          XXC000330 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ)                                              /* JMI111 */
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+             CALL       PGM(QCLRDTAQ) PARM('GLESPUDTAQ' '*LIBL ')
+
+             GOTO       CMDLBL(END)
+
+END:
+             CLOF       OPNID(ACBRC)
+             MONMSG     MSGID(CPF4520)
+/************CHGVAR     VAR(&CPYFLD) VALUE('Copyright Misys +
+                          International Banking Systems 2007')                */       /* JMI111 */
+             CHGVAR     VAR(&CPYFLD) VALUE('Copyright Finastra +
+                          International Limited 2018')                                 /* JMI111 */
+             ENDPGM

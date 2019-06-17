@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL148             Date 13Jul18               *
-      *  Prev Amend No. MD025083           Date 13Jul18               *
+      *  Last Amend No. JMI111             Date 16May19               *
+      *  Prev Amend No. CGL148             Date 13Jul18               *
+      *                 MD025083           Date 13Jul18               *
       *                 MD047741           Date 31Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD046060           Date 21Jun17               *
@@ -89,6 +90,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI111 - Midas-OPICS Interface. Upgrade to FBM 2.1           *
+      *           Use of core hook GLH00459                           *
       *  CGL148 - Automatic Opening of GL accounts                    *
       *         - Includes fix MD024246 and MD025083                  *
       *  MD025083 - Hash integer input for Journal entry sent         *

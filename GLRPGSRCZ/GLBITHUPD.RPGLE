@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 249405             Date 09Mar18               *
-      *  Prev Amend No. CGL148             Date 13Jul18               *
+      *  Last Amend No. JMI111             Date 16May19               *
+      *  Prev Amend No. 249405             Date 09Mar18               *
+      *                 CGL148             Date 13Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD046060           Date 21Jun17               *
       *                 CGL182             Date 11May17               *
@@ -80,6 +81,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI111 - Midas-OPICS Interface. Upgrade to FBM 2.1           *
+      *           Use of core hook GLH00446                           *
+      *           Addition of hook JMI111_011                         *
+      *           Addition of hook JMI111_010                         *
       *  249405 - Validate Batch In Use Flag field.                   *
       *         - Applied for MD-49830.                               *
       *  CGL148 - Automatic Opening of GL accounts                    *
@@ -636,8 +641,14 @@
      C                   MOVE      B1AFRT        BRAFRT
      C                   MOVE      B1TMST        BRTMST
      C**********         MOVE      B1BHAI        BRBHAI                                       239155
+      *                                                                                       JMI111
+      /COPY WNCPYSRC,JMI111_010                                                               JMI111
+      *                                                                                       JMI111
      C     CGL016        IFEQ      'Y'                                                     AR792734A
      C     CRE023        OREQ      'Y'                                                     AR792734A
+      *                                                                                       JMI111
+      /COPY WNCPYSRC,JMI111_011                                                               JMI111
+      *                                                                                       JMI111
      C                   MOVE      B1BHAI        BRBHAI                                    AR792734A
      C                   ENDIF                                                             AR792734A
      C                   MOVE      B1MEAB        BRMEAB                                       CSC024

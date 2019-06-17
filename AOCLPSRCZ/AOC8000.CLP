@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. JMI106             Date 22May18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG6931            Date 04May05              */
+/*                      BUG6931            Date 04May05              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /*                      CPK015             Date 18Apr02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -26,6 +27,12 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       JMI106 - Split FT Sequence Number based on Settlement Type  */
+/*                Use of core hook AOH00018                          */
+/*                Use of core hook AOH00019                          */
+/*                Use of core hook AOH00020                          */
+/*                Use of core hook AOH00021                          */
+/*                (Upgrade to FB Midas)                              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG6931 - Incorrect use of error code 600.                  */
 /*       CPK015 - 4.01 packaging.  Use DPLIB and not DILIB.          */
@@ -82,7 +89,7 @@
 /*       Check that data queue exists                                */
 /* */
              CHGVAR     VAR(&DQUEUE) VALUE('Q' *CAT &JOBNUM)
- 
+
              CHKOBJ     OBJ(QTEMP/&DQUEUE) OBJTYPE(*DTAQ)
              MONMSG     MSGID(CPF9801) EXEC(DO)
              CRTDTAQ    DTAQ(QTEMP/&DQUEUE) MAXLEN(256) TEXT('Data +
@@ -235,5 +242,5 @@
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

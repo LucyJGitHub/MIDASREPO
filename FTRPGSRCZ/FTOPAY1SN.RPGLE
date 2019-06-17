@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD052529           Date 12Feb19               *
-      *  Prev Amend No. MD050619           Date 24Apr18               *
+      *  Last Amend No. JMI106             Date 16May19               *
+      *  Prev Amend No. MD052529           Date 12Feb19               *
+      *                 MD050619           Date 24Apr18               *
       *                 MD050574           Date 20Apr18               *
       *                 MD046248           Date 27Oct17               *
       *                 AR1090283          Date 10Aug16               *
@@ -169,6 +170,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI106 - Split FT Sequence Number based on Settlement Type   *
+      *           Use of core hook FTH00064                           *
+      *           Addition of hook JMI106_009                         *
+      *           Addition of hook JMI106_010                         *
+      *           Addition of hook JMI106_011                         *
+      *           Addition of hook JMI106_012                         *
+      *           (Upgrade to FB Midas)                               *
       *  MD052529 - If incoming pay MT202 message has no 50 field,    *
       *             Ordering Customer lines 2-5 should not be         *
       *             populated with values of field 52A details 1-4.   *
@@ -1184,6 +1192,7 @@
      D  WPTACD                 7     16                                                       CGL029
      D  WPTSQN                17     18                                                       CGL029
      D  WPTBCH                19     21                                                       CGL029
+     D/COPY WNCPYSRC,JMI106_009                                                               JMI106
       *                                                                                       187056
       ** Calling parameter DS for FT0035                                                      187056
      D P0DTA           DS           256                                                       187056
@@ -9126,6 +9135,7 @@
      C**********         SUB       1             OSQNM                                209067 BUG4776
      C**********         SUB       1             OSQNM                               BUG4776R CFT151
      C                   SUB       1             WOTSQ                                        CFT151
+     C/COPY WNCPYSRC,JMI106_010                                                               JMI106
      C**********         EVAL      OSQNM = PRNUM                                    BUG4776 BUG4776R
       * Ensure PREF is generated again if entering a new payment after cance                  209067
      C                   eval      FirstTime = 'Y'                                            209067
@@ -9927,6 +9937,7 @@
      C**********         SUB       1             OSQNM                                204152 BUG4776
      C**********         SUB       1             OSQNM                               BUG4776R CFT151
      C                   SUB       1             WOTSQ                                        CFT151
+     C/COPY WNCPYSRC,JMI106_011                                                               JMI106
      C**********         EVAL      OSQNM = PRNUM                                    BUG4776 BUG4776R
      C                   endif                                                                209067
       *                                                                                       209067
@@ -12132,6 +12143,7 @@
      C                   ELSE                                                                 CER030
      C                   EVAL      CGL013 = 'N'                                               CER030
      C                   ENDIF                                                                CER030
+     C/COPY WNCPYSRC,JMI106_012                                                               JMI106
       *                                                                                     MD024335
       ** Get Default for Charges Indicator                                                  MD024335
       *                                                                                     MD024335

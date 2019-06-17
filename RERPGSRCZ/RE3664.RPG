@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD045084           Date 03Aug18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. JMI101             Date 16May19               *
+      *  Prev Amend No. MD045084           Date 03Aug18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD045460           Date 20Jun17               *
       *                 MD040758           Date 21Oct16               *
       *                 MD039280A          Date 18Oct16               *
@@ -223,6 +224,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  JMI101 - WHT Maturity Gross Postg and Suppress FCCY Conv     *
       *  MD045084 - Complete MD022410. REHISPD can be updated using   *
       *             more than one format so still get rcd locks.      *
       *             Apply fix for MD051614.                           *
@@ -1805,6 +1807,7 @@
      I              'REC64N    '          C         REC64N                085787
      I              'BasCcyTaxRoundDown'  C         C#BASE                                    CDL081
      I              'NBasCcyTaxRoundDown' C         C#NBAS                                    CDL081
+     I              'SuppressFCCYWHTConv' C         C#SCON                                    JMI101
       *                                                                   085787
      I              'MAIN TAX'            C         CPRITX                                  BUG23163
      I              'SECONDARY TAX'       C         C2NDTX                                  BUG23163
@@ -5959,6 +5962,55 @@
      C                     ELSE                                                               CGL165
      C                     MOVEL'N'       CGL165                                              CGL165
      C                     ENDIF                                                              CGL165
+      *                                                                                       JMI101
+     C                     CALL 'AOSARDR0'                                                    JMI101
+     C                     PARM *BLANKS   PRTCD                                               JMI101
+     C                     PARM '*VERIFY' POPTN                                               JMI101
+     C                     PARM 'JMI101'  PSARD                                               JMI101
+     C           SCSARD    PARM SCSARD    DSFDY                                               JMI101
+      *                                                                                       JMI101
+     C           PRTCD     IFEQ *BLANKS                                                       JMI101
+     C                     MOVEL'Y'       JMI101  1                                           JMI101
+     C                     ELSE                                                               JMI101
+     C                     MOVEL'N'       JMI101                                              JMI101
+     C                     ENDIF                                                              JMI101
+     C           JMI101    IFEQ 'Y'                                                           JMI101
+     C                     CALL 'AOSVALR0'                                                    JMI101
+     C                     PARM *BLANKS   PRTCD                                               JMI101
+     C                     PARM C#SCON    SVALK1 20                                           JMI101
+     C                     PARM           SVAL1 200                                           JMI101
+     C                     PARM *BLANK    SVALK2 20                                           JMI101
+     C                     PARM           SVAL2 200                                           JMI101
+     C                     PARM *BLANK    SVALK3 20                                           JMI101
+     C                     PARM           SVAL3 200                                           JMI101
+     C                     PARM *BLANK    SVALK4 20                                           JMI101
+     C                     PARM           SVAL4 200                                           JMI101
+     C                     PARM *BLANK    SVALK5 20                                           JMI101
+     C                     PARM           SVAL5 200                                           JMI101
+     C                     PARM *BLANK    SVALK6 20                                           JMI101
+     C                     PARM           SVAL6 200                                           JMI101
+     C                     PARM *BLANK    SVALK7 20                                           JMI101
+     C                     PARM           SVAL7 200                                           JMI101
+     C                     PARM *BLANK    SVALK8 20                                           JMI101
+     C                     PARM           SVAL8 200                                           JMI101
+     C                     PARM *BLANK    SVALK9 20                                           JMI101
+     C                     PARM           SVAL9 200                                           JMI101
+     C                     PARM *BLANK    SVALK0 20                                           JMI101
+     C                     PARM           SVAL10200                                           JMI101
+      *                                                                                       JMI101
+     C           PRTCD     IFNE *BLANKS                                                       JMI101
+     C           *LOCK     IN   LDA                                                           JMI101
+     C                     MOVEL'201'     DBASE                                               JMI101
+     C                     MOVEL'SDSVALPD'DBFILE                                              JMI101
+     C                     MOVELSVALK1    DBKEY                                               JMI101
+     C                     OUT  LDA                                                           JMI101
+     C                     EXSR *PSSR                                                         JMI101
+     C                     ENDIF                                                              JMI101
+      *                                                                                       JMI101
+      ** Setup Suppress Conversion indicator                                                  JMI101
+      *                                                                                       JMI101
+     C                     MOVELSVAL1     W#SCON  1                                           JMI101
+     C                     ENDIF                                                              JMI101
       *                                                                                     AR831847
       *                                                                                     AR831847
       ** Check if Net Interest is to be posted for German Taxes                             AR831847
@@ -12984,6 +13036,10 @@
      C           CCY       ORNE BJLCCY                                                        CGL165
      C           CGL165    ANDEQ'Y'                                                           CGL165
      C/COPY WNCPYSRC,RE3664C016
+      * Do not convert tax amount if SuppressFCCYWHTConv is 'Y'                               JMI101
+     C           JMI101    IFEQ 'Y'                                                           JMI101
+     C           W#SCON    ANDEQ'Y'                                                           JMI101
+     C                     ELSE                                                               JMI101
       *                                                                   CAC001
       **  Check if profit centre can hold FX Position                     CAC001
       *                                                                   CAC001
@@ -13216,6 +13272,7 @@
      C           BGN0ST    IFEQ 'Y'                                       CAC001
      C                     MOVE WSVPC     PRFC                            CAC001
      C                     ENDIF                                          CAC001
+     C                     ENDIF                                                              JMI101
      C                     END                             - E1
      C*
      C** POST TO WITHOLDING TAX ACCOUNT IN BASE CURRENCY CREDIT SIDE
@@ -13225,7 +13282,12 @@
      C                     MOVE WTWTAC    ATYP
      C                     MOVELCCY       WWCCY
      C/COPY WNCPYSRC,REH00455
-     C                     MOVELBACCY     CCY
+      * Post tax in account currency if SuppressFCCYWHTConv is 'Y'                            JMI101
+     C           JMI101    IFEQ 'Y'                                                           JMI101
+     C           W#SCON    ANDEQ'Y'                                                           JMI101
+     C                     ELSE                                                               JMI101
+     C                     MOVELBACCY     CCY                                                 JMI101
+     C                     ENDIF                                                              JMI101
      C/COPY WNCPYSRC,RE3664C017
       * If CGL165 is On, set up correct internal tax account to post tax to                   CGL165
      C           CGL165    IFEQ 'Y'                                                           CGL165

@@ -10,8 +10,9 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD049950           Date 08Mar18               *      
-      *  Prev Amend No. MD048795           Date 30Jan18               *
+      *  Last Amend No. JMI101             Date 16May19               *
+      *  Prev Amend No. MD049950           Date 08Mar18               *
+      *                 MD048795           Date 30Jan18               *
       *                 MD048346           Date 20Dec17               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -188,6 +189,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  JMI101 - WHT Maturity Gross Posting and Suppress FCCY Conv.  *
       *  MD049950 - No projection was created for FX deal with retail *
       *             settlement.  Check FX netting reference.          *
       *  MD048795 - Original Transasction Type is set to 'NT' when it *
@@ -1577,6 +1579,7 @@
      I              'DEALING ACCRUAL SUMM-C         ##DLAS                125828
      I              'ARY       '                                          125828
      I              'BasCcyTaxRoundDown'  C         C#BASE                                    CDL081
+     I              'SuppressFCCYWHTConv' C         C#SCON                                    JMI101
      I              'FXnetBranch'         C         FXSVAL                                  MD048346
      I**                                                                  S01117
 0925 I**                                                                  S01117
@@ -1842,6 +1845,57 @@
       *                                                                                       CGL165
      C                     MOVE 'N'       CGL165                                              CGL165
      C                     ENDIF                                                              CGL165
+      ** Check if 'JMI101' is switched 'ON'                                                   JMI101
+     C                     CALL 'AOSARDR0'                                                    JMI101
+     C                     PARM '       ' PRTCD                                               JMI101
+     C                     PARM '*VERIFY' POPTN                                               JMI101
+     C                     PARM 'JMI101'  PSARD   6                                           JMI101
+     C           SCSARD    PARM SCSARD    DSFDY                                               JMI101
+      *                                                                                       JMI101
+     C           PRTCD     IFEQ *BLANKS                                                       JMI101
+     C                     MOVE 'Y'       JMI101  1                                           JMI101
+     C                     ELSE                                                               JMI101
+      *                                                                                       JMI101
+     C                     MOVE 'N'       JMI101                                              JMI101
+     C                     ENDIF                                                              JMI101
+      *                                                                                       JMI101
+     C           JMI101    IFEQ 'Y'                                                           JMI101
+     C                     CALL 'AOSVALR0'                                                    JMI101
+     C                     PARM *BLANKS   PRTCD                                               JMI101
+     C                     PARM C#SCON    SVALK1 20                                           JMI101
+     C                     PARM           SVAL1 200                                           JMI101
+     C                     PARM *BLANK    SVALK2 20                                           JMI101
+     C                     PARM           SVAL2 200                                           JMI101
+     C                     PARM *BLANK    SVALK3 20                                           JMI101
+     C                     PARM           SVAL3 200                                           JMI101
+     C                     PARM *BLANK    SVALK4 20                                           JMI101
+     C                     PARM           SVAL4 200                                           JMI101
+     C                     PARM *BLANK    SVALK5 20                                           JMI101
+     C                     PARM           SVAL5 200                                           JMI101
+     C                     PARM *BLANK    SVALK6 20                                           JMI101
+     C                     PARM           SVAL6 200                                           JMI101
+     C                     PARM *BLANK    SVALK7 20                                           JMI101
+     C                     PARM           SVAL7 200                                           JMI101
+     C                     PARM *BLANK    SVALK8 20                                           JMI101
+     C                     PARM           SVAL8 200                                           JMI101
+     C                     PARM *BLANK    SVALK9 20                                           JMI101
+     C                     PARM           SVAL9 200                                           JMI101
+     C                     PARM *BLANK    SVALK0 20                                           JMI101
+     C                     PARM           SVAL10200                                           JMI101
+      *                                                                                       JMI101
+     C           PRTCD     IFNE *BLANKS                                                       JMI101
+     C           *LOCK     IN   LDA                                                           JMI101
+     C                     MOVEL'201'     DBASE                                               JMI101
+     C                     MOVEL'SDSVALPD'DBFILE                                              JMI101
+     C                     MOVELSVALK1    DBKEY                                               JMI101
+     C                     OUT  LDA                                                           JMI101
+     C                     GOTO ERROR                                                         JMI101
+     C                     ENDIF                                                              JMI101
+      *                                                                                       JMI101
+      ** Setup Suppress Conversion indicator                                                  JMI101
+      *                                                                                       JMI101
+     C                     MOVELSVAL1     W#SCON  1                                           JMI101
+     C                     ENDIF                                                              JMI101
      C************************************************************ 080603 117028
      C** * CHECK 'BRT' SWITCH ON ********************************* 080603 117028
      C************************************************************ 080603 117028
@@ -3141,6 +3195,17 @@
      C           EVCOD     ANDEQ'M'                                                         MD034609
      C           ECCY      ANDNEBJLCCY                                                      MD034609
      C           *IN35     IFEQ '1'                                                         MD034609
+      *                                                                                       JMI101
+      * If system value set-up is to post tax in transaction currency introduce               JMI101
+      * similar processing to above fix and don't treat key as a tax key                      JMI101
+      *                                                                                       JMI101
+     C           *IN34     OREQ '1'                                                           JMI101
+     C           JMI101    ANDEQ'Y'                                                           JMI101
+     C           W#SCON    ANDEQ'Y'                                                           JMI101
+     C           *IN36     OREQ '1'                                                           JMI101
+     C           JMI101    ANDEQ'Y'                                                           JMI101
+     C           W#SCON    ANDEQ'Y'                                                           JMI101
+      *                                                                                       JMI101
      C                     MOVE '0'       *IN60                                             MD034609
      C                     ELSE                                                             MD034609
      C                     MOVE '1'       *IN60                                             MD034609

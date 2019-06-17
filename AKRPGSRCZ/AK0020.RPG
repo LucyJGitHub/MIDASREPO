@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. JMI101             Date 12Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 23Feb15               *
       *                 MD031566           Date 13Feb15               *
       *                 MD027308B          Date 25Nov14               *
       *                 MD027308A          Date 15Jul14               *
@@ -90,6 +91,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  JMI101  - WHT Changes. Generate Tax keys for gross posting.  *
+      *            of interest and debit of tax over Settlement A/C   *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax                                *
       *  MD031566 - MISSING TIME DEPOSIT CAPITAL INT. ACKEYS          *
@@ -455,6 +458,7 @@
      I                                        6   8 CYD
      I                                        7   9 BB2                                       CAS009
      I                                        8   9 FEECD                                     CAS009
+     I                                        8   8 GRS                                       JMI101
      I                                        9   9 FBD
      I                                       10  10 AMTD
      I                                       11  14 CLASD                                     CDL038
@@ -4034,6 +4038,14 @@ E004 C                     ENDIF                                          S01460
 E003 C                     ENDIF                                          S01460
      C*                                                                   S01460
      C                     EXSR ACUP                                      S01460
+      * If JMI101 is On, also format Gross Taxable key XXIYY..GTI                             JMI101
+     C           JMI101    IFEQ 'Y'                                                           JMI101
+     C                     MOVE 'G'       GRS                                                 JMI101
+     C                     MOVE '01'      PN1                                                 JMI101
+     C                     MOVE '2'       PR1                                                 JMI101
+     C                     EXSR ACUP                                                          JMI101
+     C                     MOVE *BLANKS   GRS                                                 JMI101
+     C                     ENDIF                                                              JMI101
 E002 C                     ENDIF                                          080603
      C**                                                                  S01460
      C***Format*Key*XXMYY...N******                                S01460 080603
@@ -4052,6 +4064,14 @@ B002 C           *IN71     IFEQ *ON                                       080603
      C***********          ENDIF                                   S01460 080603
      C*                                                                   S01460
      C                     EXSR ACUP                                      S01460
+      * If JMI101 is On, also format Gross Net key XXIYY..G.N                                 JMI101
+     C           JMI101    IFEQ 'Y'                                                           JMI101
+     C                     MOVE 'G'       GRS                                                 JMI101
+     C                     MOVE *BLANKS   PN1                                                 JMI101
+     C                     MOVE *BLANKS   PR1                                                 JMI101
+     C                     EXSR ACUP                                                          JMI101
+     C                     MOVE *BLANKS   GRS                                                 JMI101
+     C                     ENDIF                                                              JMI101
      C**                                                                  S01460
      C***Format*Key*XXMYY...T********                              S01460 080603
      C** Format Key XXIYY....T                                            080603
@@ -4065,6 +4085,14 @@ B002 C           *IN71     IFEQ *ON                                       080603
      C                     MOVE '01'      PN1                             080603
      C                     MOVE '1'       PR1                             080603
      C                     EXSR ACUP                                      080603
+      * If JMI101 is On, also format Gross Tax key XXIYY..G.T                                 JMI101
+     C           JMI101    IFEQ 'Y'                                                           JMI101
+     C                     MOVE 'G'       GRS                                                 JMI101
+     C                     MOVE '01'      PN4                                                 JMI101
+     C                     MOVE '2'       PR4                                                 JMI101
+     C                     EXSR ACUP                                                          JMI101
+     C                     MOVE *BLANKS   GRS                                                 JMI101
+     C                     ENDIF                                                              JMI101
      C**                                                                  S01408
      C/COPY WNCPYSRC,AK0020CBD5                                           S01408
      C           CGL165    IFEQ 'Y'                                                           CGL165
@@ -4554,6 +4582,7 @@ E001 C                     END                             CL,CD          080603
       *                                                                                     BUG26326
       ** Stop double posting on maturity of MB and MUB keys                                 BUG26326
      C           SIPRT     IFEQ 'N'                                                         BUG26326
+     C           CGL031    ANDEQ'Y'                                                           JMI101
      C                     MOVE '01'      PN1
      C                     MOVE '2'       PR1
      C                     ENDIF                                                            BUG26326
@@ -4562,6 +4591,12 @@ E001 C                     END                             CL,CD          080603
      C**                                                                  S01408
      C* Update file
      C                     EXSR ACUP
+      * If JMI101 is On, also format Gross key XXIYY..G.B                                     JMI101
+     C           JMI101    IFEQ 'Y'                                                           JMI101
+     C                     MOVE 'G'       GRS                                                 JMI101
+     C                     EXSR ACUP                                                          JMI101
+     C                     MOVE *BLANKS   GRS                                                 JMI101
+     C                     ENDIF                                                              JMI101
      C**                                                                  S01460
      C** Format Key XXMYY...TI                                            S01460
      C**                                                                  S01460
@@ -4636,6 +4671,14 @@ E001 C                     END                             CL,CD          080603
      C                     MOVE '01'      PN1                             080603
      C                     MOVE '1'       PR1                             080603
      C                     EXSR ACUP                                      080603
+      * If JMI101 is On, also format Gross tax key XXIYY..G.T                                 JMI101
+     C           JMI101    IFEQ 'Y'                                                           JMI101
+     C                     MOVE 'G'       GRS                                                 JMI101
+     C                     MOVE '01'      PN4                                                 JMI101
+     C                     MOVE '2'       PR4                                                 JMI101
+     C                     EXSR ACUP                                                          JMI101
+     C                     MOVE *BLANKS   GRS                                                 JMI101
+     C                     ENDIF                                                              JMI101
      C**                                                                  S01408
      C/COPY WNCPYSRC,AK0020CBD5                                           S01408
      C           CGL165    IFEQ 'Y'                                                           CGL165
@@ -12262,6 +12305,18 @@ E001 C                     ENDIF                                          S01460
      C                     OUT  LDA                                                           CGL165
      C                     EXSR DBERR                                                         CGL165
      C                     ENDIF                                                              CGL165
+      *                                                                                       JMI101
+     C                     CALL 'AOSARDR0'                                                    JMI101
+     C                     PARM *BLANKS   PRTCD                                               JMI101
+     C                     PARM '*VERIFY' POPTN                                               JMI101
+     C                     PARM 'JMI101'  PSARD                                               JMI101
+     C           SCSARD    PARM SCSARD    DSFDY                                               JMI101
+      *                                                                                       JMI101
+     C           PRTCD     IFEQ *BLANKS                                                       JMI101
+     C                     MOVE 'Y'       JMI101  1                                           JMI101
+     C                     ELSE                                                               JMI101
+     C                     MOVE 'N'       JMI101                                              JMI101
+     C                     ENDIF                                                              JMI101
      C**
      C** Check that all required Narrative Codes are present
      C** on SDNARRPD

@@ -565,8 +565,11 @@
      D W#BSRD          S              1A                                                      CDL081
      D W#NBRD          S              1A                                                      CDL081
      D CDL081          S              1A                                                      CDL081
+     D JMI101          S              1A                                                      JMI101
+     D W#GROSS         S              1A                                                      JMI101
      D C#BASE          C                   CONST('BasCcyTaxRoundDown')                        CDL081
      D C#NBAS          C                   CONST('NBasCcyTaxRoundDown')                       CDL081
+     D C#GROSS         C                   CONST('GrossMMDepInterest')                        JMI101
      D SUPFLG          S              1A                                                      CFC006
      D PNAME           S             10A                                                      CFC006
      D PCSEQ           S              5A                                                      CFC006
@@ -3096,6 +3099,63 @@
      C                   EVAL      W#BSRD = PCurSet01                                         CDL081
      C                   EVAL      W#NBRD = PCurSet02                                         CDL081
      C                   ENDIF                                                                CDL081
+      ** Check if JMI101 is installed                                                         JMI101
+      *                                                                                       JMI101
+     C                   EVAL      JMI101 = 'N'                                               JMI101
+     C                   CALL      'AOSARDR0'                                                 JMI101
+     C                   PARM      *BLANKS       PRTCD                                        JMI101
+     C                   PARM      '*VERIFY'     POPTN                                        JMI101
+     C                   PARM      'JMI101'      PSARD                                        JMI101
+     C     SCSARD        PARM      SCSARD        DSFDY                                        JMI101
+                                                                                              JMI101
+     C                   IF        PRTCD <> *BLANKS                                           JMI101
+     C                             AND PRTCD <> '*NRF'                                        JMI101
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        JMI101
+     C                   EVAL      DBASE  = '201'                                             JMI101
+     C                   EVAL      DBOPTN = POPTN                                             JMI101
+     C                   EXSR      *PSSR                                                      JMI101
+     C                   ENDIF                                                                JMI101
+                                                                                              JMI101
+     C                   IF        PRTCD = *BLANKS                                            JMI101
+     C                   EVAL      JMI101 = 'Y'                                               JMI101
+     C                   ENDIF                                                                JMI101
+      ** Access withholding tax Gross Interest system value if JMI101 is on                   JMI101
+      *                                                                                       JMI101
+     C                   IF        JMI101 = 'Y'                                               JMI101
+     C                   CALL      'AOSVALR0'                                                 JMI101
+     C                   PARM      *BLANKS       PRTCD                                        JMI101
+     C                   PARM      C#GROSS       PSysVal01                                    JMI101
+     C                   PARM                    PCurSet01                                    JMI101
+     C                   PARM                    PSysVal02                                    JMI101
+     C                   PARM                    PCurSet02                                    JMI101
+     C                   PARM                    PSysVal03                                    JMI101
+     C                   PARM                    PCurSet03                                    JMI101
+     C                   PARM                    PSysVal04                                    JMI101
+     C                   PARM                    PCurSet04                                    JMI101
+     C                   PARM                    PSysVal05                                    JMI101
+     C                   PARM                    PCurSet05                                    JMI101
+     C                   PARM                    PSysVal06                                    JMI101
+     C                   PARM                    PCurSet06                                    JMI101
+     C                   PARM                    PSysVal07                                    JMI101
+     C                   PARM                    PCurSet07                                    JMI101
+     C                   PARM                    PSysVal08                                    JMI101
+     C                   PARM                    PCurSet08                                    JMI101
+     C                   PARM                    PSysVal09                                    JMI101
+     C                   PARM                    PCurSet09                                    JMI101
+     C                   PARM                    PSysVal10                                    JMI101
+     C                   PARM                    PCurSet10                                    JMI101
+                                                                                              JMI101
+     C                   IF        PRTCD <> *BLANKS                                           JMI101
+     C                   EVAL      DBKEY  = PSysVal01                                         JMI101
+     C                   EVAL      DBASE  = '202'                                             JMI101
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        JMI101
+     C                   EXSR      *PSSR                                                      JMI101
+     C                   ENDIF                                                                JMI101
+                                                                                              JMI101
+      ** Setup Gross Interest indicator                                                       JMI101
+                                                                                              JMI101
+     C                   EVAL      W#GROSS = PCurSet01                                        JMI101
+     C                   ENDIF                                                                JMI101
      C*                                                                   S01194
 0656 C*    CHECK FOR NEGOTIABLE ASSETS ACCRUALS INDICATOR                 S01194
 0658 C     BNNAIA        COMP      'Y'                                    28                   S0119
@@ -12367,10 +12427,16 @@
      C                   ELSE                                                                 CDL013
      C                   MOVE      ' '           AKY(6)                                       CDL013
      C                   ENDIF                                                                CDL013
+     C     JMI101        IFEQ      'Y'                                                        JMI101
+     C     W#GROSS       ANDNE     *BLANK                                                     JMI101
+     C     *IN23         ANDEQ     *ON                                                        JMI101
+     C                   MOVE      W#GROSS       AKY(8)                                       JMI101
+     C                   ENDIF                                                                JMI101
      C                   ENDIF                                                                CDL013
      C/COPY WNCPYSRC,DL0280C117                                           S01408
 2781 C*                                                                   080603
 2727 C                   EXSR      EXCP                                                        08060
+     C                   MOVE      *BLANKS       AKY(8)                                       JMI101
       *                                                                                       237562
       ** Return the previous value of settlement branch.                                      237562
       *                                                                                       237562
@@ -12593,6 +12659,10 @@
      C                   ELSE                                                                 CDL013
      C                   MOVE      ' '           AKY(6)                                       CDL013
      C                   ENDIF                                                                CDL013
+     C     JMI101        IFEQ      'Y'                                                        JMI101
+     C     W#GROSS       ANDNE     *BLANKS                                                    JMI101
+     C                   MOVE      W#GROSS       AKY(8)                                       JMI101
+     C                   ENDIF                                                                JMI101
      C                   ENDIF                                                                CDL013
      C/COPY WNCPYSRC,DL0280CP13                                           S01408
      C*                                                                   S01408
@@ -12602,6 +12672,7 @@
      C                   Z-ADD     PWTXA         KYAMT                                        CGL165
      C                   ENDIF                                                                CGL165
 2744 C                   EXSR      EXCP                                                        08060
+     C                   MOVE      *BLANKS       AKY(8)                                       JMI101
       * If Dual Withholding Tax feature installed also output                                 CGL165
       * Secondary Tax Account key                                                             CGL165
      C     CGL165        IFEQ      'Y'                                                        CGL165
@@ -12725,6 +12796,11 @@
      C                   Z-ADD     WORKD         WZAMT                                        235265
 2781 C                   MOVE      'N'           AKY(10)                                       08060
      C                   MOVE      'INTP'        WCFTP                                        CAS009
+     C     JMI101        IFEQ      'Y'                                                        JMI101
+     C     W#GROSS       ANDNE     *BLANKS                                                    JMI101
+     C     *IN23         ANDEQ     *ON                                                        JMI101
+     C                   MOVE      W#GROSS       AKY(8)                                       JMI101
+     C                   ENDIF                                                                JMI101
       *                                                                                     AR992570
       ** If feature CDL018=Y, use xxIxx___B. This replaces xxIxx___N                        AR992570
       ** account key.                                                                       AR992570
@@ -12781,6 +12857,7 @@
      C/COPY WNCPYSRC,DL0280C198                                           S01408
      C                   Z-ADD     KYAMT         WZAMT                                        233565
 2751 C                   EXSR      EXCP                                                        08060
+     C                   MOVE      *BLANKS       AKY(8)                                       JMI101
       *                                                                                       237562
       ** Return the previous value of settlement branch.                                      237562
       *                                                                                       237562
@@ -29040,7 +29117,7 @@
       /EJECT                                                                                  CAS005
       *Externalisation of SR/SRRSAC                                                           CPK024
      C/COPY DLCPYSRC,DL0280RSAC
- 
+
       /EJECT                                                                                  CAS005
       *Externalisation of SR/SRRSIN                                                           CPK021
      C/COPY DLCPYSRC,DL0280RSIN
@@ -31771,7 +31848,7 @@
      C                                                                                        CRE105
      C                   ENDSR                                                                CRE105
       ****************************************************************                        CRE105
- 
+
      C/COPY DLCPYSRC,DL0280MMCF                                                               CAS009
      C/COPY DLCPYSRC,DL0280HIST                                                               232928
      C/COPY DLCPYSRC,DL0280HSTQ                                                               232928

@@ -4,8 +4,9 @@
       *                                                               *
       *  DL0280 - DL0280MADT                                          *
       *                                                               *
-      *  Last Amend No. MD033094           Date 28May15               *
-      *  Prev Amend No. CRE105             Date 03Mar15               *
+      *  Last Amend No. JMI101             Date 12Mar19               *
+      *  Prev Amend No. MD033094           Date 28May15               *
+      *                 CRE105             Date 03Mar15               *
       *                 CGL165             Date 23Feb15               *
       *                 MD031215           Date 13Feb15               *
       *                 MD024874A          Date 19Aug14               *
@@ -17,6 +18,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI101  - WHT Changes. Generate Tax keys for gross posting.  *
+      *            of interest and debit of tax over Settlement A/C   *
       *  MD033094 - Incorrect account key used for interest paid      *
       *             separately.                                       *
       *  CRE105 - Withholding Tax Extract Report                      *
@@ -511,6 +514,11 @@
      C*                                                                   080603
      C                   MOVE      'M'           AKY(3)                                        08060
      C                   MOVE      'B'           AKY(10)                                       08060
+     C     JMI101        IFEQ      'Y'                                                        JMI101
+     C     W#GROSS       ANDNE     *BLANKS                                                    JMI101
+     C     *IN23         ANDEQ     *ON                                                        JMI101
+     C                   MOVE      W#GROSS       AKY(8)                                       JMI101
+     C                   ENDIF                                                                JMI101
      C*                                                                   080603
      C     CEU015        IFEQ      'Y'                                                        250190
      C     RTFC          ANDNE     *BLANKS                                                    250190
@@ -534,7 +542,13 @@
      C*                                                                   080603
      C                   ADD       WORKD         KYAMT                          + Interest     08060
      C/COPY WNCPYSRC,DL0280C169                                           S01408
+     C* If Principal and Interest amount is to be posted Gross of tax                         JMI101
+      * then do not subtract the tax from the KYAMT field                                     JMI101
+     C     JMI101        IFEQ      'Y'                                                        JMI101
+     C     W#GROSS       ANDNE     *BLANKS                                                    JMI101
+     C                   ELSE                                                                 JMI101
      C                   SUB       TAXA          KYAMT                          - TAX          08060
+     C                   ENDIF                                                                JMI101
      C/COPY WNCPYSRC,DL0280C170                                           S01408
       **********                                                                       234421 234765
      C*****GL031         IFEQ      'Y'                                                 234421 234765
@@ -628,6 +642,7 @@
       *****************************************************************                235040 240667
      C*****RBDN          IFEQ      *ZERO                                               235040 240667
      C                   EXSR      EXCP                                                        08060
+     C                   MOVE      *BLANKS       AKY(8)                                       JMI101
      C**********         ENDIF                                                         235040 240667
       *                                                                                       CAS009
      C                   MOVE      'MAMT'        WCFTP                                        CAS009
@@ -682,6 +697,10 @@
      C*                                                                   080603
      C                   MOVE      'M'           AKY(3)                                        08060
      C                   MOVE      'T'           AKY(10)                                       08060
+     C     JMI101        IFEQ      'Y'                                                        JMI101
+     C     W#GROSS       ANDNE     *BLANKS                                                    JMI101
+     C                   MOVE      W#GROSS       AKY(8)                                       JMI101
+     C                   ENDIF                                                                JMI101
      C/COPY WNCPYSRC,DL0280C171                                           S01408
      C                   Z-ADD     TAXA          KYAMT                                         08060
      C*                                                                   S01408
@@ -702,6 +721,7 @@
      C                   Z-ADD     PWTXA         KYAMT                                        CGL165
      C                   ENDIF                                                                CGL165
      C                   EXSR      EXCP                                                        08060
+     C                   MOVE      *BLANKS       AKY(8)                                       JMI101
       *
       * If Dual Withholding Tax feature installed also output                                 CGL165
       * Secondary Tax Account key                                                             CGL165
@@ -712,10 +732,10 @@
      C                   EXSR      EXCP                                                       CGL165
      C                   MOVE      ' '           AKY(9)                                       CGL165
      C                   ENDIF                                                                CGL165
- 
+
      C                   END                                                                   11703
                                                                                               CRE105
-      ** Extract interest and tax if CRE105 is swithced on                                    CRE105                                                                                          CRE10
+      ** Extract interest and tax if CRE105 is swithced on                                    CRE105
                                                                                               CRE105
      C                   IF        CRE105 = 'Y'                                               CRE105
      C                             AND *INU1 = *ON                                            CRE105
@@ -731,7 +751,7 @@
      C                   EVAL      DLPSTD = BJRDNB                                            CRE105
      C                   EVAL      DLVALD = KYDAT                                             CRE105
      C                   WRITE     DLIWHTD0                                                   CRE105
-     C                   ENDIF                                                                CRE105                                                                                              CRE10
+     C                   ENDIF                                                                CRE105
                                                                                               CRE105
      C*                                                                   S01408
      C     CDL013        IFEQ      '1'                                                        CDL013

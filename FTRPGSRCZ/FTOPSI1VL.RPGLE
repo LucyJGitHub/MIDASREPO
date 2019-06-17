@@ -15,8 +15,9 @@
       *                                                                    *
       *  (c) Finastra International Limited 2002                           *
       *                                                                    *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD035360           Date 06Aug15               *
+      *  Last Amend No. JMI107             Date 10May08               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD035360           Date 06Aug15               *
       *                 MD035030           Date 14Jul15               *
       *                 CFT148             Date 23Jan13               *
       *                 CFT120             Date 28Sep12               *
@@ -44,6 +45,10 @@
       *                                                                    *
       **********************************************************************
       *                                                                    *
+      *  JMI107 - Upgrade of JMI025 feature. RTS Bank Code Enhancement*
+      *           Amend validation to allow RTS bank code.            *
+      *           Hooks: JMI107_001, JMI107_002, JMI107_003,          *
+      *                  JMI107_004, JMI107_006                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD035360 - Database error encountered due to parameter error *
       *             in FTVODCS                                        *
@@ -146,6 +151,8 @@
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
       *
+     D/COPY WNCPYSRC,JMI107_004                                                               JMI107
+
      D SSIFileFmt    E DS                  EXTNAME(FTOSSIPD)
       * Current Outgoing Payment SSI in File Format
       *
@@ -373,6 +380,7 @@
      C                   Move      SSPRFC        SPRFC
      C                   Move      SSODMT        SODMT
      C                   Move      SSSNCO        SSNCO
+     C/COPY WNCPYSRC,JMI107_006                                                               JMI107
       *
       **  Move defauted add/deduct indicator
      C                   Move      SSADDC        SADDC
@@ -598,6 +606,7 @@
      C                   Exsr      RESETERRS
       *
       ** Validate
+     C/COPY WNCPYSRC,JMI107_001                                                              JMI107
      C                   CALLB     'FTVDNDN'
       * INPUTS
       *  Return Code
@@ -617,6 +626,7 @@
      C                   Parm                    OKFlagsDS
       *  Validation Work Fields
      C                   Parm                    Val@Fields
+     C/COPY WNCPYSRC,JMI107_002                                                               JMI107
       *
       * Update error info with that returned from the validation module
      C                   Exsr      UPDATERRS
@@ -1110,6 +1120,7 @@
      C                   EVAL      CFT142 = 'Y'                                             MD035360
      C                   ENDIF                                                              MD035360
                                                                                             MD035360
+     C/COPY WNCPYSRC,JMI107_003                                                               JMI107
      C                   Endsr
       /EJECT
       *****************************************************************

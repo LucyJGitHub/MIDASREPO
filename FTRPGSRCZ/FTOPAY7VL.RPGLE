@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas FT Outgoing Payments Insert Screen Valid'n')     *
+/*EXI *  TEXT('Midas FT Outgoing Payments Insert Screen Valid')       *
       *****************************************************************
       *                                                               *
       *  Midas - API Funds Transfer Module                            *
@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *  Last Amend No. JMI107             Date 10May08               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT157             Date 29Aug14               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE075             Date 06Dec10               *
@@ -37,6 +38,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  JMI107 - Upgrade of JMI025 feature. RTS Bank Code Enhancement*
+      *           Amend validation to allow RTS bank code.            *
+      *           Hooks: FTH00377, FTH00378, FTH00379                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *            (Recompile)                                        *
@@ -339,7 +343,7 @@
       ** VDRAC - Validate Settlement Account
       *****************************************************************
      C     VDRAC         BEGSR
- 
+
       * Reset variables updated by each module
      C                   Z-add     0             Ix                3 0
       *

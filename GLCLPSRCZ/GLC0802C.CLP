@@ -10,8 +10,9 @@
 /*       (c) Finastra International Limited 2001                     */
 /*           1989                                                    */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD036589           Date 14Feb16              */
+/*       Last Amend No. JMI112             Date 24May18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD036589           Date 14Feb16              */
 /*                      CER059             Date 19Jul10              */
 /*                      BUG23582           Date 13Apr08              */
 /*                      CER037             Date 19May08              */
@@ -45,6 +46,11 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       JMI112 - Midas-Opics Data Transfer Amendments. Upgrade to   */
+/*                FBM 2.1                                            */
+/*                Use of core hook GLC0802C04                        */
+/*                Use of core hook GLC0802C07                        */
+/*                Use of core hook GLC0802C13                        */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD036589 - FX neeting projection during COB.                */
 /*       CER059 - German Feature Upgrade to Delhi                    */
@@ -84,7 +90,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*********** PGM        PARM(&PARM)                                   /*S01117*/
- 
+
 /* &RLEV IS STANDARD RCF PARM NOT USED IN THIS PROGRAM  */            /*S01117*/
              PGM        PARM(&PARM &RSEQ &RLEV &RENT)                 /*S01117*/
 /**/
@@ -118,6 +124,7 @@
              DCL        VAR(&TION) TYPE(*CHAR) LEN(1)                 /*CTI001*/
              DCL        VAR(&CAP204) TYPE(*CHAR) LEN(1)                             /*CAP204*/
              DCL        VAR(&CDL002) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD036589*/
+/**/
 /*                                                                    /*S01408*/
 /*/COPY WNCPYSRC,GLC0802C07                                           /*S01408*/
 /*                                                                    /*S01408*/
@@ -131,7 +138,7 @@
 /*  Check if TI module is switched on  */                             /*CTI001*/
              IF         COND(%SST(&FMT 103 1) *EQ 'Y') THEN(CHGVAR +
                           VAR(&TION) VALUE('Y'))                      /*CTI001*/
- 
+
                                                                       /*S01473*/
 /* Access switchable features file to see if feature S01473     */    /*S01473*/
 /* is installed  */                                                   /*S01473*/
@@ -164,6 +171,7 @@
              SNDMSG     MSG('NOSTRO EVENTS EXTRACT') TOMSGQ(MRUNQ)    /*E193  */
 /*/COPY WNCPYSRC,GLC0802C13                                          */
 /**/                                                                  /*E193  */
+/**/
              CLRPFM     FILE(NOSEXCC)                                 /*E193  */
              CLRPFM     FILE(NOSEXEC)                                 /*E193  */
              CLRPFM     FILE(NOSEXEL)                                 /*E193  */
@@ -326,6 +334,8 @@
                 CALL       PGM(GL0580) PARM(&RSEQ &RENT)              /*E22608*/
                                                                       /*S01408*/
 /*/COPY WNCPYSRC,GLC0802C04                                           /*S01408*/
+/**/
+/**/
                                                                       /*S01408*/
 /*              ADDLFM     FILE(PRONO) MBR(PRONO) */       /*S01158*/ /*BHF982*/
 /*************ADDLFM     FILE(PRONO) MBR(PRONO) SHARE(*YES)*/ /*BHF982 048699*/

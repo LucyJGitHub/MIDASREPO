@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD052820           Date 21Feb19              */
-/*       Prev Amend No. MD049309           Date 14Feb18              */
+/*       Last Amend No. JMI112             Date 16May19              */
+/*       Prev Amend No. MD052820           Date 21Feb19              */
+/*                      MD049309           Date 14Feb18              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD048608           Date 20Nov17              */
 /*                      MD031676           Date 17Dec14              */
@@ -65,6 +66,8 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*     JMI112 - Midas-OPICS Data Transfer Amendments (Upg to FM2.1) */
+/*              Use of hook LEC0605001                              */
 /*     MD052820 - LEC06A fails due to commitment definition not     */
 /*                found.                                            */
 /*     MD049309 - LE: Records disappeared in CLOANZTD file          */
@@ -981,5 +984,5 @@ ABNOR:       SNDPGMMSG  MSG('LEC0605 ended abnormally') TOPGMQ(*EXT) +
                           Finastra International Limited')
 /***ENDPGM:  ENDPGM                                                  */                 /*MD049309*/
 /***ENDPGM:*****ENDCMTCTL                                                  /*MD049309*/ /*MD052820*/
- ENDPGM:                                                                                /*MD052820*/ 
+ ENDPGM:     /*MD052820*/
              ENDPGM                                                                     /*MD049309*/

@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053295           Date 13Apr19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD051152           Date 02Aug18               *
+      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD047993           Date 23Sep17               *
       *                 MD035545           Date 11Sep15               *      
       *                 AR996895           Date 25Nov12               *
@@ -90,6 +91,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD051152 - FRA/IRS Interest Calculation Basis 6.             *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
       *             amount for month of March (Recompile)             *
@@ -1190,6 +1192,7 @@
      C                     Z-ADD0         SZSDAT  50
      C                     Z-ADD0         SZEDAT  50
      C                     Z-ADD0         SZPER   50
+     C                     Z-ADD0         SPPER   50                                        MD051152
      C                     Z-ADD0         STYR    20
      C                     Z-ADD0         STTXDT  40
      C                     Z-ADD0         STDAY   20
@@ -1398,6 +1401,7 @@
      C                     END
       *                                                                                       CIR013
      C           SZICB     IFEQ 9                                                             CIR013
+     C           SZICB     OREQ 6                                                           MD051152
       * Convert start date to YYYYMMDD format                                                 CIR013
      C                     Z-ADDSZSDAT    @@DAYN  50                                          CIR013
      C                     EXSR ZDATE9                                                        CIR013
@@ -1407,6 +1411,10 @@
      C                     Z-ADDSZEDAT    @@DAYN                                              CIR013
      C                     EXSR ZDATE9                                                        CIR013
      C                     Z-ADD@@VDT     ZZDATB                                              CIR013
+      *                                                                                     MD051152
+     C                     ENDIF                                                            MD051152
+      *                                                                                     MD051152
+     C           SZICB     IFEQ 9                                                           MD051152
       *                                                                                       CIR013
      C                     EXSR #FEB29                                                        CIR013
       *                                                                                       CIR013
@@ -1427,6 +1435,76 @@
      C           #29FEB    ANDEQ'Y'                                                           CIR013
      C           SZEDAT    SUB  SZSDAT    SZPER
      C                     END
+      *                                                                                     MD051152
+      ** Perform no. of days calculation for method 6                                       MD051152
+     C           SZICB     IFEQ 6                                                           MD051152
+      *                                                                                     MD051152
+      ** If start and end date are in the same year, check if the                           MD051152
+      ** year is a leap year and add no. of interest days to the                            MD051152
+      ** relevant total                                                                     MD051152
+     C           ZZYY1     IFEQ ZZYY2                                                       MD051152
+     C           ZZYY1     DIV  4         ZZWN5                                             MD051152
+     C                     MVR            ZZWN5                                             MD051152
+     C           ZZWN5     IFNE 0                                                           MD051152
+     C                     Z-ADD365       SZICVL                                            MD051152
+     C                     ELSE                                                             MD051152
+     C                     Z-ADD366       SZICVL                                            MD051152
+     C                     ENDIF                                                            MD051152
+     C                     Z-ADDSZPER     SPPER                                             MD051152
+      *                                                                                     MD051152
+      ** Calculate Settlement Amount                                                        MD051152
+     C                     EXSR FRASR                                                       MD051152
+      *                                                                                     MD051152
+      ** else must break down the interest period into leap years                           MD051152
+      ** and non-leap years                                                                 MD051152
+     C                     ELSE                                                             MD051152
+      ** Add 1 to starting year number                                                      MD051152
+     C           ZZYY1     ADD  1         ZZYY2                                             MD051152
+      * Get Midas day number for 1st Jan of year after start date                           MD051152
+     C                     MOVE '01'      ZZMM2                                             MD051152
+     C                     MOVE '01'      ZZDD2                                             MD051152
+     C                     MOVE ZZDATB    ZZDTIN                                            MD051152
+     C                     EXSR ZDAT10                                                      MD051152
+     C                     Z-ADDZZMDNO    ZZENDW  50                                        MD051152
+     C           ZZENDW    SUB  SZSDAT    SPPER                                             MD051152
+      *                                                                                     MD051152
+      ** Check if current year is a leap year                                               MD051152
+     C           ZZYY1     DIV  4         ZZWN5                                             MD051152
+     C                     MVR            ZZWN5                                             MD051152
+     C           ZZWN5     IFNE 0                                                           MD051152
+     C                     Z-ADD365       SZICVL                                            MD051152
+     C                     ELSE                                                             MD051152
+     C                     Z-ADD366       SZICVL                                            MD051152
+     C                     ENDIF                                                            MD051152
+      *                                                                                     MD051152
+      ** Calculate Settlement Amount                                                        MD051152
+     C                     EXSR FRASR                                                       MD051152
+      *                                                                                     MD051152
+      * Finally calculate the days for the last part-year up                                MD051152
+      * to the end date                                                                     MD051152
+      *                                                                                     MD051152
+      * Get Midas day number for 1st Jan of current year                                    MD051152
+     C                     MOVE '01'      ZZMM2                                             MD051152
+     C                     MOVE '01'      ZZDD2                                             MD051152
+     C                     MOVE ZZDATB    ZZDTIN                                            MD051152
+     C                     EXSR ZDAT10                                                      MD051152
+     C                     Z-ADDZZMDNO    ZZBEG   50                                        MD051152
+     C           SZEDAT    SUB  ZZBEG     SPPER                                             MD051152
+      *                                                                                     MD051152
+      ** Check if year is a leap year                                                       MD051152
+     C           ZZYY2     DIV  4         ZZWN5                                             MD051152
+     C                     MVR            ZZWN5                                             MD051152
+     C           ZZWN5     IFNE 0                                                           MD051152
+     C                     Z-ADD365       SZICVL                                            MD051152
+     C                     ELSE                                                             MD051152
+     C                     Z-ADD366       SZICVL                                            MD051152
+     C                     ENDIF                                                            MD051152
+      *                                                                                     MD051152
+      ** Calculate Settlement Amount                                                        MD051152
+     C                     EXSR FRASR                                                       MD051152
+      *                                                                                     MD051152
+     C                     ENDIF                                                            MD051152
+     C                     ENDIF                                                            MD051152
       *
       **  IF THE END DATE IS LESS THAN OR EQUAL TO THE MATURITY DATE
       *
@@ -1649,6 +1727,8 @@
       **             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       **             (INTEREST CALC BASIS x 100) + (BASE RATE x D)
       *
+     C           SZICB     IFNE 6                                                           MD051152
+      *                                                                                     MD051152
      C           SZFLT     IFGE SZFIX
       *
      C           SZFLT     SUB  SZFIX     SZWRK1
@@ -1671,6 +1751,8 @@
      C********** SZWRK2    DIV  SZWRK5    SZWRK6    H                     E35983
      C           SZWRK6    DIV  SZWRK5    SZSETL    H                     E35983
      C********** SZWRK6    MULT SZPPL     SZSETL    H                     E35983
+      *                                                                                     MD051152
+     C                     ENDIF                                                            MD051152
       *
       **  IF VALUE DATE = START DATE THEN FIRST PERIOD SO INITIALISE
       **  RUNNING DISCOUNT FACTOR TO 1
@@ -1692,6 +1774,8 @@
      C           SZRSA     ADD  SZRDS     SZRDS                           E22610
      C*                                                                   E22610
      C                     END                                            E22610
+      *                                                                                     MD051152
+     C                     Z-ADD0         SZSETL                                            MD051152
       *
       **  CALCULATE THIS PERIOD'S DISCOUNT FACTOR USING THE EQUATION
       **
@@ -1738,6 +1822,44 @@
       *
      C           DLRAD9    ENDSR
       *
+     C**************************************************************************            MD051152
+      /SPACE 5                                                                              MD051152
+     C**************************************************************************            MD051152
+     C           FRASR     BEGSR                                                            MD051152
+      *                                                                                     MD051152
+      **  Calculate this period's discounted settlement amount using                        MD051152
+      **  this equation where SS = Settlement amount                                        MD051152
+      **                       D = PERIOD                                                   MD051152
+      **                                                                                    MD051152
+      **        SS = (BASE RATE - FIXED RATE) x D x PRINCIPAL                               MD051152
+      **             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                         MD051152
+      **             (INTEREST CALC BASIS x 100) + (BASE RATE x D)                          MD051152
+      *                                                                                     MD051152
+     C           SZFLT     IFGE SZFIX                                                       MD051152
+      *                                                                                     MD051152
+     C           SZFLT     SUB  SZFIX     SZWRK1                                            MD051152
+      *                                                                                     MD051152
+     C                     ELSE                                                             MD051152
+      *                                                                                     MD051152
+     C           SZFIX     SUB  SZFLT     SZWRK1                                            MD051152
+      *                                                                                     MD051152
+     C                     END                                                              MD051152
+      *                                                                                     MD051152
+     C           SZWRK1    MULT SPPER     SZWRK2                                            MD051152
+      *                                                                                     MD051152
+      * Multiply now by principal to get larger value for dividing                          MD051152
+      * and avoid errors due to half-adjusting small numbers later                          MD051152
+     C           SZWRK2    MULT SZPPL     SZWRK6                                            MD051152
+      *                                                                                     MD051152
+     C           SZICVL    MULT 100       SZWRK3                                            MD051152
+     C           SZFLT     MULT SZPER     SZWRK4                                            MD051152
+     C           SZWRK3    ADD  SZWRK4    SZWRK5                                            MD051152
+     C           SZWRK6    DIV  SZWRK5    W#SET6 180H                                       MD051152
+      *                                                                                     MD051152
+     C           W#SET6    ADD  SZSETL    SZSETL                                            MD051152
+      *                                                                                     MD051152
+     C                     ENDSR                                                            MD051152
+      *                                                                                     MD051152
       *****************************************************************
       /TITLE AB SUBROUTINE
       *****************************************************************

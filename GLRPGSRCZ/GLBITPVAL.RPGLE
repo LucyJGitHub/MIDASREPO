@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL148             Date 13Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD052075           Date 07Jun19               *
+      *  Prev Amend No. CGL148             Date 13Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
       *                 CGL135A            Date 10Jul13               *
       *                 CSF011A            Date 28Nov11               *
@@ -67,6 +68,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052075 - [CGL150] Warning message should be displayed when *
+      *           the system defaults the value date.                 *
       *  CGL148 - Automatic Opening of GL accounts                    *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
@@ -1277,6 +1280,8 @@
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
+      ** CGL150 Default Value Date 'Y'                                                      MD052075
+     C                   PARM                    VDFLTF                                     MD052075
       *
       ** Value Date - OK indicator
      C                   PARM                    DDVldtOK
@@ -1331,6 +1336,12 @@
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
+      ** Warning flds/message IDs/message data (arrays) from/to caller                      MD052075
+     C                   PARM                    WFldNmXAr                                  MD052075
+     C                   PARM                    WMsgIDXAr                                  MD052075
+     C                   PARM                    WMsgDtXAr                                  MD052075
+      ** CGL150 Default Value Date 'Y'                                                      MD052075
+     C                   PARM                    VDFLTF                                     MD052075
       *
       ** Value Date - OK indicator
      C                   PARM                    DDVldtOK
@@ -2095,6 +2106,8 @@
       ** Valid JE Item (DS) - for file update                                                 246418
      C                   PARM                    PVBITPX                                      246418
      C/COPY OFCPYSRCZ,CGL135_071                                                             CGL135A
+      ** CGL150 Default Value Date 'Y'                                                      MD052075
+     C                   PARM                    VDFLTF            1                        MD052075
       *
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

@@ -18,8 +18,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CGL150             Date 13Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD052075           Date 07Jun19               *
+      *  Prev Amend No. CGL150             Date 13Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD026695           Date 12May14               *
       *                 MD000091           Date 08May13               *
       *                 CRE073             Date 06Dec10               *
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052075 - [CGL150] Warning message should be displayed when *
+      *           the system defaults the value date.                 *
       *  CGL150 - Value date to back value date if prior to           *
       *           backvalue period                                    *
       *  MD046248 - Finastra Rebranding                               *
@@ -412,7 +415,15 @@
       *
      C     CGL150        IFEQ      'Y'                                                        CGL150
      C     WVLDT         ANDLT     WBRUN                                                      CGL150
+     C     CGL150        OREQ      'Y'                                                      MD052075
+     C     WVLDT         ANDEQ     WBRUN                                                    MD052075
+     C     VDFLTF        ANDEQ     'Y'                                                      MD052075
      C                   Z-ADD     WBRUN         WVLDT                                        CGL150
+     C                   MOVE      'Y'           VDFLTF                                     MD052075
+     C                   MOVE      'W'           DDVldtOK                                   MD052075
+     C                   ADD       1             WIx                                        MD052075
+     C                   MOVEL     'DDVLDT'      WFldNmXAr(WIx)                             MD052075
+     C                   MOVEL     'GLX1157'     WMsgIdXAr(WIx)                             MD052075
      C                   ENDIF                                                                CGL150
      C                   SELECT
       *
@@ -653,6 +664,8 @@
      C                   PARM                    WFldNmXAr
      C                   PARM                    WMsgIDXAr
      C                   PARM                    WMsgDtXAr
+      ** CGL150 Default Value Date 'Y'                                                      MD052075
+     C                   PARM                    VDFLTF            1                        MD052075
       *
       ** Value Date - OK indicator
      C                   PARM                    DDVldtOK          1

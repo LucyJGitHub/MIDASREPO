@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD050928A          Date 28Jun18               *
+      *  Last Amend No. MD052075           Date 07Jun19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD050928A          Date 28Jun18               *
       *                 MD050928           Date 15May18               *
       *                 MD050345           Date 04Apr18               *
       *                 MD050342           Date 04Apr18               *
@@ -217,6 +218,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052075 - [CGL150] Warning message should be displayed when *
+      *           the system defaults the value date.                 *
       *  CSD102 - Password Length Extension                           *
       *  MD050928A - Reinstate codes by CFT157 as codes on FTOP* files*
       *              were reversed.                                   *
@@ -1906,6 +1909,9 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       15            Bfp                                       AR1005162
       *                                                                                       CSC054
      C/COPY OFCPYSRCZ,CGL135_043                                                             CGL135A
+     C     1             SUBST     BUFFER:Bfp    VDFLTF            1                        MD052075
+     C                   ADD       1             Bfp                                        MD052075
+     C
      C     BPRXLn        SUBST     BUFFER:Bfp    RegData                                      CER001
      C                   ADD       BPRXLn        Bfp                                          CER001
      C     BPEXLn        SUBST     BUFFER:Bfp    ExtData
@@ -1920,6 +1926,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    POthNarr2                                  BUG23742
      C                   PARM                    PEADetail                                    CSC054
      C/COPY OFCPYSRCZ,CGL135_044                                                             CGL135A
+      ** CGL150 Default Value Date 'Y'                                                      MD052075
+     C                   PARM                    VDFLTF                                     MD052075
      C                   PARM                    RegData                                      CER001
      C                   PARM                    ExtData
      C                   PARM                    FldNameArr

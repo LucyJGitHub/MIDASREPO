@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD052075           Date 07Jun19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSF011A            Date 28Nov11               *
       *                 CER059             Date 19Jul10               *
       *                 BUG23742           Date 09May09               *
@@ -53,6 +54,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052075 - [CGL150] Warning message should be displayed when *
+      *           the system defaults the value date.                 *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
@@ -760,6 +763,8 @@
      C                   PARM                    CRE023                                       CRE023
       ** Valid JE Item (DS) - for file update                                                 246418
      C                   PARM                    PVBITPX                                      246418
+      ** CGL150 Default Value Date 'Y'                                                      MD052075
+     C                   PARM                    VDFLTF            1                        MD052075
       *                                                                                      BUG9073
       ** Setup batch number and batch item when there is no error                            BUG9073
       *                                                                                      BUG9073

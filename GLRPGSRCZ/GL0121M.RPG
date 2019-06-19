@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. AR675503           Date 20Mar19               *
+      *  Last Amend No. MD052075           Date 07Jun19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 AR675503           Date 20Mar19               *
       *                 CGL150             Date 13Jul18               *
       *                 CGL149             Date 13Jul18               *
       *                 CGL148             Date 13Jul18               *
@@ -170,6 +171,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052075 - [CGL150] Warning message should be displayed when *
+      *           the system defaults the value date.                 *
       *  CSD102 - Password Length Extension                           *
       *  AR675503 - F16 - Find Error function do not work accurately. *
       *             Apply fix 252321.                                 *
@@ -1426,6 +1429,8 @@
      C           P4SACD    PARM           WP0009  1        Action Code                        189519
      C           PBTAM     PARM PBTAM     WPBTAM  1                                           191175
      C                     PARM           WP0010  1        GL0121M Interface                  246922
+      ** CGL150 Default Value Date 'Y'                                                      MD052075
+     C                     PARM           WDFLT   1                                         MD052075
      C/COPY WNCPYSRC,GL0121MK65
      C*                                                                   CEU013
       *****************************************************************
@@ -8838,11 +8843,25 @@ E1   C                     ENDIF                                          CGL016
      C*
      C**   CHECK AGAINST DATE THE BACK VALUE PERIOD
      C*
+     C           CGL150    IFEQ 'Y'                                                         MD052075
+     C           #1VLDT    IFEQ UUBRUN                                                      MD052075
+     C           WDFLT     ANDEQ'Y'                                                         MD052075
+     C                     MOVEL#RVDDS    ZA0081                                            MD052075
+      * Send warning 'Value date defaulted to maximum allowed back value date'              MD052075
+     C                     MOVEL'GLX1157' ZAMSID                                            MD052075
+     C                     MOVE 'Y'       WWFLG                                             MD052075
+     C                     EXSR ZASNMS                                                      MD052075
+     C                     SETON                       42  *                                MD052075
+     C                     ENDIF                                                            MD052075
+     C                     ENDIF                                                            MD052075
+      *                                                                                     MD052075
      C           #1VLDT    IFLT UUBRUN
      C           CGL150    IFEQ 'Y'                                                           CGL150
      C                     Z-ADDUUBRUN    #1VLDT                                              CGL150
+     C                     MOVEL'Y'       WDFLT                                             MD052075
      C                     ELSE                                                               CGL150
      C                     MOVE '*BVLDER' W0RTN
+     C                     MOVEL'N'       WDFLT                                             MD052075
      C                     ENDIF                                                              CGL150
      C                     END
      C/COPY WNCPYSRC,GL0121MC22

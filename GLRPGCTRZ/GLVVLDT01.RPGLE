@@ -18,8 +18,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CGL150             Date 13Jul18               *
-      *  Prev Amend No. CGL149             Date 13Jul18               *
+      *  Last Amend No. MD052075           Date 07Jun19               *
+      *  Prev Amend No. CGL150             Date 13Jul18               *
+      *                 CGL149             Date 13Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 08May13               *
       *                 CRE073             Date 06Dec10               *
@@ -40,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052075 - [CGL150] Warning message should be displayed when *
+      *           the system defaults the value date.                 *
       *  CGL150 - Value date to back value date if prior to           *
       *           backvalue period                                    *
       *  CGL149 - Allow postings to be valued prior to the date       *
@@ -151,6 +154,8 @@
       *
       ** Index for arrays of error message ids, etc.
      D Idx             S              3P 0
+      ** Index for arrays of warning  message ids, etc.                                     MD052075
+     D WIx             S              3P 0                                                  MD052075
       *                                                                         CGL010
       ** Maximum Forward Day Number Work Field                                  CGL010
      D WMaxFwDN        S                   LIKE(BJRDNB)                         CGL010
@@ -181,6 +186,7 @@
       ** +------------------------------------------------------------+
       *
      C                   Z-ADD     *ZERO         Idx
+     C                   Z-ADD     *ZERO         WIx                                        MD052075
      C                   Z-ADD     *ZERO         WVLDT             5 0
      C                   MOVEL     *BLANK        WNRFD             1
       *
@@ -371,7 +377,15 @@
       *
      C     CGL150        IFEQ      'Y'                                                        CGL150
      C     WVLDT         ANDLT     WBRUN                                                      CGL150
+     C     CGL150        OREQ      'Y'                                                      MD052075
+     C     WVLDT         ANDEQ     WBRUN                                                    MD052075
+     C     VDFLTF        ANDEQ     'Y'                                                      MD052075
      C                   Z-ADD     WBRUN         WVLDT                                        CGL150
+     C                   MOVE      'Y'           VDFLTF                                     MD052075
+     C                   MOVE      'W'           DDVldtOK                                   MD052075
+     C                   ADD       1             WIx                                        MD052075
+     C                   MOVEL     'DDVLDT'      WFldNmXAr(WIx)                             MD052075
+     C                   MOVEL     'GLX1157'     WMsgIdXAr(WIx)                             MD052075
      C                   ENDIF                                                                CGL150
      C                   SELECT
       *
@@ -483,6 +497,12 @@
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
+      ** Warning flds/message IDs/message data (arrays) from/to caller                      MD052075
+     C                   PARM                    WFldNmXAr                                  MD052075
+     C                   PARM                    WMsgIDXAr                                  MD052075
+     C                   PARM                    WMsgDtXAr                                  MD052075
+      ** CGL150 Default Value Date 'Y'                                                      MD052075
+     C                   PARM                    VDFLTF            1                        MD052075
       *
       ** Value Date - OK indicator
      C                   PARM                    DDVldtOK          1

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. LUC109             Date 23Aug16               *
-      *  Prev Amend No. MD041342           Date 15Sep16               *
+      *  Last Amend No. LUC123             Date 18Jun19               *
+      *  Prev Amend No. LUC109             Date 23Aug16               *
+      *                 MD041342           Date 15Sep16               *
       *                 CLE141             Date 08Feb16               *
       *                 MD031089           Date 12Feb15               *
       *                 MD032052           Date 23Jan15               *
@@ -154,6 +155,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LUC123 - Extend Customer De-Activation (CSD025) to GL and LE *
+      *           Amendment of core hook LECLIP1V27                   *
+      *           Addition of hook LUC123_012                         *
+      *           Addition of hook LUC123_013                         *
+      *           Addition of hook LUC123_014                         *
+      *           Addition of hook LUC123_015                         *
       *  LUC109 - HO Reporting (Upgrade to FB Midas 2.1)              *
       *         - bypass check if maturity date of loan is greater    *
       *           than expiry date of facility.                       *
@@ -765,6 +772,7 @@
       *
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ***  First DS for access programs, long data structure
+     D/COPY WNCPYSRC,LUC123_012                                                               LUC123
       *
      D ValidLnCl     E DS                  EXTNAME(LEVCLILPD)
       ***  Valid Loans CL layout -> CLOANCL
@@ -2016,12 +2024,14 @@
       ***  Must be a valid customer
       *
      C                   ELSE
+     C/COPY WNCPYSRC,LUC123_013
      C                   CALLB     'AOCUSTR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY'        @OPTN
      C                   PARM      DDCUST        @CUST            10
      C                   PARM      *BLANKS       @KEYSTS           7
      C     SDCUST        PARM      SDCUST        DSSDY
+     C/COPY WNCPYSRC,LUC123_014
      C     @RTCD         IFNE      *BLANKS
      C                   MOVE      'N'           DDCUSTOK
      C                   ADD       1             Idx
@@ -2047,6 +2057,7 @@
      C                   MOVEL     'DDCUST'      FldNamXAr(Idx)
      C                   MOVEL     'LEL0036'     MsgIDXAr(Idx)
      C                   ENDIF
+     C/COPY WNCPYSRC,LUC123_015
      C                   ENDIF
      C                   ENDIF
       *

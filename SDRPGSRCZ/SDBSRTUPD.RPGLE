@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MG000484           Date 15Jul19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CTI006             Date 31Mar14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG22792           Date 23Feb08               *
@@ -38,6 +39,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MG000484 - Rate Change should not be generated if New Base   *
+      *             Rate has the same value as the previous history   *
+      *             record.                                           *
+      *           - Applied for MD-49833.                             *
+      *           - Applied for MD053919.
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CTI006 - Trade Finance BF Midas 2.2 Interface                *
@@ -766,6 +772,24 @@
       * Timestamp                                                                             CAP084
      C                   EVAL      BATMST=TimeStamp                                           CAP084
       *
+      * Check previous value in history file                                                MG000484
+     C                   MOVE      BACYCD        WCYCD                                      MG000484
+     C                   MOVE      BABSRC        WBSRC                                      MG000484
+     C     BAVDNR        SUB       1             WVDNR                                      MG000484
+     C     BSHSKY        SETGT     SDBSHSL1                                                 MG000484
+     C     BSHSK         READPE    SDBSHSL1                               42                MG000484
+      * If found compare G0CBSR (previous rate) with current value                          MG000484
+     C     *IN42         IFEQ      '0'                                                      MG000484
+      * If new base rate is the same as previous history record, flag it as 'no change'.    MG000484
+     C     BANBRT        IFNE      0                                                        MG000484
+     C     BANBRT        ANDEQ     G0CBSR                                                   MG000484
+     C     BANBRT        OREQ      0                                                        MG000484
+     C     BACBSR        ANDEQ     G0CBSR                                                   MG000484
+     C                   MOVEL     'N'           BAACLT                                     MG000484
+     C                   MOVEL     'N'           BAACRC                                     MG000484
+     C                   ENDIF                                                              MG000484
+     C                   ENDIF                                                              MG000484
+      *                                                                                     MG000484
       * UPDATE DEAL
       *
      C                   UPDATE    @BAREDG
@@ -936,6 +960,7 @@
      C                   PARM      BABSRS        WQ0009            5
      C                   PARM      BATYLC        WQ0010            1
      C                   PARM      BJRDNB        WQ0011            5 0
+     C                   PARM      BAACRC        WQ0012            1                        MG000484
       *
      C     *IN90         IFEQ      *ON
      C                   MOVEL     BVCYCD        DBKEY

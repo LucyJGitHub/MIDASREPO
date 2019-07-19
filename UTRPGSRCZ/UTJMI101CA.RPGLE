@@ -7,16 +7,14 @@
       *                                                               *
       *  Midas - Standing Data                                        *
       *                                                               *
-      *  UTJMI101C - Midas UT Transfer Tax Rate Definitions           *
+      *  UTJMI101CA- Midas UT Transfer Tax Rate Definitions IPDS      *
       *                                                               *
       *  (c) Finastra Systems Technology, Inc. 2019                   *
       *                                                               *
-      *  Last Amend No. JMI101A            Date 08Jul19               *
-      *  Prev Amend No. JMI101  *CREATE    Date 05Feb19               *
+      *  Last Amend No. JMI101A  *Create   Date 04Jul19               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  JMI101A - User open on XACKEYAL                              *
       *  JMI101 - Tax Changes                                         *
       *                                                               *
       *****************************************************************
@@ -35,16 +33,21 @@
       *****************************************************************
 
       * Midas SD Account Keys Detail
-     FACKEYAL   UF   E             DISK    INFSR(*PSSR)
+     FACKEYAL   IF   E             DISK    INFSR(*PSSR)
      F                                     USROPN
       *
       * Midas SD Account Keys Header
      FACKEYAK   UF   E           K DISK    INFSR(*PSSR)
      F                                     USROPN
+      * Midas SD Account Keys Rtv
+     FACKEYL0   IF   E           K DISK    INFSR(*PSSR)
+     F                                     USROPN
+     F                                     RENAME(ACKEYALF:ACKEYALFD)
+     F                                     PREFIX(D)
       *
       * Midas SD Account Keys Update
      FXACKEYAL  O    E             DISK    INFSR(*PSSR)
-     F                                     USROPN                                    JMI101A
+     F                                     USROPN
      F                                     RENAME(ACKEYALF:ACKEYALF2)
      F                                     PREFIX(X)
       *
@@ -53,6 +56,7 @@
      D DateOut         S              8S 0
      D @@DAYN          S              5P 0
      D TimeStamp       S               Z
+     D DSAKEY          S             14
       *
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** Bank details
@@ -92,98 +96,16 @@
      C                   IF        %SUBST(AKEY:1:2) = 'TD' or
      C                             %SUBST(AKEY:1:2) = 'IT' or
      C                             %SUBST(AKEY:1:2) = 'CD'
-      * For existing tax key, update to be 1 sided tax standard Tax key.
-      * Write a new new dual sided Gross tax key
-     C                   IF        (%SUBST(AKEY:3:1) = 'I' or
-     C                             %SUBST(AKEY:3:1) = 'M') and
-     C                             %SUBST(AKEY:10:1) = 'X'
-     C                   EXSR      SRMOVE
-     C                   EVAL      %SUBST(XAKEY:10:1) = 'T'
-     C                   EVAL      %SUBST(XAKEY:8:1) = 'G'
-     C                   WRITE     ACKEYALF2
-     C                   ADD       1             COUNT
-     C                   EVAL      %SUBST(AKEY:10:1) = 'T'
-     C                   EVAL      PRF1 = 0
-     C                   EVAL      NCD1 = *BLANKS
-     C                   EVAL      ACD1 = 0
-     C                   UPDATE    ACKEYALF
       *
-     C                   ENDIF
-      *
-      * For existing Interest Date Payment key, write new Gross Interest
-      * Payment Key, write Taxable Interest Key, Write Net Interest key
-      * and Gross Interest key.
-      * Update existing key to be single sided debit only
-     C                   IF        %SUBST(AKEY:3:1) = 'I' and
+      * For existing Maturity Interest key, write new Interest Paid Separately
+      * key (so that it has same Dr side details as Maturity Interest key, and no CR details)
+     C                   IF        %SUBST(AKEY:3:1) = 'R' and
      C                             %SUBST(AKEY:10:1) = 'I' and
      C                             %SUBST(AKEY:6:1) = ' '
      C                   EXSR      SRMOVE
-     C                   EVAL      %SUBST(XAKEY:9:1) = 'T'
      C                   EVAL      %SUBST(XAKEY:8:1) = 'G'
      C                   WRITE     ACKEYALF2
      C                   ADD       1             COUNT
-      *
-     C                   EXSR      SRMOVE
-     C                   EVAL      %SUBST(XAKEY:9:1) = 'T'
-     C                   EVAL      XPRF4 = 0
-     C                   EVAL      XNCD4 = *BLANKS
-     C                   EVAL      XACD4 = 0
-     C                   WRITE     ACKEYALF2
-     C                   ADD       1             COUNT
-      *
-     C                   EXSR      SRMOVE
-     C                   EVAL      %SUBST(XAKEY:10:1) = 'N'
-     C                   EVAL      XPRF1 = 0
-     C                   EVAL      XNCD1 = *BLANKS
-     C                   EVAL      XACD1 = 0
-     C                   WRITE     ACKEYALF2
-     C                   ADD       1             COUNT
-      *
-     C                   EXSR      SRMOVE
-     C                   EVAL      %SUBST(XAKEY:10:1) = 'N'
-     C                   EVAL      %SUBST(XAKEY:8:1) = 'G'
-     C                   EVAL      XPRF4 = 0
-     C                   EVAL      XNCD4 = *BLANKS
-     C                   EVAL      XACD4 = 0
-     C                   EVAL      XPRF1 = 0
-     C                   EVAL      XNCD1 = *BLANKS
-     C                   EVAL      XACD1 = 0
-     C                   WRITE     ACKEYALF2
-     C                   ADD       1             COUNT
-      *
-     C                   EVAL      PRF4 = 0
-     C                   EVAL      NCD4 = *BLANKS
-     C                   EVAL      ACD4 = 0
-     C                   UPDATE    ACKEYALF
-     C                   ENDIF
-      *
-      * For existing Maturity Settlement key, write new Gross Maturity
-      * Settlement key
-     C                   IF        %SUBST(AKEY:3:1) = 'M' and
-     C                             %SUBST(AKEY:10:1) = 'B'
-     C                   EXSR      SRMOVE
-     C                   EVAL      %SUBST(XAKEY:8:1) = 'G'
-     C                   WRITE     ACKEYALF2
-     C                   ADD       1             COUNT
-     C                   ENDIF
-      *
-      * For existing Maturity Interest key, write new taxable interest key
-      * and update existing key to have credit side details removed
-     C                   IF        %SUBST(AKEY:3:1) = 'M' and
-     C                             %SUBST(AKEY:10:1) = 'I' and
-     C                             %SUBST(AKEY:6:1) = ' '
-     C                   EXSR      SRMOVE
-     C                   EVAL      %SUBST(XAKEY:9:1) = 'T'
-     C                   EVAL      XPRF4 = 0
-     C                   EVAL      XNCD4 = *BLANKS
-     C                   EVAL      XACD4 = 0
-     C                   WRITE     ACKEYALF2
-     C                   ADD       1             COUNT
-      *
-     C                   EVAL      PRF4 = 0
-     C                   EVAL      NCD4 = *BLANKS
-     C                   EVAL      ACD4 = 0
-     C                   UPDATE    ACKEYALF
      C                   ENDIF
       *
      C                   ENDIF
@@ -192,7 +114,8 @@
      C                   ENDDO
       *
      C                   CLOSE     ACKEYAL
-     C                   CLOSE     XACKEYAL                                         JMI101A
+     C                   CLOSE     XACKEYAL
+     C                   CLOSE     ACKEYL0
      C                   OPEN      ACKEYAK
      C                   READ      ACKEYAK
      C                   ADD       COUNT         NREC1
@@ -212,32 +135,24 @@
      C                   EVAL      XRECI = RECI
      C                   EVAL      XQQAKEY =  QQAKEY
      C                   EVAL      XZZ002 = ZZ002
-     C                   EVAL      XACD1QQ = ACD1QQ
      C                   EVAL      XACD2QQ = ACD2QQ
      C                   EVAL      XACD3QQ = ACD3QQ
-     C                   EVAL      XACD4QQ = ACD4QQ
      C                   EVAL      XACD5QQ = ACD5QQ
      C                   EVAL      XACD6QQ = ACD6QQ
-     C                   EVAL      XNCD1 = NCD1
      C                   EVAL      XNCD2 = NCD2
      C                   EVAL      XNCD3 = NCD3
-     C                   EVAL      XNCD4 = NCD4
      C                   EVAL      XNCD5 = NCD5
      C                   EVAL      XNCD6 = NCD6
-     C                   EVAL      XPRF1 = PRF1
      C                   EVAL      XPRF2 = PRF2
      C                   EVAL      XPRF3 = PRF3
-     C                   EVAL      XPRF4 = PRF4
      C                   EVAL      XPRF5 = PRF5
      C                   EVAL      XPRF6 = PRF6
      C                   EVAL      XZZ034 = ZZ034
      C                   EVAL      XLCD = LCD
      C                   EVAL      XCHTP = CHTP
      C                   EVAL      XTNLU = TNLU
-     C                   EVAL      XACD1 = ACD1
      C                   EVAL      XACD2 = ACD2
      C                   EVAL      XACD3 = ACD3
-     C                   EVAL      XACD4 = ACD4
      C                   EVAL      XACD5 = ACD5
      C                   EVAL      XACD6 = ACD6
      C                   EVAL      XAKEY = AKEY
@@ -248,12 +163,45 @@
      C                   EVAL      XAACC = AACC
      C                   EVAL      XEACC = EACC
      C                   EVAL      XGPDT = GPDT
-     C                   EVAL      XASQ1 = ASQ1
      C                   EVAL      XASQ2 = ASQ2
      C                   EVAL      XASQ3 = ASQ3
-     C                   EVAL      XASQ4 = ASQ4
      C                   EVAL      XASQ5 = ASQ5
      C                   EVAL      XASQ6 = ASQ6
+      *
+     C                   Eval      DSAKEY = *Blanks
+     C                   Eval      DSAKEY = AKEY
+     C                   Eval      %SUBST(DSAKEY:3:1) = 'M'
+     C     DSAKEY        Chain     ACKEYL0                            70
+     C     *In70         Ifeq      *Off
+     C                   EVAL      XACD1QQ = DACD1QQ
+     C                   EVAL      XNCD1 = DNCD1
+     C                   EVAL      XPRF1 = DPRF1
+     C                   EVAL      XACD1 = DACD1
+     C                   EVAL      XASQ1 = DASQ1
+     C                   else
+     C                   EVAL      XACD1QQ = 0
+     C                   EVAL      XNCD1 = *Blank
+     C                   EVAL      XPRF1 = 0
+     C                   EVAL      XACD1 = 0
+     C                   EVAL      XASQ1 = *Blank
+     C                   Endif
+      *
+     C                   Eval      %SUBST(DSAKEY:10:1) = 'T'
+     C                   Eval      %SUBST(DSAKEY:8:1) = 'G'
+     C     DSAKEY        Chain     ACKEYL0                            70
+     C     *In70         Ifeq      *Off
+     C                   EVAL      XACD4QQ = DACD1QQ
+     C                   EVAL      XNCD4 = DNCD1
+     C                   EVAL      XPRF4 = DPRF1
+     C                   EVAL      XACD4 = DACD1
+     C                   EVAL      XASQ4 = DASQ1
+     C                   else
+     C                   EVAL      XACD4QQ = 0
+     C                   EVAL      XNCD4 = *Blank
+     C                   EVAL      XPRF4 = 0
+     C                   EVAL      XACD4 = 0
+     C                   EVAL      XASQ4 = *Blank
+     C                   Endif
       *
      C                   ENDSR
       *****************************************************************
@@ -279,7 +227,7 @@
      C                   Z-ADD     001           DBASE
      C                   MOVEL     *BLANKS       DBKEY
      C                   MOVEL     'BANK'        DBKEY
-     C                   MOVEL     'XX000340'    DBPGM
+     C                   MOVEL     'UTJMI101CA'  DBPGM
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
      C                   MOVE      '1'           *INLR
@@ -288,7 +236,8 @@
      C                   ENDIF
       *
      C                   OPEN      ACKEYAL
-     C                   OPEN      XACKEYAL                                             JMI101A
+     C                   OPEN      XACKEYAL
+     C                   OPEN      ACKEYL0
       *
      C                   ENDSR
       *****************************************************************

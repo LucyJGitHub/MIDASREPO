@@ -3457,6 +3457,11 @@
 0678 C*             PROCESSING.
 0679 C*
 0680 C     BEGIN         TAG                                                    ** BEGIN TAG **LN071
+     C                   If        JMI101 = 'Y'                                              JMI101C
+     C                   MOVE      IPDS          IPDSX             1                         JMI101C
+     C                   MOVE      IMET          IMETX             2 0                       JMI101C
+     C                   MOVEL     INSA          INSAX            18                         JMI101C
+     C                   EndIF                                                               JMI101C
      C                   EVAL      PSTXA = 0                                                MD037285
      C                   MOVE      TAXI          WTAXI             1                          CER069
      C                   IF        *IN03 = *ON AND TAXI = 'A'                                 CER069

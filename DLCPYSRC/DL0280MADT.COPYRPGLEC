@@ -4,8 +4,11 @@
       *                                                               *
       *  DL0280 - DL0280MADT                                          *
       *                                                               *
-      *  Last Amend No. JMI101             Date 12Mar19               *
-      *  Prev Amend No. MD033094           Date 28May15               *
+      *  Last Amend No. JMI101C            Date 10Jul19               *
+      *  Prev Amend No. JMI101B            Date 08Jul19               *
+      *                 JMI101A            Date 04Jul19               *  
+      *                 JMI101             Date 12Mar19               *
+      *                 MD033094           Date 28May15               *
       *                 CRE105             Date 03Mar15               *
       *                 CGL165             Date 23Feb15               *
       *                 MD031215           Date 13Feb15               *
@@ -18,6 +21,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI101C - Incorporate CDL070 changes                         *
+      *  JMI101B - Reset AKY(8)                                       *
+      *  JMI101A - WHT changes - add processing for IPDS              *
       *  JMI101  - WHT Changes. Generate Tax keys for gross posting.  *
       *            of interest and debit of tax over Settlement A/C   *
       *  MD033094 - Incorrect account key used for interest paid      *
@@ -129,7 +135,14 @@
      C*                                                                   080603
      C     IPDS          IFEQ      'Y'                                          B 002          08060
      C/COPY WNCPYSRC,DL0280C167                                           S01408
+     C     JMI101        IFEQ      'Y'                                                        JMI101A
+     C     W#GROSS       ANDNE     *BLANKS                                                    JMI101A
+     C     *IN23         ANDEQ     *ON                                                        JMI101A
+     C                   MOVE      W#GROSS       AKY(8)                                       JMI101A
+     C                   Z-ADD     WORKD         KYAMT                                        JMI101A
+     C                   ELSE                                                                 JMI101A
      C     WORKD         SUB       TAXA          KYAMT                                         08060
+     C                   ENDIF                                                                JMI101A
      C/COPY WNCPYSRC,DL0280C168                                           S01408
      C                   MOVE      'R'           AKY(3)                                        08060
      C                   MOVE      'I'           AKY(10)                                       08060
@@ -163,6 +176,7 @@
      C                   EXSR      INTACC                                                     239550
       *                                                                   148100
      C                   EXSR      EXCP                                                        08060
+     C                   MOVE      *BLANKS       AKY(8)                                       JMI101B     
       *                                                                   148100
       ** Return the previous value of settlement branch.                  148100
       *                                                                   148100
@@ -700,6 +714,11 @@
      C     JMI101        IFEQ      'Y'                                                        JMI101
      C     W#GROSS       ANDNE     *BLANKS                                                    JMI101
      C                   MOVE      W#GROSS       AKY(8)                                       JMI101
+      *  RETAIL SETTL A/C                                                                    JMI101C
+     C     IPDSX         IFEQ      'Y'                                                       JMI101C
+     C                   MOVE      IMETX         KYSETL                                      JMI101C
+     C                   MOVE      INSAX         KYOSTL                                      JMI101C
+     C                   ENDIF                                                               JMI101C
      C                   ENDIF                                                                JMI101
      C/COPY WNCPYSRC,DL0280C171                                           S01408
      C                   Z-ADD     TAXA          KYAMT                                         08060

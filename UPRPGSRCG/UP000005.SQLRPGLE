@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Handle redundant and renamed files')
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP000005 - Handle redundant, renamed or moved files          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
       *  Last Amend No. CUP040 *CREATE      Date 09Aug13              *
       *                                                               *

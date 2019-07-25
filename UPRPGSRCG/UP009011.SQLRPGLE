@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2015')
+     H COPYRIGHT('(c) Finastra International Limited 2015')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Update extension file data on UPAFFD')        *
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP009011 - Update extension file data on UPAFFD              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
       *  Last Amend No. CUP040  *CREATE    Date 23Mar15               *
       *  Prev Amend No. xxxxxx             Date ddMmmyy               *
@@ -19,7 +19,7 @@
       *  CUP040 - New deliverable data methodology.                   *
       *                                                               *
       *****************************************************************
- 
+
      D KeyFieldArr     S             10A   DIM(10)
      D FLNAME          S             10A
      D inPssr          S               n

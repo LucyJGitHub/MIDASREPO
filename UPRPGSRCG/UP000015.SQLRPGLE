@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Save non-core logical files')
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP000015 - Save non-core logical files, views                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
       *  Last Amend No. CUP041   *CREATE   Date 10Sep13               *
       *  Prev Amend No. xxxxxx             Date ddMmmyy               *

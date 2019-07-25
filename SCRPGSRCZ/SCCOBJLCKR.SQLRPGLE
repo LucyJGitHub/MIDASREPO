@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SC Create object listing')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SCCOBJLCKR - Midas SC Create object listing                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd 2004             *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
       *  Last Amend No. MD021351 *REWRITE  Date 19Jul13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -32,9 +32,9 @@
       *  BUG3834 - New programs created to deal with object locks     *
       *                                                               *
       *****************************************************************
- 
+
       ** Work fields
- 
+
      D w@command       S           1024
      D w@lgth          S             15  5
      D Error           S              1A   inz('N')
@@ -44,12 +44,12 @@
      D OutputFile      S             10
      D OutputLibrary   S             10
      D PIMMED          S              1
- 
+
       ** Main Process
- 
+
       ** First up we need to retrieve a list of all the
       ** objects in the library
- 
+
      C                   EVAL      w@command = 'DSPOBJD ' +
      C                                         'OBJ(' +
      C                                          %TRIM(inputLibrary) + '/' +
@@ -64,15 +64,15 @@
      C                   CALL      'QCMDEXC'
      C                   PARM                    w@command
      C                   PARM                    w@lgth
- 
+
       ** If Process Immediately = 'Y'
- 
+
      C                   IF        PIMMED = 'Y'
      C                   CALL      'SCCOBJLCKJ'
      C                   ENDIF
- 
+
       ** Leave
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *****************************************************************
@@ -86,11 +86,11 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
      C                   SETON                                            LR
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -100,7 +100,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    inputFile
      C                   PARM                    inputLibrary
@@ -108,7 +108,7 @@
      C                   PARM                    OutputFile
      C                   PARM                    OutputLibrary
      C                   PARM                    PIMMED
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

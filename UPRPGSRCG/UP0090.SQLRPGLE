@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Create deliverables list')                    *
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP0090 - Create Deliverables List                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
       *  Last Amend No. MD034724             Date 11Jun15             *
       *  Prev Amend No. CUP042 *REWRITE    Date 04May15               *

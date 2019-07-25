@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Report of similarity between users - dtl.')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SM000045 - Compare differences betwen users, detail          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
       *  Last Amend No. CBF005   *CREATE   Date 04Jul11               *
       *                                                               *
@@ -33,11 +33,11 @@
      D  PrintLn              367    368B 0
       *
      D BFDT          E DS                  EXTNAME(SMBFDTPD)
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
      C                   WRITE     FHDR
       *
      C/exec SQL

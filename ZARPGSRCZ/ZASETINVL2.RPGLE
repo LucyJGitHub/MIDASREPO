@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2016')
+     H COPYRIGHT('(c) Finastra International Limited 2016')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas ZA Settle instructions validation 2')            *
@@ -9,7 +9,7 @@
       *                                                               *
       *  ZASETINVL2 - SETTLEMENT INSTRUCTIONS VALIDATION 2            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2016            *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
       *  Last Amend No. MD052228           Date 30Oct18               *
       *  Prev Amend No. MD041649           Date 29Sep16               *
@@ -635,4 +635,4 @@
      C                   ENDSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2016
+(c) Finastra International Limited 2016

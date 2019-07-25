@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Copy Selected Account keys to new acct')

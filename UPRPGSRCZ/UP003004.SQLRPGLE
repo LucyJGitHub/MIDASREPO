@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Copy global data for a zone')
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP003004 - Copy global data for a zone                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -147,13 +147,13 @@
       ** The following /COPY contains the standard program status
       ** subroutine, excluding a bound call to the DBERRCTL module.
      C/COPY ZACPYSRC,PSSR_ILENE
- 
+
      C                   SetOn                                        LR
      C                   Return
- 
+
      C                   EndSR
- 
+
       **---------------------------------------------------------------
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2007
+(c) Finastra International Limited 2007

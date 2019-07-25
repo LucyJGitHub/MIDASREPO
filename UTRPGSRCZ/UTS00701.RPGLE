@@ -1,6 +1,6 @@
      H NOMAIN
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2018')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas UT QJORJRNE API Interface')                      *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Report of user / branch combination')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SM000047 - Report of user / branch combination               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
       *  Last Amend No. CBF005   *CREATE   Date 04Jul11               *
       *                                                               *
@@ -33,11 +33,11 @@
      D  SpoolFileNo          123    124B 0
      D  OverFlowLn           188    189B 0
      D  PrintLn              367    368B 0
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
      C                   WRITE     FHDR
       *
      C/exec SQL

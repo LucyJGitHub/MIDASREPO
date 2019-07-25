@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*XBI *  OVRDBF FILE(QTMENU) TOFILE(GPMENUPD)                         *
 /*XBI *  OVRDBF FILE(MIQT_PERMM) TOFILE(MITB_PERMM)                   *
@@ -11,7 +11,7 @@
       *                                                               *
       *  SM000038 - Generate Permission Mapping                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
       *  Last Amend No. MD019885 *CREATE   Date 04Apr14               *
       *                                                               *
@@ -51,102 +51,102 @@
        Exec SQL
         Declare QT cursor for
             Select * from QTMENU order by MIINDX;
- 
+
        Exec SQL Open QT;
- 
+
        Exec SQL
         Fetch next
         from QT
         into :MENU;
- 
+
        DoW SQLCODE = 0;
- 
+
            MenuCode = MIINDX;
            PermMCnt = 0;
- 
+
            Exec SQL
             Select count(*) into :PermMCnt from MITB_PERMM
             where PMINDX = :MenuCode;
- 
+
            If PermMCnt = 0;
               Exec SQL
                Select count(*) into :PermMCnt from MIQT_PERMM
                where PMINDX = :MenuCode;
            EndIf;
- 
+
            If PermMCnt = 0;
- 
+
               If MIAAC1 <> *Blanks;
                  Action = MIAAC1;
                  ExSr WriteRec;
               EndIf;
- 
+
               If MIAAC2 <> *Blanks;
                  Action = MIAAC2;
                  ExSr WriteRec;
               EndIf;
- 
+
               If MIAAC3 <> *Blanks;
                  Action = MIAAC3;
                  ExSr WriteRec;
               EndIf;
- 
+
               If MIAAC4 <> *Blanks;
                  Action = MIAAC4;
                  ExSr WriteRec;
               EndIf;
- 
+
               If MIAAC5 <> *Blanks;
                  Action = MIAAC5;
                  ExSr WriteRec;
               EndIf;
- 
+
               If MIAAC6 <> *Blanks;
                  Action = MIAAC6;
                  ExSr WriteRec;
               EndIf;
- 
+
               If MIAAC7 <> *Blanks;
                  Action = MIAAC7;
                  ExSr WriteRec;
               EndIf;
- 
+
               If MIAAC8 <> *Blanks;
                  Action = MIAAC8;
                  ExSr WriteRec;
               EndIf;
- 
+
               If MIAAC9 <> *Blanks;
                  Action = MIAAC9;
                  ExSr WriteRec;
               EndIf;
- 
+
               If MIAAC10 <> *Blanks;
                  Action = MIAAC10;
                  ExSr WriteRec;
               EndIf;
- 
+
            EndIf;
- 
+
            Exec SQL
             fetch next
             from QT
             into: MENU;
- 
+
        EndDo;
- 
+
        Exec SQL Close QT;
- 
+
        // Now read through the permission mapping file to build description.
- 
+
        Exec SQL Declare PM cursor for
           Select * from MIQT_PERMM;
- 
+
        Exec SQL Open PM;
        Exec SQL Fetch next from PM into :BFPM;
- 
+
        DoW SQLCODE = 0;
- 
+
            Exec SQL
             Select count(*)
               into :Counter
@@ -154,27 +154,27 @@
              where b.MIINDX   = d.MLMENUCODE
                and d.MLPARENT = c.MGID
                and b.MIINDX   = :PMINDX;
- 
+
            ExSr UpdDescr;
- 
+
            Exec SQL Fetch next from PM into :BFPM;
- 
+
        EndDo;
- 
+
        Exec SQL Close PM;
- 
+
        // Now read through the permissions file to build the Artefact Name
- 
+
        Exec SQL Declare PM2 cursor for
           Select * from MIQT_PERMM;
- 
+
        Exec SQL Open PM2;
        Exec SQL Fetch next from PM2 into :BFPM;
- 
+
        DoW SQLCODE = 0;
- 
+
         // Only remove blanks once per different menu item.
- 
+
            If PMINDX <> LastPMINDX;
               LastPMINDX = PMINDX;
               If PMARTD <> ' ';
@@ -184,89 +184,89 @@
               EndIf;
            EndIf;
            ActionText = '';
- 
+
         // Try to obtain suffix for Non-Standard Action Codes
- 
+
            Exec SQL
             select EXSUFX into :ActionText
               from MITB_ASFEX
              where EXACTC = trim(:PMACTC)
                and EXINDX = trim(:PMINDX);
- 
+
            If ActionText = '';
- 
+
         // Try to obtain suffix for Standard Action Codes
- 
+
            Exec SQL
             select SFSUFX into :ActionText
               from MITB_ASSFX
              where SFACTC = trim(:PMACTC);
- 
+
            EndIf;
- 
+
         // If no suffix is found use Action Code
- 
+
            If ActionText = *Blanks;
               ActionText = PMACTC;
            EndIf;
- 
+
            MenuINDX = PMINDX;
- 
+
            Permission = 'MI_MNU_' + %trim(Mode) + '_' +
                         %trim(MenuINDX) + '_' +
                         %TRIMR(PermissionRoot) + '_' + PMACTC;
- 
+
            PermissionD =  %trim(PMARTD) + ' - ' + %trim(ActionText);
- 
+
            Exec SQL
             Update MIQT_PERMM
                set PMARTF = trim(replace(:Permission, '*', ''))
                  , PMARTD = trim(:PermissionD)
              where PMINDX = :PMINDX
                and PMACTC = :PMACTC;
- 
+
            Exec SQL Fetch next from PM2 into :BFPM;
- 
+
        EndDo;
        Exec SQL Close PM2;
- 
+
        // Remove known special characters in Artefact Names generated.
- 
+
        Exec SQL
         Update MIQT_PERMM SET PMARTF = REPLACE(PMARTF,'/','');
- 
+
        Exec SQL
         Update MIQT_PERMM SET PMARTF = REPLACE(PMARTF,',','');
- 
+
        Exec SQL
         Update MIQT_PERMM SET PMARTF = REPLACE(PMARTF,')','');
- 
+
        Exec SQL
         Update MIQT_PERMM SET PMARTF = REPLACE(PMARTF,'(','');
- 
+
        Exec SQL
         Update MIQT_PERMM SET PMARTF = REPLACE(PMARTF,'%','');
- 
+
        Exec SQL
         Update MIQT_PERMM SET PMARTF = REPLACE(PMARTF,'-','');
- 
+
        Exec SQL
         Update MIQT_PERMM SET PMARTF = REPLACE(PMARTF,'.','');
- 
+
        Exec SQL
         Update MIQT_PERMM SET PMARTF = REPLACE(PMARTF,'''','');
- 
+
        Exec SQL
         Update MIQT_PERMM set PMARTF = replace(pmartf,'§','Section');
        Exec SQL
         Update MIQT_PERMM set PMARTD = replace(pmartd,'§','Section');
- 
+
        Exec SQL
         Update MIQT_PERMM set PMARTF = replace(pmartf,'&','And');
- 
+
        *INLR = *ON;
        Return;
- 
+
       /end-free
       *****************************************************************
       /EJECT
@@ -280,7 +280,7 @@
       /free
        BegSr UpdDescr;
              If Counter > 1;
- 
+
                 Exec SQL
                  Update MIQT_PERMM
                     set PMARTD =
@@ -292,9 +292,9 @@
                             and d.MLPARENT = c.MGID)
                   where PMINDX = :PMINDX
                     and PMACTC = :PMACTC;
- 
+
              Else;
- 
+
                 Exec SQL
                  Update MIQT_PERMM
                     set PMARTD = (select trim(MIINAR)
@@ -302,9 +302,9 @@
                   where PMINDX = :PMINDX
                     and PMACTC = :PMACTC;
        EndIf;
- 
+
        EndSr;
- 
+
       /end-free
       *****************************************************************
       /EJECT
@@ -317,7 +317,7 @@
       *
       /free
        BegSr WriteRec;
- 
+
              Exec SQL
               Insert into MIQT_PERMM (
               PMINDX, PMACTC, PMARTF, PMARTD
@@ -325,7 +325,7 @@
               values (
               :MenuCode, :Action, ' ', ' '
               );
- 
+
        EndSr;
       /end-free
       *****************************************************************

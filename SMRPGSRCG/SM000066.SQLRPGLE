@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Implementation steps maintenance')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SM000066 - Implementation steps maintenance                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 20114                     *
       *                                                               *
       *  Last Amend No. CUP042   *CREATE   Date 24Nov14               *
       *  Prev Amend No. xxxxxxxx           Date ddMmmyy               *
@@ -858,12 +858,12 @@
      C                   EVAL      *IN31 = *OFF
      C                   EVAL      *IN27 = *OFF
      C                   EVAL      GFAORD = *blank
- 
+
      C                   UPDATE    SM000066S0
      C                   READC     SM000066S0                             29
      C                   ENDDO
      C                   ENDIF
- 
+
      C                   EXSR      Clear
      C                   EXSR      ResetInds
      C                   EVAL      ErrInd = 'N'
@@ -1346,7 +1346,7 @@
      C                   PARM                    DFmt
      C                   PARM                    WQ0003
      C                   PARM      *blanks       ZDate
- 
+
      C                   EVAL      GFDATE = ZDate
       *
       ** Perform checks as to whether fields are displayed or not.

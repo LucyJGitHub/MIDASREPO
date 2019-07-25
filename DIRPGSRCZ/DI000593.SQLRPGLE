@@ -2039,7 +2039,7 @@
 
      P                 e
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013
 ** RECONSTAT
 ARINIT
 ARPROC

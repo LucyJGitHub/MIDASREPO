@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Set user to role')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SM000046 - Set user to role                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
       *  Last Amend No. AR1085933          Date 06Feb13               *
       *  Prev Amend No. CBF005   *CREATE   Date 04Jul11               *
@@ -58,11 +58,11 @@
       *
      D BFUB          E DS                  EXTNAME(SMBFUBPD)
      D BFAC          E DS                  EXTNAME(SMBFACPD)
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PJob
      C                   PARM                    PUser

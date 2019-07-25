@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Prepare database upgrade')
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP000013 - Prepare database upgrade                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
       *  Last Amend No. MD034307           Date 05May15               *
       *  Prev Amend No. CUP041   *CREATE   Date 06Sep11               *

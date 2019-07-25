@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Resequence numbers for Action File')
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP009012 - Resequence numbers for Action Files               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
       *  Last Amend No. A1084804 *CREATE   Date 01Feb13               *
       *  Prev Amend No. xxxxxxxx           Date ddMmmyy               *

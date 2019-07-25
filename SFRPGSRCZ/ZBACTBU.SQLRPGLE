@@ -26,7 +26,7 @@
       *                                                               *
       *  Calls: None                                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
       *  Any changes made to this program may also need to be         *
       *  incorporated in ZVACTBU.                                     *
@@ -99,10 +99,10 @@
      F                                     RENAME(SFMENUD0:GPMENUD0)
       *
      D ARR             S              1    DIM(6)
- 
+
      D R_Count         S              4  0
      D SQL_Err         S              1A
- 
+
      D*SDSTAT***     E DS           256    EXTNAME(SDSTAT)                                    CCB020
       ***Standing*Data*Data*Structure**********************************                       CCB020
       *****************************************************************                       CCB020
@@ -229,13 +229,13 @@
      C     ChkAuth       BEGSR
       *
      C                   EVAL      ERR = 1
- 
+
      C/EXEC SQL WHENEVER SQLERROR GOTO CheckEnd
      C/END-EXEC
- 
+
      C/EXEC SQL WHENEVER NOT FOUND GOTO CheckEnd
      C/END-EXEC
- 
+
      C/EXEC SQL
      C+  SELECT Count(*) into :R_Count from MIVW_PerMM
      C**********WHERE PMINDX = :UNQCDE AND PMACTC = :ZACTN                                  AR867641
@@ -244,10 +244,10 @@
      C+         WHERE INDX = :UNQCDE AND ACA = :ZACTN                                       AR867641
      C+            AND BRCB = :ZBR   AND USRP = :USRID                                      AR867641
      C/END-EXEC
- 
+
       ** If no record for the action, check if user is authorise to other action
      C                   IF        R_Count < 1
- 
+
      C/EXEC SQL
      C+  SELECT Count(*) into :R_Count from MIVW_PerMM
      C**********WHERE PMINDX = :UNQCDE                                                      AR867641
@@ -256,15 +256,15 @@
      C+         WHERE INDX = :UNQCDE                                                        AR867641
      C+            AND BRCB = :ZBR   AND USRP = :USRID                                      AR867641
      C/END-EXEC
- 
+
      C                   IF        R_COUNT > 0
      C                   EVAL      ERR = 2
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      ERR = 0
      C                   ENDIF
- 
+
      C     CheckEnd      ENDSR
       *****************************************************************
       /EJECT

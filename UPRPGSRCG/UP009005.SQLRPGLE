@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Update target file')                          *
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP009005 - Update target file                                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
       *  Last Amend No. CPK030             Date 12Feb15               *
       *  Prev Amend No. AR1092254A         Date 14Mar13               *
@@ -29,7 +29,7 @@
       *  CUP021 - Rewrite of Action File processing                   *
       *                                                               *
       *****************************************************************
- 
+
      FUPAFFDL1  IF   E           K DISK
      FUPAFFDL3  IF   E           K DISK    RENAME(UPAFFDD0:U_UPAFFDD0)
      F                                     PREFIX(U_)
@@ -75,7 +75,7 @@
      DOutLine          DS
      D*XOut*****                      1    DIM(400)                                         AR859322
      D XOut                           1    DIM(2000)                                        AR859322
- 
+
      DFmtInp           DS
      D FmtInp30A               1     30A
      D FmtInp01P               1     01P 0
@@ -214,7 +214,7 @@
       *                                                               *
       *****************************************************************
      C     BuildSetStr   BEGSR
- 
+
       /free
         IF FNum > 1;
        //*SetStr*=*%TRIM(SetStr) + ' ,';                                                    //CPK030
@@ -222,10 +222,10 @@
         ELSE;
           SetStr = 'SET';
         ENDIF;
- 
+
        //SetStr*=*%TRIM(SetStr)*+ ' ' + U_AFFDNM + ' =';                                    //CPK030
         SetStr = %TRIMR(SetStr) + ' ' + U_AFFDNM + ' =';                                    //CPK030
- 
+
        //IF*U_AFFDTP*<>*'S'*and*U_AFFDTP*<>*'P';********************************          //AR859322
        //IF**I_AFFDTP*<>*'S'*and*I_AFFDTP*<>*'P'*and*I_AFFDTP*<>*'B';*********** //AR859322 AR854642
          IF  U_AFFDTP <> 'S' and U_AFFDTP <> 'P' and U_AFFDTP <> 'B';                     //AR854642
@@ -250,7 +250,7 @@
        //*SetStr*=*%TRIM(SetStr) + ' ' + %TRIM(IOField);                                    //CPK030
           SetStr = %TRIMR(SetStr) + ' ' + %TRIM(IOField);                                   //CPK030
         ENDIF;
- 
+
       /end-free
      C     BuildSetStrE  ENDSR
       *
@@ -261,7 +261,7 @@
       *                                                               *
       *****************************************************************
      C     BuildKey      BEGSR
- 
+
       /free
        Indx = 0;
        WhereStr = *BLANKS;
@@ -273,10 +273,10 @@
         ELSE;
           WhereStr = 'Where';
         ENDIF;
- 
+
        //WhereStr*=*%TRIM(WhereStr) + ' ' + KeyField(Indx) + ' =';                          //CPK030
         WhereStr = %TRIMR(WhereStr) + ' ' + %TRIMR(KeyField(Indx)) + ' =';                  //CPK030
- 
+
         IF KeyType(Indx) <> 'S' and KeyType(Indx) <> 'P';
         IF KeyType(Indx) = 'B' and ATFILE = 'BFTEVTCODE';                               //AR1092254A
           FmtInp30A = %SUBST(ATDATA:KeyPosit(Indx):KeyLen(Indx));                       //AR1092254A
@@ -307,7 +307,7 @@
        //*WhereStr*=*%TRIM(WhereStr) + ' ' + IOField;                                       //CPK030
           WhereStr = %TRIMR(WhereStr) + ' ' + IOField;                                      //CPK030
         ENDIF;
- 
+
        ENDDO;
       /end-free
      C     BuildKeyE     ENDSR
@@ -319,7 +319,7 @@
       *                                                               *
       *****************************************************************
      C     ReplaceQuote  BEGSR
- 
+
       /free
        XPos = %SCAN(QuoteChar:%SUBST(ATDATA:U_AFFDPS:U_AFFDLN));
        OutString = *blanks;
@@ -343,7 +343,7 @@
        ENDIF;
          OutString = Outline;
       /End-free
- 
+
      C     ReplaceQuoteE ENDSR
       /EJECT                                                                             //AR926961A
       *****************************************************************                  //AR926961A
@@ -397,18 +397,18 @@
      C/END-EXEC
      C/exec SQL whenever NOT FOUND goto ERR_TAG_U
      C/END-EXEC
- 
+
      C/EXEC SQL
      C+ execute immediate :Stmt
      C/END-EXEC
- 
+
      C                   EVAL      RecNFind = 'N'
- 
+
      C     ERR_TAG_U     TAG
      C                   IF        RecNFind = 'Y'
      C                   EXSR      InsertRec
      C                   ENDIF
- 
+
      C     UpdateRecordE ENDSR
       *
       /EJECT
@@ -428,7 +428,7 @@
      C/END-EXEC
      C/exec SQL whenever NOT FOUND goto ErrTagD
      C/END-EXEC
- 
+
      C/EXEC SQL
      C+ execute immediate :Stmt
      C/END-EXEC
@@ -665,7 +665,7 @@
           ColLine = '(';
           ValLine = '(';
        ENDIF;
- 
+
        //*ColLine**=*%TRIM(ColLine) + I_AFFDNM;                                             //CPK030
           ColLine  = %TRIMR(ColLine) + I_AFFDNM;                                            //CPK030
        //*IF**I_AFFDTP*<>*'S'*and*I_AFFDTP*<>*'P';******************************          //AR859322
@@ -692,7 +692,7 @@
        //****ValLine = %TRIM(ValLine) + IOField;                                            //CPK030
              ValLine = %TRIMR(ValLine) + IOField;                                           //CPK030
           ENDIF;
- 
+
       /end-free
       *
      C     BuildColE     ENDSR
@@ -786,7 +786,7 @@
      C     FFDKey        KLIST
      C                   KFLD                    WFile
      C                   KFLD                    WKey
- 
+
      C     IFFDKey       KLIST
      C                   KFLD                    WFile
      C                   KFLD                    Pos

@@ -1,6 +1,6 @@
 /*******************************************************************************/
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('MQ Series Interface to MidasPlus - Data Take-on')
@@ -10,7 +10,7 @@
       *                                                               *
       *  SC003000 - MQ Series Interface to MidasPlus - Data Take-on   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  ((c) Finastra International Limited 2006                     *
       *                                                               *
       *  Last Amend No. AR957012           Date 23Nov12               *
       *  Prev Amend No. AR685870           Date 10Dec10               *
@@ -79,7 +79,7 @@
       *
       *
       ***Check*for*error*in*SQL*execution                                                   AR685870
- 
+
      C**********         IF        SQLCOD <> 0  And SQLCOD <> 100                           AR685870
      C**********         MOVEL     'SC003000'    DBPGM                                      AR685870
      C**********         MOVEL     APEXTN        DBFILE                                     AR685870
@@ -88,7 +88,7 @@
       *
      C**********         EXSR      *PSSR                                                    AR685870
      C**********         ENDIF                                                              AR685870
- 
+
      C**********         READ      APDTAKPD                               80                AR685870
      C**********         ENDDO                                                              AR685870
                                                                                             AR685870
@@ -164,13 +164,13 @@
      C     POPRTN        BEGSR
       *
       * Prepare SQL statement
- 
+
      C/EXEC SQL
      C+ PREPARE S1 FROM :WSTRSQL
      C/END-EXEC
- 
+
       * Execute SQL statement
- 
+
      C/EXEC SQL
      C+ EXECUTE S1
      C/END-EXEC
@@ -196,6 +196,6 @@
      C                   ENDSR
       *
       *****************************************************************
- 
+
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006

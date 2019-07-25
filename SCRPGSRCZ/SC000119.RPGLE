@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SC PEA Clear MQ transactions')                   *
@@ -15,7 +15,7 @@
       *  Calls - Java MQ Client methods: clrMessage                   *
       *          AOSVALR0                                             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
       *  Last Amend No. AR1043780          Date 07Feb13               *
       *  Prev Amend No. AR1034553          Date 16Oct12               *
@@ -51,23 +51,23 @@
       ** Standard D-specs
       ** ================
       **
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** Constant to hold input parameter for AOSVALR0.
- 
+
      D JavaPath        C                   Const('JavaPathStem')
      D JavaHome        C                   Const('JavaHome')                                AR992769
      D*Path1****       C                   Const('/com.ibm.mq.jar')                AR992769 AR995693
@@ -84,7 +84,7 @@
      D PathArr         S             50    DIM(39) CTDATA PERRCD(1)                        AR1043780
                                                                                             AR995693
       ** Prototype Java methods called
- 
+
      D ClearMsg        PR              O   EXTPROC(*JAVA:
      D                                     'com.misys.midas.midasplus.logger.ut-
      D                                     il.PEAClearTransaction':
@@ -95,47 +95,47 @@
      D  zone                           O   CLASS(*JAVA:
      D                                      'java.lang.String')
      D                                     CONST
- 
+
      D GetError        PR            10A   VARYING
      D                                     EXTPROC(*JAVA:
      D                                     'java.lang.String':
      D                                     'getBytes')
- 
+
      D makestr         PR              O   EXTPROC(*JAVA:
      D                                      'java.lang.String':
      D                                      *CONSTRUCTOR)
      D  byte                         30A   CONST VARYING
- 
+
       ** Prototype Definition for setting classpath
- 
+
      D PutEnv          PR            10I 0 EXTPROC('putenv')
      D  pEnv                           *   VALUE OPTIONS(*STRING)
- 
+
      D GetEnv          PR              *   EXTPROC('getenv')
      D  gEnv                           *   VALUE OPTIONS(*STRING)
- 
+
       ** Execute CL Command
                                                                                             AR995693
      D ExeCmd          PR                  EXTPGM('QCMDEXC')                                AR995693
      D  PCmd                        200A   CONST                                            AR995693
      D  PLen                         15P 5 CONST                                            AR995693
- 
+
      D WPtr            S               *
      D WStr            S           1024A   BASED(WPtr)
      D WCmd            S            200A                                                    AR995693
      D WLen            S             15P 5                                                  AR995693
- 
+
      D retmsg          S               O   CLASS(*JAVA:
      D                                      'java.lang.String')
      D SZone           S               O   CLASS(*JAVA:
      D                                      'java.lang.String')
- 
+
       ** Parameter variables
- 
+
      D PZone           S             10A
- 
+
       ** Work Variables
- 
+
      D WRetCode        S             10I 0
      D WPath           S            200A
      D WSavPath        S           1024A
@@ -144,9 +144,9 @@
      D WSavHome        S           1024A                                                    AR992769
      D WNewHome        S           1024A                                                    AR992769
      D ix              S              2P 0                                                  AR995693
- 
+
       ** Parameter variables
- 
+
      D PRetCode        S             10A
      D PrtCd           S              7A                                                    AR992769
      D PSysVal01       S             20A                                                    AR992769
@@ -173,27 +173,27 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       ** Save and Set CLASSPATH environment variable.
       ** and JAVA_HOME variable                                                             AR992769
- 
+
      C                   EXSR      SRSetCPath
      C                   EXSR      SRSetJHome                                               AR992769
- 
+
       ** Start processing of data.
- 
+
      C                   EXSR      SRProcess
- 
+
       ** Restore CLASSPATH enviroment variable.
       ** and JAVA_HOME variable                                                             AR992769
- 
+
      C                   EXSR      SRRstCPath
      C                   EXSR      SRRstJHome                                               AR992769
                                                                                             AR995693
@@ -203,11 +203,11 @@
      C                   EVAL      WCmd    = 'RMVLNK OBJLNK(PEA)'                           AR995693
      C                   EVAL      WLen    = %LEN(%TRIM(WCmd))                              AR995693
      C                   CALLP(E)  ExeCmd(WCmd:WLen)                                        AR995693
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -216,11 +216,11 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PRetCode
      C                   PARM                    PZone
- 
+
      C                   CALL      'AOSVALR0'                                               AR992769
      C                   PARM      *BLANKS       PRtCd                                      AR992769
      C                   PARM      JavaPath      PSysVal01                                  AR992769
@@ -279,20 +279,20 @@
       *                                                              *
       ****************************************************************
      C     SRProcess     BEGSR
- 
+
       ** Call ClearMessage to delete contents of MQ Queues.
- 
+
      C**********         EVAL      SZone    = makestr(PZone)                               AR1005563
      C                   EVAL      SZone    = makestr(%TRIM(PZone))                        AR1005563
      C                   EVAL      retmsg   = ClearMsg(SZone)
      C                   EVAL      PRetCode = GetError(retmsg)
- 
+
      C                   IF        PRetCode <> *BLANKS
      C                   EXSR      SRRstCPath
      C                   EXSR      SRRstJHome                                               AR992769
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -302,10 +302,10 @@
       *                                                              *
       ****************************************************************
      C     SRSetCPath    BEGSR
- 
+
      C                   EVAL      WPtr     = GetEnv('CLASSPATH')
      C                   EVAL      WSavPath = WStr
- 
+
      C**********         EVAL      WNewPath = 'CLASSPATH='                                  AR995693
      C**********                              + %TRIMR(WPath)                               AR995693
      C**********                              + '/lib/ext'                                  AR995693
@@ -334,7 +334,7 @@
      C                   ENDFOR                                                             AR995693
                                                                                             AR995693
      C                   EVAL      WRetCode = PutEnv(%TRIM(WNewPath))
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -344,11 +344,11 @@
       *                                                              *
       ****************************************************************
      C     SRRstCPath    BEGSR
- 
+
      C                   EVAL      WNewPath = 'CLASSPATH='
      C                                        + %TRIMR(WSavPath)
      C                   EVAL      WRetCode = PutEnv(%TRIM(WNewPath))
- 
+
      C                   ENDSR
       ****************************************************************                      AR992769
       /EJECT                                                                                AR992769
@@ -393,14 +393,14 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
      C                   ENDSR
 ** PathArr                                                                                  AR995693

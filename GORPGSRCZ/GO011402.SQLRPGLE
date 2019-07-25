@@ -154,4 +154,4 @@
      C                   ENDSR
 
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012

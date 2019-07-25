@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Remove old Switchable Feature data')
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP000004 - Remove old Switchable Feature data                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
       *  Last Amend No. CUP040 *CREATE      Date 08Aug13              *
       *                                                               *

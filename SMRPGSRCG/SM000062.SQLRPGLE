@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(SM000062F) TOFILE(UPFFDSTPD)                     *
 /*XBIB*  OVRDBF FILE(SM000062M) TOFILE(UPMBRLTPD)                     *
@@ -14,7 +14,7 @@
       *             a loan reference field contained 000000 then it   *
       *             is set to blank.                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
       *  Last Amend No. AR1092867          Date 01Mar13               *
       *  Prev Amend No. AR1085447*CREATE   Date 06Feb13               *
@@ -193,7 +193,7 @@
      C                   ENDIF
      C                   EVAL      ObjName = LNFILE
      C                   EVAL      SQLFail = ' '
- 
+
      C                   DOU       %EOF or SingleMode = 'Y'
       *
       ** Only process file if it hasn't already been processed.

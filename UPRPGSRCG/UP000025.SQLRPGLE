@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2015')
+     H COPYRIGHT('(c) Finastra International Limited 2015')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Check if UDF tables are delivered')           *
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP000025 - Check if UDF tables are delivered                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
       *  Last Amend No. MD034724   *CREATE   Date 03Jun15             *
       *  Prev Amend No. xxxxxx             Date ddMmmyy               *

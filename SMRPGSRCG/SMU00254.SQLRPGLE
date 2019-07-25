@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM MIACOB field text chg for global')
@@ -15,7 +15,7 @@
       *             This ensures permission data for menu item        *
       *             0000000659 is removed from BF layer.              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
       *  Last Amend No. AR1067493 *CREATE  Date 12Dec12               *
       *                                                               *
@@ -27,40 +27,40 @@
       *
      D Recursive       S              1
       /free
- 
+
        Exec SQL
         label on column GPMENUPD
         ( MIACOB text is 'Phase ''G'' Restricted?');
- 
+
        Exec SQL
         label on column GPMENUPD
         ( MIACOB is 'Phs ''G'' Rstrct?');
- 
+
        Exec SQL
         label on column GZSFMENUPD
         ( MIACOB text is 'Phase ''G'' Restricted?');
- 
+
        EXEC SQL
         label on column GZSFMENUPD
         ( MIACOB is 'Phs ''G'' Rstrct?');
- 
+
        // Removal of menu item 0000000659 permission data
- 
+
        Exec SQL
         Delete from BFTB_RESOURCEPERM
         where BFRESOURCEID like '%0000000659%';
- 
- 
+
+
        Exec SQL
         Delete from BFTB_RESOURCE
         where BFARTEFACTID like '%0000000659%';
- 
+
        Exec SQL
         Delete from BFTB_PERMISSION
         where BFPERMISSIONNAME like '%0000000659%';
- 
+
        Return;
- 
+
       /EJECT
        //-------------------------------------------------------------*
        // *PSSR  - Program exception error routine                    *

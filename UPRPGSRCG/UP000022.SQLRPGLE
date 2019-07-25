@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Merge message files')
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP000022 - Merge message files                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
       *  Last Amend No. CUP041   *CREATE   Date 05Aug14               *
       *  Prev Amend No. xxxxxx             Date ddMmmyy               *

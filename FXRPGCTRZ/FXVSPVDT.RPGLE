@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2017')
+     H COPYRIGHT('(c) Finastra International Limited 2017')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FX Val deal date, value date, option date')      *
@@ -369,4 +369,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2017
+(c) Finastra International Limited 2017

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Permission Patch Retrieve Sys Details')
@@ -8,6 +8,8 @@
       *  Midas - Implementation module                                *
       *                                                               *
       *  SMU00201 - Midas SM Upgrade for Permission Patch Application *
+      *                                                               *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
       *  Last Amend No. MD020108 *CREATE   Date 18Apr13               *
       *                                                               *
@@ -25,6 +27,6 @@
        EXEC SQL
         Select value(GIVAL,'') into: TargetPfx from GPSVALPD
         where GISVAL = 'GlobalSystemPrefix';
- 
+
                  Return;
       /end-free

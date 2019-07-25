@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Bridge menu options maintenance')
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP000101 - Bridge menu options maintenance                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
       *  Last Amend No. CUP041   *CREATE   Date ddMmmyy               *
       *  Prev Amend No. xxxxxxxx           Date ddMmmyy               *
@@ -814,12 +814,12 @@
      C                   EVAL      *IN31 = *OFF
      C                   EVAL      *IN27 = *OFF
      C                   EVAL      DFAORD = *blank
- 
+
      C                   UPDATE    UP000101S0
      C                   READC     UP000101S0                             29
      C                   ENDDO
      C                   ENDIF
- 
+
      C                   EXSR      Clear
      C                   EXSR      ResetInds
      C                   EVAL      ErrInd = 'N'
@@ -1163,7 +1163,7 @@
      C                   PARM                    DFmt
      C                   PARM                    WQ0003
      C                   PARM      *blanks       ZDate
- 
+
      C                   EVAL      DFDATE = ZDate
       *
       ** Perform checks as to whether fields are displayed or not.

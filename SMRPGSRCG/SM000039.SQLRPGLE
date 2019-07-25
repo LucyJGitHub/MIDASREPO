@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Update similarity between users - detail')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SM000039 - Report similarity between users - detail          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
       *  Last Amend No. CBF005   *CREATE   Date 04Jul11               *
       *                                                               *
@@ -24,11 +24,11 @@
      D PUser02         S             10
      D Users           S             21
      D Recursive       S              1    INZ('N')
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PUser01
      C                   PARM                    PUser02

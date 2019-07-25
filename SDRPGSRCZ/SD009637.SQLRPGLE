@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SD Validate JMS Technical User')
@@ -12,7 +12,7 @@
       *             - A valid BFTB_USER                               *
       *             - A valid/exist in Validation List                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
       *  Last Amend No. CSD101             Date 07Dec18               *
       *  Prev Amend No. MD033895           Date 16Apr15               *

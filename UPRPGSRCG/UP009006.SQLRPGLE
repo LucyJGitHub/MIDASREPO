@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP File Compare and report')
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP009006 - File compare and report                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
       *  Last Amend No. AR926961A          Date 28Mar12               *
       *  Prev Amend No. CUP021  *CREATE    Date 20Jan11               *
@@ -299,15 +299,15 @@
      C                   EVAL      OpenErr = 'Y'
      C/exec SQL whenever SQLERROR goto ERRP1
      C/END-EXEC
- 
+
      C/EXEC SQL
      C+ prepare S1 from :STMT
      C/END-EXEC
- 
+
      C/EXEC SQL
      C+ DECLARE C1 CURSOR FOR S1
      C/END-EXEC
- 
+
      C                   EVAL      OpenErr = 'N'
       *
      C     ERRP1         TAG
@@ -429,7 +429,7 @@
           STMT = %TRIM(STMT) + ' and ';
           NExStmt = %TRIM(NExStmt) + ' and';
        endif;
- 
+
        STMT = %TRIM(STMT)+ ' SUBSTR(WTDATA,' + %TRIM(FPos)+' =  ?';
        NExStmt = %TRIM(NExStmt) + ' SUBSTR(a.WTDATA,' + %TRIM(FPos)
                    + ' = SUBSTR(b.AWDATA,' + %TRIM(FPOS2);

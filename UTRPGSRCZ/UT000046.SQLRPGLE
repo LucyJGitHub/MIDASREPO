@@ -1,6 +1,6 @@
       *****************************************************************
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
      F*****************************************************************
 /*STD *  RPGSQLBND
 /*EXI *  TEXT('Midas UT Get Message Description')
@@ -10,7 +10,7 @@
       *                                                               *
       *  UT000046 - Update Error Message Description                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
       *  Last Amend No. CBF011   *CREATE   Date 04Jul11               *
       *                                                               *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Upd. SDFCTLPA')
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP003007 - Update program for SDFCTLPA trailers              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
       *  Last Amend No. MD027649 *CREATE   Date 26Jun14               *
       *                                                               *
@@ -43,48 +43,48 @@
      C+      Where     System_Table_Schema = :SchemLib
      C+            and System_Table_Name = :SchemFile
      C/end-exec
- 
+
      C/exec sql
      C+  open C1
      C/end-exec
- 
+
       ** Check for successful completion
- 
+
      C                   If        (SQLCOD <> 0)
      C                   If        (%SUBST(SQLSTATE:1:2) <> '02')
      C                   ExSR      *PSSR
      C                   EndIf
      C                   EndIf
- 
+
      C/exec SQL
      C+    fetch
      C+    from C1
      C+    into: SchemFileRows
      C/end-exec
- 
+
       ** Check for successful completion
- 
+
      C                   If        (SQLCOD <> 0)
      C                   If        (%SUBST(SQLSTATE:1:2) <> '02')
      C                   ExSR      *PSSR
      C                   EndIf
      C                   EndIf
- 
+
      C/exec SQL
      C+ update SDFCTLPA set AHNORC = :SchemFileRows
      C+ where AHFLNM = :SchemFile
      C/end-exec
- 
+
       ** Check for successful completion
- 
+
      C                   If        (SQLCOD <> 0)
      C                   If        (%SUBST(SQLSTATE:1:2) <> '02')
      C                   ExSR      *PSSR
      C                   EndIf
      C                   EndIf
- 
+
      C     McENDER       TAG
- 
+
      C                   MOVE      *ON           *INLR
      C                   RETURN
       *
@@ -112,16 +112,16 @@
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     RunBefore     IFEQ      *BLANKS
- 
+
      C                   MOVE      'Y'           RunBefore         1
- 
+
      C                   DUMP
      C                   ENDIF
- 
+
      C                   SETON                                        LRU7U8
      C                   RETURN
- 
+
      C                   ENDSR
       *********************************************************************

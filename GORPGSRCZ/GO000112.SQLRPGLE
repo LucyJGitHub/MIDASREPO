@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*S*D****RPGBASEBND****************************************************            CCB023 AR1089839
       ***RPGSQLBND*****************************************************            CCB023 AR1089839

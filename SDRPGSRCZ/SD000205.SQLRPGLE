@@ -1,7 +1,7 @@
      H DEBUG
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
-/*EXI *  TEXT('Midas SD Edit Withholding Tax Rate Codes')             *   
+/*EXI *  TEXT('Midas SD Edit Withholding Tax Rate Codes')             *
       *****************************************************************
       *                                                               *
       *  Midas - Standing Data Module                                 *
@@ -10,7 +10,7 @@
       *                                                               *
       *  Function:  This program maintains Withholding Tax Rate Codes *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
       *  Last Amend No. CGL165  *CREATE    Date 17Feb15               *
       *                                                               *
@@ -112,11 +112,11 @@
      D QSDFC1        E DS                  EXTNAME(SDFCTLL0)
      D                                     Inz
       * UPD : Midas SD Standing data controls update
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
      D                                     Inz
- 
+
       ** External data structure for Account Code Details
      D SDACOD        E DS                  EXTNAME(SDACODPD)
      D                                     Inz
@@ -172,7 +172,7 @@
       * Message data for 'Description is required.'
       * Description
      D  ZA0007                 1     30
- 
+
       // Variables Declaration
      D Exists          S               N
      D PACOD           S                   LIKE(#1RITAC)
@@ -362,7 +362,7 @@
       *
       * USER: Initialize detail screen (existing record)
       * Set-up DTL Screen Footer - Standard Functions  *
- 
+
       ** Initialize the indicator for deletion action
      C                   Eval      *IN92  = *Off
      C*
@@ -699,7 +699,7 @@
       *
       * Minimum Interest
      C                   IF        #1MINT <> *BlankS
- 
+
      C                   CALL      'ZALIGN'
      C                   PARM                    P@RTCD            7
      C                   PARM      #1MINT        @FIELD           16
@@ -751,37 +751,37 @@
      C                   PARM      '*KEY   '     P@OPTN
      C                   PARM      #1RITAC       PACOD
      C     SDACOD        PARM      SDACOD        DSSDY
- 
+
       ** Record not found
- 
+
      C                   IF        P@RTCD = '*NRF   '
      C                   MOVEL     'SDUSRMSG'    ZAMSGF
      C                   MOVEL     'USR0173'     ZAMSID
      C                   EXSR      ZASNMS
      C                   SETON                                        9935      *
- 
+
      C                   ELSE
- 
+
       ** Must be non-title account code
- 
+
      C                   IF        A5TOIN = 'Y'
      C                   MOVEL     'SDUSRMSG'    ZAMSGF
      C                   MOVEL     'USR4230'     ZAMSID
      C                   EXSR      ZASNMS
      C                   SETON                                        9935      *
      C                   ENDIF
- 
+
      C                   IF        A5ACTY <>'G'
      C                   MOVEL     'SDUSRMSG'    ZAMSGF
      C                   MOVEL     'USR2769'     ZAMSID
      C                   EXSR      ZASNMS
      C                   SETON                                        9935      *
      C                   ENDIF
- 
+
      C                   EVAL      #1RITAC = A5ACCD
      C                   ENDIF
- 
- 
+
+
      C                   ENDIF                                                  *FI
       *================================================================
      CSR   DCEXIT        ENDSR
@@ -985,14 +985,14 @@
      C     KLCRSA        KLIST
      C                   KFLD                    WTRC                           W Tax Rate Code
       * Check for duplicate primary key
- 
+
       /free
          //TEST Setll WTRC SDWTRCL0;
          exec sql
              select count(*)  into :rcdCount
               from SDWTRCL0 where WTRC = :WTRC;
       /end-free
- 
+
      C                   IF        sqlcod < 0 and RcdCount > 0
      C                   MOVEL     'USR0078'     W0RTN             7
       * Send message 'Withholding Tax Rate Code     EX'
@@ -1521,43 +1521,43 @@
      C                   KFLD                    #1WTRC                         W Tax Rate Code
       *
 tst  C*****KLDWML        SETLL     SDWTDMD3
- 
+
       /free
- 
+
         // Check if tax rate code is used in files
         Setll #1WTRC SDWTDML2;
         Exists = %equal(SDWTDML2);
- 
+
         If not Exists;
            Setll #1WTRC SDWTDML3;
            Exists = %equal(SDWTDML3);
         EndIf;
- 
- 
+
+
         // Check WTRC in AMAD;
         If not Exists;
            exec sql
               select count(*) into :rcdCount
                  from ACCNTBXC where ATTXC1 = :#1WTRC or ATTXC2 = :#1WTRC;
- 
+
            If rcdCount > 0;
               Exists = *on;
            EndIf;
         EndIf;
- 
+
         // Check WTRC in LDNI;
         If not Exists;
            exec sql
               select count(*) into :rcdCount
                  from DEALSDC where TXC1 = :#1WTRC or TXC2 = :#1WTRC;
- 
+
            If rcdCount > 0;
               Exists = *on;
            EndIf;
         EndIf;
- 
+
       /end-free
- 
+
 tst  C**** *IN90         IFEQ      ' 1'
       ** Check if tax rate code is in file DEALSDY1
 TST  C*****KLDLSC        CHAIN     DEALYF1                            90
@@ -1727,4 +1727,4 @@ F3=Main Menu   F12=Previous
 **CTDATA ARGV
 F3=Previous
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2015
+(c) Finastra International Limited 2015

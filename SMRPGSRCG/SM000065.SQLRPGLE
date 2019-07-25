@@ -1,6 +1,6 @@
      H DEBUG
      H DFTACTGRP(*NO) ACTGRP(*CALLER)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Permission Mapping and Upload')
@@ -14,7 +14,7 @@
       *             in the menu item - permission mapping file and    *
       *             invoke upload of permission data into BF layer    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
       *  Last Amend No. MD019885 *CREATE   Date 04Apr14               *
       *---------------------------------------------------------------*
@@ -36,11 +36,11 @@
      D Mode                           7A   CONST
      D GenPgmName                    10A   CONST
      D Message                      100A   CONST
- 
+
       * Build permissions mapping table
      DSM000038         PR                  EXTPGM('SM000038')
      D Mode                           5A   CONST
- 
+
       *
       ** +--------------------------------------+
       ** ¦ Work Fields and Data Structures      ¦
@@ -54,24 +54,24 @@
      D ModuleName      S            100A
      D ReptLine        S            100A
      D Ret             S             10I 0 INZ(0)
- 
+
      DPERM           E DS                  EXTNAME(MITB_PERMM)
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    Mode
      C                   PARM                    Map
      C                   PARM                    OvRdQTMENU
       /free
- 
+
        Select;
          when Mode  = 'CORE';
               SMode = 'CRE';
          when Mode  = 'CUST';
               SMode = 'CST';
        EndSl;
- 
+
        If Map = '*YES';
- 
+
           If Mode = 'CUST';
              Exec SQL
                   Create table QTEMP/QTMENU as
@@ -88,44 +88,44 @@
                      with data;
              EndIf;
           EndIf;
- 
+
           Exec SQL
                Create table QTEMP/MIQT_PERMM as
                (select * from MITB_PERMM) with no data;
- 
+
           SM000038(Mode);
        EndIf;
- 
+
        Exec SQL Declare PM cursor for
                 select * from MIQT_PERMM;
- 
+
        Exec SQL Open PM;
        Exec SQL Fetch next from PM into :PERM;
- 
+
        DoW SQLCODE = 0;
- 
+
            ExSr Upload;
- 
+
            If Ret <> 0;
               ExSr CleanUp;
            EndIf;
- 
+
            ExSr Log;
- 
+
            Exec SQL Fetch next from PM into :PERM;
        EndDo;
        Exec SQL Close PM;
- 
+
        UP008010('*REPORT' : 'SM000065' : '');
- 
+
        Exec SQL Insert into MITB_PERMM
                 ( select * from MIQT_PERMM);
- 
+
        If Map = '*YES';
           Exec SQL Drop table QTEMP/QTMENU;
           Exec SQL Drop table QTEMP/MIQT_PERMM;
        EndIf;
- 
+
        Return;
       /end-free
       *****************************************************************
@@ -162,10 +162,10 @@
       *
       /free
        BegSr Cleanup;
- 
+
              Exec SQL Delete from MIQT_PERMM
                        where PMINDX = :PMINDX;
- 
+
        EndSr;
       /end-free
       *****************************************************************
@@ -186,7 +186,7 @@
              Else;
                 ReptLine = %trim(Reptline) + ' successful.';
              EndIf;
- 
+
              UP008010('*WRITE' : 'SM000065' : ReptLine );
              ReptLine = '';
        EndSr;

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*S*D ***RPGBASEBND****************************************************                       CUP040
 /*STD *  RPGSQLBND                                                    *                       CUP040
@@ -10,7 +10,7 @@
       *                                                               *
       *  UP009009 - Update Action File details for new file           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
       *  Last Amend No. CUP040             Date 22Feb13               *
       *  Prev Amend No. CUP021  *CREATE    Date 15Feb11               *

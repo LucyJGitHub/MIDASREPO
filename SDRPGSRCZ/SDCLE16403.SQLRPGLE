@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLMOD                                                    *
 /*EXI *  TEXT('Midas SD Initialize SDRPKYTD new fields')              *
@@ -9,7 +9,7 @@
       *                                                               *
       *  SDCLE16403 -  Delete data for new fields                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
       *  Last Amend No.  MD031687  *CREATE    Date 18Dec14            *
       *                                                               *

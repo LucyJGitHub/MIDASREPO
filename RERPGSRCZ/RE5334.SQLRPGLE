@@ -9,7 +9,7 @@
      F*                                                               *
      F*  RE5334 -  ACCOUNTS NOT SUBJECT TO CHARGE REPORT              *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                               *
       *  Last Amend No. CRE083AA           Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -609,4 +609,4 @@
      CSR                 ENDSR
      C*****************************************************************
 **  CPY@  OBJECT COPYRIGHT
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

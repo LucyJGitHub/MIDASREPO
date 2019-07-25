@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2001')
       *****************************************************************
 /*XBI *  CRTPF FILE(QTEMP/SCTRIGQT) RCDLEN(400)                       *
 /*STD *  RPGBASEBND                                                   *
@@ -11,7 +11,7 @@
       *  SC001005 - Write cmd and error messages for SCSARDPD SCTRIGPD*
       *             SDMMIDPD SCSARTPD                                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CCB022  *CREATE    Date 06Aug12               *
       *                                                               *
@@ -85,39 +85,39 @@
       ** MAIN ROUTINE                                                *
       *                                                              *
       ****************************************************************
- 
+
       ** WRITE mode
- 
+
      C                   IF        ParmMode = '*WRITE'
      C                   EVAL      XSCTRIGQT = ParmMessage
      C                   WRITE     CMDS
      C                   ENDIF
- 
+
       ** PROC mode
- 
+
      C                   IF        ParmMode = '*PROC'
- 
+
      C     1             SETLL     SCTRIGQT
      C                   READ      CMDS          SCTRIGDS
- 
+
      C                   DOW       NOT %EOF( SCTRIGQT )
- 
+
      C                   IF        SCMode = '*SPECIAL'
- 
+
      C                   EVAL      CmdLength = %LEN( CmdString )
      C                   CALLP(E)  QCMDEXC( CmdString : CmdLength )
- 
+
      C                   IF        %ERROR
      C                   EXSR      WriteErrMsg
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   READ      CMDS          SCTRIGDS
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
       /EJECT
@@ -132,13 +132,13 @@
       *****************************************************************
       *
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    ParmMode
      C                   PARM                    ParmMessage
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * WriteErrMsg - Writes error message depending on trigger mode  *
@@ -147,25 +147,25 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     WRITEERRMSG   BEGSR
- 
+
      C                   IF        TriggerMode = 'ADDPFTRG'
      C                   EVAL      ErrMsg = 'Trigger(s) not added to '
      C                   ENDIF
- 
+
      C                   IF        TriggerMode = 'RMVPFTRG'
      C                   EVAL      ErrMsg = 'Trigger(s) not removed ' +
      C                                      'from '
      C                   ENDIF
- 
+
      C                   EVAL      ErrMsg = %TRIM( ErrMsg ) +
      C                               ' ' +  %TRIM ( TriggerFile ) + '.'
      C                   EVAL      XUPERRMQT = ErrMsg
      C                   WRITE     ERRM
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * *PSSR  - Program exception error routine                      *
@@ -177,19 +177,19 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        NOT PSSRDone
      C                   EVAL      PSSRDone = True
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       ********************************************************************

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Access of Bridge menu options')
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP000009 - Access Bridge menu options                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
       *  Last Amend No. CUP041   *CREATE   Date 15Aug14               *
       *  Prev Amend No. xxxxxx             Date ddMmmyy               *

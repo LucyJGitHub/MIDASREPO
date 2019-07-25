@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SC PEA MQ status updater')                       *
@@ -13,7 +13,7 @@
       *             PEA system and updates the PEA status file in     *
       *             the Live system using Websphere MQ.               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
       *  Last Amend No. CSD102             Date 08Jan19               *
       *  Prev Amend No. MD020167           Date 23Apr13               *

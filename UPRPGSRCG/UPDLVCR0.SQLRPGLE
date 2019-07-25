@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
       *****************************************************************
@@ -8,7 +8,7 @@
       *                                                               *
       *  UPDLVCR0 - Driving file access object                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
       *  Last Amend No. CUP042 *REWRITE    Date 26May15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*

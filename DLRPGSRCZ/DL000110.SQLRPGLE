@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2017')
+     H COPYRIGHT('(c) Finastra International Limited 2017')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas DL Cancelled Deals Housekeeping')                *
@@ -196,4 +196,4 @@
      C/COPY ZACPYSRC,PSSR_ILEB
      C/EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2017
+(c) Finastra International Limited 2017

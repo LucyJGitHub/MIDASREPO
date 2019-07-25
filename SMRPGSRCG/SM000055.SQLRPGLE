@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Upload to BF - Role/Group from Model User')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SM000055 - Upload to BF - Role/Group from Model User         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
       *  Last Amend No. MD022372A          Date 28Apr14               *
       *  Prev Amend No. MD018386C          Date 23Apr13               *

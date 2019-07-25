@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Control restore of libraries')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SM000070 - New program to restore libraries                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
       *  Last Amend No. CUP042   *CREATE   Date 03Feb12               *
       *  Prev Amend No. xxxxxx             Date ddMmmyy               *

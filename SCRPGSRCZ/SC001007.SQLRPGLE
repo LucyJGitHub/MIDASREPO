@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas Permanent Remove/Add Processing for COM')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SC001007 - Permanent Remove/Add Processing for COM           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
       *  Last Amend No. MD024412 *CREATE    Date 03Feb14              *
       *                                                               *
@@ -18,13 +18,13 @@
       *  MD024412 - Additional changes for COM processing             *
       *                                                               *
       *****************************************************************
- 
+
      D PMode           S              4
      D PFile           S             10
      D PMember         S             10
      D PNoOfMbrs       S              5  0
      D PADDLFM         S           1000
- 
+
      D Complete        S              1    INZ('N')
      D Share           S              4
      D SaveName        S             10
@@ -34,32 +34,32 @@
      D DoLoop          S              5  0
      D Quote           S              1    INZ('''')
      D Recursive       S              1
- 
+
      D MBR           E DS                  EXTNAME(UPFDMBTPD)
      D                                     PREFIX(X)
      D FMBR          E DS                  EXTNAME(SCFMBRTD)
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PMode
      C                   PARM                    PFile
      C                   PARM                    PMember
      C                   PARM                    PNoOfMbrs
      C                   PARM                    PADDLFM
- 
+
      C                   EVAL      Complete = 'N'
- 
+
      C                   SELECT
- 
+
      C                   WHEN      PMode = '*BLD'
      C                   IF        PMember = '*ALL'
      C                   EXSR      BuildAll
      C                   ELSE
      C                   EXSR      Build
      C                   ENDIF
- 
+
      C                   WHEN      PMode = '*DEL'
      C                   EXSR      Delete
- 
+
      C                   WHEN      PMode = '*WRT'
      C                   IF        PMember = '*ALL'
      C                   EXSR      WriteAll
@@ -68,9 +68,9 @@
      C                   EXSR      Write
      C                   EXSR      Update
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   RETURN
       ********************************************************************
       /EJECT
@@ -80,7 +80,7 @@
       *                                                                  *
       ********************************************************************
      C     Build         BEGSR
- 
+
      C/exec SQL
      C+ declare Build cursor for
      C+ select * from SCFMBRTD
@@ -91,26 +91,26 @@
      C+   MBFILE
      C+ , MBNAME
      C/end-exec
- 
+
      C/exec SQL
      C+ open Build
      C/end-exec
- 
+
      C/exec SQL
      C+ fetch next
      C+ from Build
      C+ into :FMBR
      C/end-exec
- 
+
       ** Do nothing if there are no records found.
- 
+
      C                   IF        SQLCODE = 0
- 
+
      C                   EVAL      PADDLFM = 'ADDLFM FILE(' + PFile
      C                   EVAL      PADDLFM = %TRIMR(PADDLFM) + ')'
- 
+
       ** If there is only one member then DTAAMBRS(*ALL) can be used.
- 
+
      C                   IF        MBNSCM = 0
      C                   EVAL      PNoOfMbrs = 1
      C                   EVAL      PADDLFM = %TRIMR(PADDLFM) +
@@ -132,29 +132,29 @@
      C                             ' (' + MBBOM
      C                   EVAL      PADDLFM = %TRIMR(PADDLFM) +
      C                             '))'
- 
+
      C                   DO        DoLoop
- 
+
      C/exec SQL
      C+ fetch next
      C+ from Build
      C+ into :FMBR
      C/end-exec
- 
+
      C                   EVAL      PADDLFM = %TRIMR(PADDLFM) +
      C                             '(' + MBBOF
      C                   EVAL      PADDLFM = %TRIMR(PADDLFM) +
      C                             ' (' + MBBOM
      C                   EVAL      PADDLFM = %TRIMR(PADDLFM) +
      C                             '))'
- 
+
      C                   ENDDO
      C                   ENDIF
- 
+
      C/exec SQL
      C+ close Build
      C/end-exec
- 
+
      C                   IF        MBRSHR = 'N'
      C                   EVAL      Share = '*NO'
      C                   ELSE
@@ -164,11 +164,11 @@
      C                             ') TEXT(' + Quote + MBMTXT
      C                   EVAL      PADDLFM = %TRIMR(PADDLFM) +
      C                             Quote + ') SHARE(' + Share + ')'
- 
+
      C                   ELSE
      C                   EVAL      PADDLFM = *blanks
      C                   ENDIF
- 
+
      C     BuildE        ENDSR
       ********************************************************************
       /EJECT
@@ -178,7 +178,7 @@
       *                                                                  *
       ********************************************************************
      C     BuildAll      BEGSR
- 
+
      C/exec SQL
      C+ declare BuildAll cursor for
      C+ select * from SCFMBRTD
@@ -188,26 +188,26 @@
      C+   MBFILE
      C+ , MBNAME
      C/end-exec
- 
+
      C/exec SQL
      C+ open BuildAll
      C/end-exec
- 
+
      C/exec SQL
      C+ fetch next
      C+ from BuildAll
      C+ into :FMBR
      C/end-exec
- 
+
       ** Do nothing if there are no records found.
- 
+
      C                   IF        SQLCODE = 0
- 
+
      C                   EVAL      PADDLFM = 'ADDLFM FILE(' + PFile
      C                   EVAL      PADDLFM = %TRIMR(PADDLFM) + ')'
- 
+
       ** If there is only one member then DTAAMBRS(*ALL) can be used.
- 
+
      C                   IF        MBNSCM = 0
      C                   EVAL      PNoOfMbrs = 1
      C                   EVAL      PADDLFM = %TRIMR(PADDLFM) +
@@ -230,31 +230,31 @@
      C                             ' (' + MBBOM
      C                   EVAL      PADDLFM = %TRIMR(PADDLFM) +
      C                             '))'
- 
+
      C                   DO        DoLoop
      C/exec SQL
      C+ fetch next
      C+ from BuildAll
      C+ into :FMBR
      C/end-exec
- 
+
      C                   EVAL      PADDLFM = %TRIMR(PADDLFM) +
      C                             '(' + MBBOF
      C                   EVAL      PADDLFM = %TRIMR(PADDLFM) +
      C                             ' (' + MBBOM
      C                   EVAL      PADDLFM = %TRIMR(PADDLFM) +
      C                             '))'
- 
+
      C                   ENDDO
      C                   ENDIF
- 
+
      C/exec SQL
      C+ close BuildAll
      C/end-exec
- 
+
       ** If *ALL members was specified then return individual member name to
       ** main program so that correct records can be deleted later.
- 
+
      C                   EVAL      PMember = MBNAME
      C                   IF        MBRSHR = 'N'
      C                   EVAL      Share = '*NO'
@@ -265,11 +265,11 @@
      C                             ') TEXT(' + Quote + MBMTXT
      C                   EVAL      PADDLFM = %TRIMR(PADDLFM) +
      C                             Quote + ') SHARE(' + Share + ')'
- 
+
      C                   ELSE
      C                   EVAL      PADDLFM = *blanks
      C                   ENDIF
- 
+
      C     BuildAllE     ENDSR
       ********************************************************************
       /EJECT
@@ -280,13 +280,13 @@
       *                                                                  *
       ********************************************************************
      C     Delete        BEGSR
- 
+
      C/exec SQL
      C+ delete from SCFMBRTD
      C+ where MBFILE = :PFile
      C+ and MBNAME = :PMember
      C/end-exec
- 
+
      C     DeleteE       ENDSR
       ********************************************************************
       /EJECT
@@ -296,44 +296,44 @@
       *            file member                                           *
       ********************************************************************
      C     Write         BEGSR
- 
+
      C/exec SQL
      C+ declare Write cursor for
      C+ select * from MBR001007T
      C+ where MBFILE = :PFile
      C+ and MBNAME = :PMember
      C/end-exec
- 
+
      C/exec SQL
      C+ open Write
      C/end-exec
- 
+
      C/exec SQL
      C+ fetch next
      C+ from Write
      C+ into :MBR
      C/end-exec
- 
+
      C                   DOW       SQLCODE = 0
      C                             and Complete = 'N'
- 
+
       ** The number of records written will depend on the relationship
       ** between the logical and physical members.
- 
+
      C                   EXSR      WriteRec
- 
+
      C/exec SQL
      C+ fetch next
      C+ from Write
      C+ into :MBR
      C/end-exec
- 
+
      C                   ENDDO
- 
+
      C/exec SQL
      C+ close Write
      C/end-exec
- 
+
      C     WriteE        ENDSR
       ********************************************************************
       /EJECT
@@ -344,43 +344,43 @@
       *                                                                  *
       ********************************************************************
      C     WriteAll      BEGSR
- 
+
      C/exec SQL
      C+ declare WriteAll cursor for
      C+ select * from MBR001007T
      C+ where MBFILE = :PFile
      C/end-exec
- 
+
      C/exec SQL
      C+ open WriteAll
      C/end-exec
- 
+
      C/exec SQL
      C+ fetch next
      C+ from WriteAll
      C+ into :MBR
      C/end-exec
- 
+
      C                   DOW       SQLCODE = 0
      C                             and Complete = 'N'
- 
+
       ** The number of records written will depend on the relationship
       ** between the logical and physical members.
- 
+
      C                   EXSR      WriteRec
- 
+
      C/exec SQL
      C+ fetch next
      C+ from WriteAll
      C+ into :MBR
      C/end-exec
- 
+
      C                   ENDDO
- 
+
      C/exec SQL
      C+ close WriteAll
      C/end-exec
- 
+
      C     WriteAllE     ENDSR
       ********************************************************************
       /EJECT
@@ -390,7 +390,7 @@
       *                                                                  *
       ********************************************************************
      C     WriteRec      BEGSR
- 
+
      C/exec SQL
      C+ insert into SCFMBRTD
      C+ (
@@ -419,7 +419,7 @@
      C+ , 'Y'
      C+ )
      C/end-exec
- 
+
      C     WriteRecE     ENDSR
       ********************************************************************
       /EJECT
@@ -429,9 +429,9 @@
       *                                                                  *
       ********************************************************************
      C     Update        BEGSR
- 
+
       ** Build string to allow update of SCFMBRTD.
- 
+
      C/exec SQL
      C+ declare Update cursor for
      C+ select * from SCFMBRTD
@@ -442,30 +442,30 @@
      C+   MBFILE
      C+ , MBNAME
      C/end-exec
- 
+
      C/exec SQL
      C+ open Update
      C/end-exec
- 
+
      C/exec SQL
      C+ fetch next
      C+ from Update
      C+ into :FMBR
      C/end-exec
- 
+
       ** Do nothing if there are no records found.
- 
+
      C                   DOW       SQLCODE = 0
- 
+
      C                   IF        MBNAME <> SaveName
      C                   EVAL      SaveName = MBNAME
      C                   EVAL      SavePF = MBBOF
      C                   EVAL      SavePFMbr = MBBOM
      C                   ELSE
- 
+
       ** If the physical file member is the same then preserve all records for
       ** the logical file.
- 
+
      C                   IF        MBBOM <> SavePFMbr
      C/exec SQL
      C+ delete from SCFMBRTD
@@ -473,21 +473,21 @@
      C/end-exec
      C                   ENDIF
      C                   ENDIF
- 
+
      C/exec SQL
      C+ fetch next
      C+ from Update
      C+ into :FMBR
      C/end-exec
- 
+
      C                   ENDDO
- 
+
      C/exec SQL
      C+ close Update
      C/end-exec
- 
+
      C                   EXSR      SetMBNSCM
- 
+
      C     UpdateE       ENDSR
       ********************************************************************
       /EJECT
@@ -497,7 +497,7 @@
       *
       ********************************************************************
      C     UpdateAll     BEGSR
- 
+
      C/exec SQL
      C+ declare UpdateAll cursor for
      C+ select * from SCFMBRTD
@@ -507,30 +507,30 @@
      C+   MBFILE
      C+ , MBNAME
      C/end-exec
- 
+
      C/exec SQL
      C+ open UpdateAll
      C/end-exec
- 
+
      C/exec SQL
      C+ fetch next
      C+ from UpdateAll
      C+ into :FMBR
      C/end-exec
- 
+
       ** Do nothing if there are no records found.
- 
+
      C                   DOW       SQLCODE = 0
- 
+
      C                   IF        MBNAME <> SaveName
      C                   EVAL      SaveName = MBNAME
      C                   EVAL      SavePF = MBBOF
      C                   EVAL      SavePFMbr = MBBOM
      C                   ELSE
- 
+
       ** If the physical file member is the same then preserve all records for
       ** the logical file.
- 
+
      C                   IF        MBBOM <> SavePFMbr
      C/exec SQL
      C+ delete from SCFMBRTD
@@ -538,17 +538,17 @@
      C/end-exec
      C                   ENDIF
      C                   ENDIF
- 
+
      C/exec SQL
      C+ fetch next
      C+ from UpdateAll
      C+ into :FMBR
      C/end-exec
- 
+
      C                   ENDDO
- 
+
      C                   EXSR      SetMBNSCM
- 
+
      C     UpdateAllE    ENDSR
       ********************************************************************
       /EJECT
@@ -558,7 +558,7 @@
       *                                                                  *
       ********************************************************************
      C     SetMBNSCM     BEGSR
- 
+
      C/exec SQL
      C+ update SCFMBRTD a
      C+ set MBNSCM = 0
@@ -583,7 +583,7 @@
      C+ and NumRecs = 1
      C+ )
      C/end-exec
- 
+
      C     SetMBNSCME    ENDSR
       ********************************************************************
       /EJECT
@@ -593,7 +593,7 @@
       *                                                                  *
       ********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     Recursive     IFEQ      *BLANKS
      C                   MOVE      'Y'           Recursive
      C                   DUMP

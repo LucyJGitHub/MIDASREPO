@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas RE Accounts transferred to Inactive')
@@ -9,7 +9,7 @@
       *                                                               *
       *  RE377801 - Accounts transferred to Inactive                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
       *  Last Amend No. AR1097467B         Date 18Apr13               *
       *  Prev Amend No. AR1071130          Date 07Jan13               *
@@ -63,7 +63,7 @@
      D ACACL0DS      E DS                  Dim(ACACRows) Inz                              AR1097467B
      D                                     Qualified
      D                                     EXTNAME(REACNTK0)
- 
+
      D INACPDDS      E DS                  Inz
      D                                     Dim(ACACRows)                                  AR1097467B
      D                                     Qualified
@@ -125,7 +125,7 @@
      C/EXEC SQL
      C+ open ACACCUR
      C/END-EXEC
- 
+
      C/EXEC SQL
      C+ get diagnostics :MLOOPROW = DB2_NUMBER_ROWS
      C/END-EXEC
@@ -175,7 +175,7 @@
      C                   EXSR      DBERR
      C                   LEAVE
      C                   ENDIF
- 
+
      C**********         EVAL      ACACIdx = 1                                            AR1097467B
       *****************************************************************                   AR1097467B
      C**********         DOW       ACACIdx <= ACACReturned                                AR1097467B
@@ -208,7 +208,7 @@
      C                   LEAVE
      C                   ENDIF
      C                   ENDIF                                                            AR1097467B
- 
+
      C**********         EVAL      ACACIdx += 1                                           AR1097467B
       *****************************************************************                   AR1097467B
      C**********         ENDDO                                                            AR1097467B
@@ -288,15 +288,15 @@
      C                   EVAL      StopMLoop = True
      C                   EVAL      *INU7 = True
      C                   EVAL      *INU8 = True
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = SRBASE
      C                   EVAL      DBFILE = SRFILE
      C                   EVAL      DBKEY = SRKEY
      C                   EVAL      DBPGM = SRPGM
      C                   OUT       LDA
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT

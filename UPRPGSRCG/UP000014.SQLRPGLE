@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Delete logicals, views, indices, etc.')
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP000014 - Delete logicals, views, indices, etc.             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
       *  Last Amend No. CUP041   *CREATE   Date 09Sep13               *
       *  Prev Amend No. xxxxxx             Date ddMmmyy               *

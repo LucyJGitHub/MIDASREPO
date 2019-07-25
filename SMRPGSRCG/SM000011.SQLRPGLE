@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
  **** *****************************************************************
 /*XBI *  OVRDBF FILE(SM000011OF) TOFILE(QAFDMBRL)                     *
 /*STD *  RPGSQLBND                                                    *
@@ -18,7 +18,7 @@
       *                                                               *
       *  Called By: SMC000111                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*

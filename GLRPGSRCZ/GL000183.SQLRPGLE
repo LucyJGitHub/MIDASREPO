@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2016')
+     H COPYRIGHT('(c) Finastra International Limited 2016')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas GL User Access Audit File Purge')                *

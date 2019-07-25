@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas API Main-UDF Extension Common - Housekeeping')
@@ -8,7 +8,7 @@
       *                                                               *
       *  SC002501 - Midas API Main-UDF Extension Common - Housekeeping*
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
       *  Last Amend No. AR1071195          Date 25Jan13               *
       *  Prev Amend No. AR685870           Date 10Dec10               *
@@ -28,13 +28,13 @@
       *****************************************************************
      F***APUDTKPD  IF   E             DISK                                                 AR1071195
      FSCSQLSPD  IF   E             DISK                                                    AR1071195
- 
+
       *****************************************************************
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       *****************************************************************
- 
+
       ** Dynamic SQL statement work field
      D***WSTRSQL         S           1000A   INZ(*BLANKS)                                  AR1071195
      D I#RTCD          S              7A
@@ -51,15 +51,15 @@
      D PreMarker       S            500A                                                   AR1071195
      D PostMarker      S            500A                                                   AR1071195
      D SQLLen          S              3  0 INZ(0)                                          AR1071195
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
       ** Get zone details for UDF Extension table update
- 
+
      C                   CALL      'GOGETZONE'
      C                   PARM      *BLANKS       I#RTCD
      C                   PARM      *BLANKS       I#ERMS
@@ -72,9 +72,9 @@
      C                   PARM                    O#DNWD
      C                   PARM                    O#BCCY
      C                   PARM                    O#NJOB
- 
+
       ** Check for error in access object
- 
+
      C                   IF        I#RTCD <> *BLANKS
      C                   MOVEL     'SC002501'    DBPGM
      C                   MOVEL     'GPZONEPD'    DBFILE
@@ -83,17 +83,17 @@
       *
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Read through file
- 
+
      C*****1****         SETLL     APUDTKPD                                                AR1071195
      C**********         READ      APUDTKPD                                                AR1071195
      C     1             SETLL     SCSQLSPD                                                AR1071195
      C                   READ      SCSQLSPD                                                AR1071195
- 
+
      C**********         DOW       NOT %EOF(APUDTKPD)                                      AR1071195
      C                   DOW       NOT %EOF(SCSQLSPD)                                      AR1071195
- 
+
      C**********         IF        APSEQN = '01' AND                              AR685870 AR1071195
      C**********                   APCON2 <> *BLANKS                              AR685870 AR1071195
       **********                                                                  AR685870 AR1071195
@@ -110,41 +110,41 @@
      C**********                              ' and (' + %trim(APCON2) +                   AR1071195
      C**********                              ' from ' + %trim(APMAIN) +                   AR1071195
      C**********                              ')' + ')'                          BUG28093A AR1071195
- 
+
       ** Execute command
- 
+
      C                   EXSR      DELRTN
- 
+
       ** Check for error in SQL execution
- 
+
      C                   IF        SQLCOD <> 0  And SQLCOD <> 100
      C                   MOVEL     'SC002501'    DBPGM
      C**********         MOVEL     APUEXT        DBFILE                                    AR1071195
      C                   MOVEL     SQLDELET      DBFILE                                    AR1071195
      C                   MOVEL     '002'         DBASE
      C**********         MOVEL     WSTRSQL       DBKEY                                     AR1071195
- 
+
      C                   EXSR      *PSSR
      C                   ENDIF
      C**********         ENDIF                                                    AR685870 AR1071195
- 
+
      C**********         READ      APUDTKPD                                                AR1071195
      C                   READ      SCSQLSPD                                                AR1071195
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * DELRTN - Delete Routine                                       *
       *****************************************************************
- 
+
      C     DELRTN        BEGSR
- 
+
       ** Prepare SQL statement
- 
+
      C                   EVAL      SQLSTM = ''                                             AR1071195
      C                   EVAL      SQLSTM = SQLCREAT                                       AR1071195
      C                   EXSR      REPZON                                                  AR1071195
@@ -152,9 +152,9 @@
      C*+*PREPARE S1 FROM :WSTRSQL                                                          AR1071195
      C+ PREPARE S1 FROM :SQLSTM                                                            AR1071195
      C/END-EXEC
- 
+
       ** Execute SQL statement
- 
+
      C/EXEC SQL
      C+ EXECUTE S1                                                                         AR1071195
      C/END-EXEC
@@ -173,7 +173,7 @@
      C/EXEC SQL                                                                            AR1071195
      C+ EXECUTE S2                                                                         AR1071195
      C/END-EXEC                                                                            AR1071195
- 
+
      C                   ENDSR
                                                                                            AR1071195
       *****************************************************************                    AR1071195
@@ -199,7 +199,7 @@
       /end-free                                                                          //AR1071195
                                                                                            AR1071195
      C                   ENDSR                                                             AR1071195
- 
+
       *****************************************************************
       *                                                               *
       *  *PSSR  - Program exception error routine                     *
@@ -208,18 +208,18 @@
       *          This subroutine DUMPs the program just once.         *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   DUMP
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
- 
+
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2010
+(c) Finastra International Limited 2010

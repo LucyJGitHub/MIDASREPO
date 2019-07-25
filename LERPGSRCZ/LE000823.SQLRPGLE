@@ -1,5 +1,5 @@
      H DEBUG
-     H Copyright('(c) Misys International Banking Systems Ltd. 2017')
+     H Copyright('(c) Finastra International Limited 2016')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas LE PDCL creation of settlement account keys')    *
@@ -16,8 +16,8 @@
       *                                                               *
       *  Last Amend No. MD051944           Date 22Sep18               *
       *  Prev Amend No. MD049865           Date 06Aug18               *
-      *                 MD051242           Date 25Jun18               *      
-      *                 MD049363           Date 19Sep18               *  
+      *                 MD051242           Date 25Jun18               *
+      *                 MD049363           Date 19Sep18               *
       *                 MD051242           Date 25Jun18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD048557           Date 27Nov17               *
@@ -27,7 +27,7 @@
       *                                                               *
       *  MD051944 - Settlement entries from Principal Increase        *
       *             event is rounded down                             *
-      *  MD049865 - Component LEC000823 failed in COB                 *      
+      *  MD049865 - Component LEC000823 failed in COB                 *
       *  MD049363 - Percentage allocation error                       *
       *  MD051242 - CLE031: COB: GLC0340 failed with Currency out of  *
       *             balance for fee with no settlement currency       *

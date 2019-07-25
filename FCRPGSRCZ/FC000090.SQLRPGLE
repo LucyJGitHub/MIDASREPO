@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas FC CFC006 Initialisation Program')
@@ -9,7 +9,7 @@
       *                                                               *
       *  FC000090 - CFC006 Initialisation Program                     *
       *                                                               *
-      *  (c) Finastra International Limited 2013                      *                             
+      *  (c) Finastra International Limited 2013                      *
       *
       *  Last Amend No. MD046248           Date 27Oct17               *
       *  Prev Amend No. MD020563 *CREATE   Date 22May13               *

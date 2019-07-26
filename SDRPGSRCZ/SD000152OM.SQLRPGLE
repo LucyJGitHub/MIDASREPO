@@ -1,7 +1,7 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited. 2017')
       *****************************************************************
-/*STD *  RPGSQLBND                                                   *
+/*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Nostro Account Activity - OM')                         *
       *****************************************************************
       *                                                               *
@@ -16,12 +16,14 @@
       *                                                               *
       *   (c) Finastra International Limited. 2017                    *
       *                                                               *
-      *  Last Amend No. MD038440A          Date 08May18               *
-      *  Prev Amend No. MD048898           Date 11Dec17               *
+      *  Last Amend No. MD052107           Date 02Jul19               *
+      *  Prev Amend No. MD038440A          Date 08May18               *
+      *                 MD048898           Date 11Dec17               *
       *                 MD038440           Date 27Oct17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052107  - Reformat Nostro Account Activity Report Layout   *
       *  MD038440A - MGOREFPD records should not block transmitted    *
       *              messages. Change to Info only.                   *
       *  MD048898 - No validation for default Nostro in SDCURRPD      *
@@ -48,7 +50,8 @@
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
 
-     D  TXSTAT         S             20A   DIM(3) CTDATA PERRCD(1)
+     D**********  TXSTAT         S             20A   DIM(3) CTDATA PERRCD(1)                MD052107
+     D  TXSTAT         S             36A   DIM(3) CTDATA PERRCD(1)                          MD052107
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -74,7 +77,8 @@
      D PBYTRTY         S              2A
      D PMGST           S              4A
      D KACNO           S             17A
-     D APTRAN          S             40A
+     D********** APTRAN          S             40A                                          MD052107
+     D APTRAN          S             35A                                                    MD052107
      D FULNOST         S              5A
 
      D PSEQ            S              5
@@ -141,11 +145,17 @@
      C                                    YYBRCA + '-' + YYCNUM + '-' + YYCCY +
      C                                    '-' + YYACOD + '-' + YYACSQ
      C                   EVAL      KACNO= YYBRCA + YYCNUM + YYACOD + YYACSQ
+      *                                                                                     MD052107
+     C                   IF        PMODE <> 'V'                                             MD052107
      C                   WRITE     HEADP1
+     C                   ENDIF                                                              MD052107
       *
      C                   EXSR      SRValv
       *
+     C                   IF        PMODE <> 'V'                                             MD052107
      C                   WRITE     TRAILP1
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
      C                   EVAL      *INLR = *ON
       *
      C                   RETURN
@@ -155,7 +165,40 @@
       *                                                               *
       *****************************************************************
      C     SRValv        BEGSR
-
+      *                                                                                     MD052107
+      ** Extended Settlements                                                               MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRExtndSett                                              MD052107
+     C                   ENDIF                                                              MD052107
+      ** Midas-Fontis TPP Nostro Default                                                    MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   IF        CGL009 = 'Y'                                             MD052107
+     C                   EXSR      SRFontNost                                               MD052107
+     C                   ENDIF                                                              MD052107
+     C                   ENDIF                                                              MD052107
+      ** Outgoing Message Field Management                                                  MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SROutMsgFM                                               MD052107
+     C                   ENDIF                                                              MD052107
+      ** OPAY messages by Nostro                                                            MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SROPAYNost                                               MD052107
+     C                   ENDIF                                                              MD052107
+      ** Treasury Currency                                                                  MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRTrsryCCY                                               MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SROutMsgFM - Retrieve Outgoing Message Field Management      *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SROutMsgFM    BEGSR                                                              MD052107
+      *                                                                                     MD052107
       **  Set file pointer to first record of MEOUFMPD
       *
      C/exec SQL
@@ -193,9 +236,13 @@
 
      C                   DOW       SQLCode <> 100
 
-     C                   EVAL      APTRAN = 'Outgoing Message Field Management'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(2)+ ' ' + pOMNWRK +
-     C                              ' ' +  pOMMTPY + ' ' +  pOMMTAG
+     C                   EVAL      APTRAN = 'Outgoing Message Field Management'             MD052107
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(2)+ ' ' + pOMNWRK +              MD052107
+     C**********                    ' ' +  pOMMTPY + ' ' +  pOMMTAG                         MD052107
+     C                   EVAL      DATAP = TXSTAT(2) + ' ' + APTRAN +                       MD052107
+     C                             ' ' + pOMNWRK + ' ' + pOMMTPY + ' '                      MD052107
+     C                             + pOMMTAG                                                MD052107
+      *                                                                                     MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
@@ -214,6 +261,15 @@
      C/exec SQL
      C+ close EXLIST2
      C/end-exec
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SROPAYNost - Retrieve OPAY Messages by Nostro                *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SROPAYNost    BEGSR                                                              MD052107
       *
       **  Set file pointer to first record of MGOREFPD
       *
@@ -256,20 +312,31 @@
 
      C                   IF        pMGST <> 'TRAN'                                         MD038440A
      C                   EVAL      APTRAN = 'OPAY messages by Nostro'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) +' ' + pTRNO
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) +' ' + pTRNO                  MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN +                       MD052107
+     C                             ' ' + pTRNO                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
       *
      C                   ELSE                                                              MD038440A
      C                   EVAL      APTRAN = 'OPAY messages by Nostro'                      MD038440A
-     C                   EVAL      DATAP = APTRAN + TXSTAT(2) +' ' + pTRNO                 MD038440A
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(2) +' ' + pTRNO                 MD038440A
+     C                   EVAL      DATAP = TXSTAT(2) + ' ' + APTRAN +                       MD052107
+     C                             ' ' + pTRNO                                              MD052107
      C                   IF        *IN60 = *ON                                             MD038440A
      C                   WRITE     HEADP1                                                  MD038440A
      C                   EVAL      *IN60 = *OFF                                            MD038440A
@@ -289,10 +356,19 @@
      C/exec SQL
      C+ close EXLIST3
      C/end-exec
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRFontNost - Retrieve Midas-Fontis TPP Nostro Default        *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRFontNost    BEGSR                                                              MD052107
       *
       **  Set file pointer to first record of MEFNODPD
       *
-     C                   IF        CGL009 = 'Y'
+     C**********         IF        CGL009 = 'Y'                                             MD052107
      C/exec SQL
      C+ declare EXLIST4 cursor for
      C+ select FHAJOB,FHAUSR   from MEFNODPD
@@ -329,18 +405,27 @@
      C                   DOW       SQLCode <> 100
 
      C                   EVAL      APTRAN = 'Midas-Fontis TPP Nostro Default'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) +' ' + pFHAJOB +
-     C                                      ' ' + pFHAUSR
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) +' ' + pFHAJOB +              MD052107
+     C**********                            ' ' + pFHAUSR                                   MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN +                       MD052107
+     C                             ' ' + pFHAJOB + ' ' + pFHAUSR                            MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -353,7 +438,16 @@
      C/exec SQL
      C+ close EXLIST5
      C/end-exec
-     C                   ENDIF
+     C**********         ENDIF                                                              MD052107
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRTrsryCCY - Retrieve Treasury Currency                      *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRTrsryCCY    BEGSR                                                              MD052107
       *
       **  Set file pointer to first record of SDCURRPD
       *
@@ -398,17 +492,26 @@
 
      C**********         EVAL      APTRAN = 'MNCP Pool'                                     MD048898
      C                   EVAL      APTRAN = 'Treasury Currency'                             MD048898
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pA6CYCD
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pA6CYCD               MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN +                       MD052107
+     C                             ' ' + pA6CYCD                                            MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'                                              MD048898
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT                                                  MD048898
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                     MD048898 MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                         MD048898 MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -421,6 +524,15 @@
      C/exec SQL
      C+ close EXLIST7
      C/end-exec
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRExtndSett - Retrieve Extended Settlements                  *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRExtndSett   BEGSR                                                              MD052107
       *
       **  Set file pointer to first record of SDEXSTPD
       *
@@ -462,8 +574,10 @@
      C                   DOW       SQLCode <> 100
 
      C                   EVAL      APTRAN = 'Extended Settlements '
-     C                   EVAL      DATAP = APTRAN + TXSTAT(2) + ' ' + pBYCUST +
-     C                              ' '  + pBYTRTY
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(2) + ' ' + pBYCUST +             MD052107
+     C**********                    ' '  + pBYTRTY                                          MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN +                       MD052107
+     C                             ' ' + pBYCUST + ' '  + pBYTRTY                           MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
@@ -483,7 +597,8 @@
      C+ close EXLIST8
      C/end-exec
       *
-     C     VALEXIT       ENDSR
+     C**********     VALEXIT       ENDSR                                                    MD052107
+     C                   ENDSR                                                              MD052107
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -565,6 +680,8 @@
      C                   ENDIF                                                              MD048898
       *
      C                   ENDSR
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
       *****************************************************************
       *                                                               *
       *  SRRCFProc - RCF processing                                   *
@@ -614,6 +731,6 @@
       /EJECT
       ********************************************************************
 ** TXSTAT
-BLOCKING DELETION
-INFORMATION
-DEAD TRANSACTION
+BLOCKING NOSTRO ACCOUNT DELETION                                                            MD052107
+FOR INFORMATION ONLY                                                                        MD052107
+DEAD TRANSACTION TO BE REVIEWED                                                             MD052107

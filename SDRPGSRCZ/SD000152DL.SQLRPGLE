@@ -7,7 +7,8 @@
       *                                                               *
       *  Midas - Standing Data ILE Module                             *
       *                                                               *
-      *  SD0152DL - Nostro Account Activity  - DL.                    *
+      ***SD0152DL*-*Nostro*Account*Activity**-*DL.*********************                     MD052107
+      *  SD000152DL - Nostro Account Activity - DL.                   *                     MD052107
       *                                                               *
       *  Function:  This program checks if a Nostro is used by        *
       *             a Dealing transaction.                            *
@@ -16,14 +17,16 @@
       *                                                               *
       *   (c) Finastra International Limited. 2017                    *
       *                                                               *
-      *  Last Amend No. MD042142A          Date 13Jan19               *
-      *  Prev Amend No. MD042142           Date 08May18               *
+      *  Last Amend No. MD052107           Date 02Jul19               *
+      *  Prev Amend No. MD042142A          Date 13Jan19               *
+      *                 MD042142           Date 08May18               *
       *                 MD038440A          Date 08May18               *
       *                 MD048898           Date 11Dec17               *
       *                 MD038440           Date 27Oct17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052107  - Reformat Nostro Account Activity Report Layout   *
       *  MD042142A - Cannot close Nostro Account.                     *
       *            - Applied for MD052616.                            *
       *  MD042142 - Refine MD038440 and MD048898 fixes.               *
@@ -52,7 +55,9 @@
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
 
-     D  TXSTAT         S             20A   DIM(3) CTDATA PERRCD(1)
+     D**********  TXSTAT         S             20A   DIM(3) CTDATA PERRCD(1)                MD052107
+     D  TXSTAT         S             36A   DIM(3) CTDATA PERRCD(1)                          MD052107
+     D  NOTES          S             24A   DIM(2) CTDATA PERRCD(1)                          MD052107
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -67,7 +72,9 @@
      D XxRtn           S              1A
      D PMODE           S              1A
 
-     D pDLNO           S              6
+     D********** pDLNO           S              6                                           MD052107
+     D pDLNO           S              6  0                                                  MD052107
+     D wDLNO           S              6                                                     MD052107
      D pDTYP           S              2
      D pDLST           S              2
      D PVDAT           S              5  0
@@ -83,7 +90,8 @@
      D PLCUST          S              6A
      D PLSEQN          S              4  0
      D KACNO           S             17A
-     D APTRAN          S             40A
+     D********** APTRAN          S             40A                                          MD052107
+     D APTRAN          S             31A                                                    MD052107
 
      D PSEQ            S              5
      D PSFILE          S             10
@@ -135,20 +143,92 @@
      C                                    YYBRCA + '-' + YYCNUM + '-' + YYCCY +
      C                                    '-' + YYACOD + '-' + YYACSQ
      C                   EVAL      KACNO= YYBRCA + YYCNUM + YYACOD + YYACSQ
+      *                                                                                     MD052107
+     C                   IF        PMODE <> 'V'                                             MD052107
      C                   WRITE     HEADP1
+     C                   ENDIF                                                              MD052107
       *
      C                   EXSR      SRValv
-      *
+      *                                                                                     MD052107
+     C                   IF        PMODE <> 'V'                                             MD052107
      C                   WRITE     TRAILP1
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
      C                   EVAL      *INLR = *ON
       *
      C                   RETURN
       *****************************************************************
       *                                                               *
-      *  SValv  - Retrieve Dealing transactions                       *
+      *   SRValv - Retrieve Dealing transactions                      *
       *                                                               *
       *****************************************************************
      C     SRValv        BEGSR
+      *                                                                                     MD052107
+      ** CLS Pay-in Schedule                                                                MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   IF        CDL008 = 'Y'                                             MD052107
+     C                   EXSR      SRCLSPay                                                 MD052107
+     C                   ENDIF                                                              MD052107
+     C                   ENDIF                                                              MD052107
+      ** Deals Amendment                                                                    MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRDLAmend                                                MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+      ** Dealing Fee                                                                        MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   IF        CAS009 = 'Y'                                             MD052107
+     C                   EXSR      SRDLFee                                                  MD052107
+     C                   ENDIF                                                              MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+      ** FRA / IRS / CACF                                                                   MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRFRADeal                                                MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+      ** Foreign Exchange                                                                   MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRFXDeal                                                 MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+      ** FX Confirmed Nets                                                                  MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   IF        CDL002 = 'Y'                                             MD052107
+     C                   EXSR      SRFXCNet                                                 MD052107
+     C                   ENDIF                                                              MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+      ** FX Netting Multiple Settlements                                                    MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   IF        CDL025  = 'Y'                                            MD052107
+     C                   EXSR      SRFXNetM                                                 MD052107
+     C                   ENDIF                                                              MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+      ** Money Market                                                                       MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRMMDeal                                                 MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+      ** Negotiable Assets Purchased                                                        MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRNASP                                                   MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+      ** Negotiable Assets Sold                                                             MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRNASS                                                   MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *  SRMMDeal  - Retrieve MM Dealing transactions                 *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRMMDeal      BEGSR                                                              MD052107
       *
       ** Set file pointer to first record of DEALSDC
       *
@@ -166,7 +246,8 @@
      C+       RECI = 'D' and                                                               MD038440A
      C+       DTYP in ('IT', 'TD', 'CI', 'CD' )                                            MD038440A
      C+ order by
-     C+       DLNO
+     C**********+       DLNO                                                                MD052107
+     C+       DLNO, VDAT DESC, DTYP, DLST                                                   MD052107
      C/end-exec
 
      C/exec SQL
@@ -197,44 +278,62 @@
      C                   DOW       SQLCode <> 100
 
      C                   IF        PRONS = XXNOST                                          MD038440A
+     C                   EVAL      APTRAN = 'Money Market'                                  MD052107
+     C                   MOVE      pDLNO         wDLNO                                      MD052107
      C                   IF        PVDAT <  BJRDNB
-     C                   EVAL      APTRAN = 'Money Market'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(3) + ' ' + pDLNO +
-     C                              ' ' +  pDTYP + ' ' + pDLST
+     C**********         EVAL      APTRAN = 'Money Market'                                  MD052107
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(3) + ' ' + pDLNO +               MD052107
+     C**********                    ' ' +  pDTYP + ' ' + pDLST                              MD052107
+     C                   EVAL      DATAP = TXSTAT(3) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             wDLNO + '      ' + pDTYP + ' '  +                        MD052107
+     C                             pDLST + '         ' + NOTES(1)                           MD052107
      C                   ELSE
-     C                   EVAL      APTRAN = 'Money Market'                                  MD048898
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pDLNO +
-     C                              ' ' +  pDTYP + ' ' + pDLST
+     C**********         EVAL      APTRAN = 'Money Market'                         MD048898 MD052107
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pDLNO +               MD052107
+     C**********                    ' ' +  pDTYP + ' ' + pDLST + '           '              MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             wDLNO + '      ' + pDTYP + ' '  +                        MD052107
+     C                             pDLST + '         ' + NOTES(1)                           MD052107
      C                   IF        PMODE = 'V'
      C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
+     C**********         GOTO      VALEXIT                                                  MD052107
      C                   ENDIF
      C                   ENDIF
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
+     C                   ENDIF                                                              MD052107
      C                   ENDIF                                                             MD038440A
       *
      C                   IF        PPONS = XXNOST                                          MD038440A
+     C                   EVAL      APTRAN = 'Money Market'                                  MD052107
+     C                   MOVE      pDLNO         wDLNO                                      MD052107
      C                   IF        PVDAT <  BJRDNB                                         MD038440A
-     C                   EVAL      APTRAN = 'Money Market'                                 MD038440A
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pDLNO +              MD038440A
-     C                              ' ' +  pDTYP + ' ' + pDLST                             MD038440A
+     C**********         EVAL      APTRAN = 'Money Market'                        MD038440A MD052107
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pDLNO +     MD038440A MD052107
+     C**********                    ' ' +  pDTYP + ' ' + pDLST                    MD038440A MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             wDLNO + '      ' + pDTYP + ' '  +                        MD052107
+     C                             pDLST + '         ' + NOTES(2)                           MD052107
      C                   IF        PMODE = 'V'                                             MD038440A
      C                   EVAL      XxRtn  = 'R'                                            MD038440A
-     C                   GOTO      VALEXIT                                                 MD038440A
+     C**********         GOTO      VALEXIT                                        MD038440A MD052107
      C                   ENDIF                                                             MD038440A
      C                   ENDIF                                                             MD038440A
       *                                                                                    MD038440A
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON                                             MD038440A
      C                   WRITE     HEADP1                                                  MD038440A
      C                   EVAL      *IN60 = *OFF                                            MD038440A
      C                   ENDIF                                                             MD038440A
       *                                                                                    MD038440A
      C                   WRITE     DETAIL1                                                 MD038440A
+     C                   ENDIF                                                              MD052107
      C                   ENDIF                                                             MD038440A
       *                                                                                    MD038440A
 
@@ -265,7 +364,8 @@
      C+       RECI = 'D' and                                                               MD038440A
      C+       DTYP in ('CF', 'CL' , 'DL', 'IP', 'TI' )                                     MD038440A
      C+ order by
-     C+       DLNO
+     C**********+       DLNO                                                                MD052107
+     C+       DLNO, VDAT DESC, DTYP, DLST                                                   MD052107
      C/end-exec
 
      C/exec SQL
@@ -296,43 +396,62 @@
      C                   DOW       SQLCode <> 100
 
      C                   IF        PPONS =  XXNOST                                         MD038440A
+     C                   EVAL      APTRAN = 'Money Market'                                  MD052107
+     C                   MOVE      pDLNO         wDLNO                                      MD052107
      C                   IF        PVDAT <  BJRDNB
-     C                   EVAL      APTRAN = 'Money Market'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(3) + ' ' + pDLNO +
-     C                              ' ' +  pDTYP + ' ' + pDLST
+     C**********         EVAL      APTRAN = 'Money Market'                                  MD052107
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(3) + ' ' + pDLNO +               MD052107
+     C**********                    ' ' +  pDTYP + ' ' + pDLST                              MD052107
+     C                   EVAL      DATAP = TXSTAT(3) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             wDLNO + '      ' + pDTYP + ' '                           MD052107
+     C                              + pDLST + '         ' + NOTES(1)                        MD052107
      C                   ELSE
-     C                   EVAL      APTRAN = 'Money Market'                                  MD048898
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pDLNO +
-     C                              ' ' +  pDTYP + ' ' + pDLST
+     C**********         EVAL      APTRAN = 'Money Market'                         MD048898 MD052107
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pDLNO +               MD052107
+     C**********                    ' ' +  pDTYP + ' ' + pDLST                              MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             wDLNO + '      ' + pDTYP + ' '                           MD052107
+     C                              + pDLST + '         ' + NOTES(1)                        MD052107
      C                   IF        PMODE = 'V'
      C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
+     C**********         GOTO      VALEXIT                                                  MD052107
      C                   ENDIF
      C                   ENDIF
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
+     C                   ENDIF                                                              MD052107
      C                   ENDIF                                                             MD038440A
       *
      C                   IF        PRONS =  XXNOST                                         MD038440A
-     C                   IF        PVDAT <  BJRDNB                                         MD038440A
      C                   EVAL      APTRAN = 'Money Market'                                 MD038440A
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pDLNO +              MD038440A
-     C                              ' ' +  pDTYP + ' ' + pDLST                             MD038440A
+     C                   MOVE      pDLNO         wDLNO                                      MD052107
+     C                   IF        PVDAT <  BJRDNB                                         MD038440A
+     C**********         EVAL      APTRAN = 'Money Market'                        MD038440A MD052107
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pDLNO +     MD038440A MD052107
+     C**********                    ' ' +  pDTYP + ' ' + pDLST                    MD038440A MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             wDLNO + '      ' + pDTYP + ' '                           MD052107
+     C                              + pDLST + '         ' + NOTES(2)                        MD052107
      C                   IF        PMODE = 'V'                                             MD038440A
      C                   EVAL      XxRtn  = 'R'                                            MD038440A
-     C                   GOTO      VALEXIT                                                 MD038440A
+     C**********         GOTO      VALEXIT                                        MD038440A MD052107
      C                   ENDIF                                                             MD038440A
      C                   ENDIF                                                             MD038440A
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON                                             MD038440A
      C                   WRITE     HEADP1                                                  MD038440A
      C                   EVAL      *IN60 = *OFF                                            MD038440A
      C                   ENDIF                                                             MD038440A
       *                                                                                    MD038440A
      C                   WRITE     DETAIL1                                                 MD038440A
+     C                   ENDIF                                                              MD052107
      C                   ENDIF                                                             MD038440A
       *
 
@@ -348,6 +467,15 @@
      C/exec SQL
      C+ close DLLIST0B
      C/end-exec
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRFXDeal  - Retrieve FX Dealing transactions                 *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRFXDeal      BEGSR                                                              MD052107
       ** Set file pointer to first record of DEALSDB
       *
      C/exec SQL
@@ -360,7 +488,8 @@
      C+       PONS = :XxNost and
      C+       RECI = 'D'
      C+ order by
-     C+       DLNO
+     C**********+       DLNO                                                                MD052107
+     C+       DLNO, DTYP, DLST                                                              MD052107
      C/end-exec
 
      C/exec SQL
@@ -390,18 +519,29 @@
      C                   DOW       SQLCode <> 100
 
      C                   EVAL      APTRAN = 'Foreign Exchange'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pDLNO +
-     C                              ' ' + pDTYP +   ' ' + pDLST
+     C                   MOVE      pDLNO         wDLNO                                      MD052107
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pDLNO +               MD052107
+     C**********                    ' ' + pDTYP +   ' ' + pDLST                             MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             wDLNO + '      ' + pDTYP + ' '                           MD052107
+     C                              + pDLST                                                 MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -415,6 +555,15 @@
      C+ close DLLIST1
      C/end-exec
       *
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRFRADeal  - Retrieve FRA Dealing transactions               *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRFRADeal     BEGSR                                                              MD052107
       ** Set file pointer to first record of DEALSDG
       *
      C/exec SQL
@@ -429,7 +578,8 @@
      C+       PONS = :XxNost and                                                            MD042142
      C+       RECI = 'D'
      C+ order by
-     C+       DLNO
+     C**********+       DLNO                                                                MD052107
+     C+       DLNO, DTYP, DLST                                                              MD052107
      C/end-exec
 
      C/exec SQL
@@ -460,18 +610,29 @@
 
      C**********         EVAL      APTRAN = 'Forward Rate Agreement'                        MD042142
      C                   EVAL      APTRAN = 'FRA / IRS / CACF'                              MD042142
-     C                   EVAL      DATAP = APTRAN +  TXSTAT(1) + ' ' + pDLNO +
-     C                             ' ' + pDTYP +  ' ' + pDLST
+     C                   MOVE      pDLNO         wDLNO                                      MD052107
+     C**********         EVAL      DATAP = APTRAN +  TXSTAT(1) + ' ' + pDLNO +              MD052107
+     C**********                   ' ' + pDTYP +  ' ' + pDLST                               MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             wDLNO + '      ' + pDTYP + ' '                           MD052107
+     C                              + pDLST                                                 MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   EVAL      XxRtn  = 'R'
-     C                   IF        PMODE = 'V'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -485,6 +646,15 @@
      C+ close DLLIST2
      C/end-exec
       *
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRDLAmend  - Retrieve Deals Amendment transactions           *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRDLAmend     BEGSR                                                              MD052107
       ** Set file pointer to first record of DEAMSDI
       *
      C/exec SQL
@@ -497,7 +667,8 @@
      C+       PONS = :XxNost  and
      C+       AMTP in ('EM', 'PD', 'PI', 'SI' )
      C+ order by
-     C+       DLNO
+     C**********+       DLNO                                                                MD052107
+     C+       DLNO, DTYP, DLST                                                              MD052107
      C/end-exec
 
      C/exec SQL
@@ -527,18 +698,29 @@
      C                   DOW       SQLCode <> 100
 
      C                   EVAL      APTRAN = 'Deals Amendment'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pDLNO +
-     C                             ' ' + pDTYP + ' ' + pDLST
+     C                   MOVE      pDLNO         wDLNO                                      MD052107
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pDLNO +               MD052107
+     C**********                   ' ' + pDTYP + ' ' + pDLST                                MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             wDLNO + '      ' + pDTYP + ' '                           MD052107
+     C                              + pDLST                                                 MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   EVAL      XxRtn  = 'R'
-     C                   IF        PMODE = 'V'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -552,6 +734,15 @@
      C+ close DLLIST3
      C/end-exec
       *
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRNASP  - Retrieve NASP transactions                         *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRNASP        BEGSR                                                              MD052107
       ** Set file pointer to first record of DEALSDD
       *
      C/exec SQL
@@ -564,7 +755,8 @@
      C+       PONS = :XxNost and
      C+       RECI = 'D'
      C+ order by
-     C+       DLNO
+     C**********+       DLNO                                                                MD052107
+     C+       DLNO, DTYP, DLST                                                              MD052107
      C/end-exec
 
      C/exec SQL
@@ -593,15 +785,26 @@
 
      C                   DOW       SQLCode <> 100
 
-     C                   EVAL      APTRAN = 'Negotiable Assests Purchased'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' '  + pDLNO +
-     C                             ' ' + pDTYP +  ' ' + pDLST
+     C                   EVAL      APTRAN = 'Negotiable Assets Purchased'
+     C                   MOVE      pDLNO         wDLNO                                      MD052107
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' '  + pDLNO +              MD052107
+     C**********                   ' ' + pDTYP +  ' ' + pDLST                               MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             wDLNO + '      ' + pDTYP + ' '                           MD052107
+     C                              + pDLST                                                 MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
+     C                   ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -615,6 +818,15 @@
      C+ close DLLIST4
      C/end-exec
       *
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRNASS  - Retrieve NASS transactions                         *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRNASS        BEGSR                                                              MD052107
       ** Set file pointer to first record of DEALSDE
       *
      C/exec SQL
@@ -625,7 +837,8 @@
      C+       CCY = :YyCcy and
      C+       PONS = :XxNost
      C+ order by
-     C+       DLNO
+     C**********+       DLNO                                                                MD052107
+     C+       DLNO, DTYP, DLST                                                              MD052107
      C/end-exec
 
      C/exec SQL
@@ -654,19 +867,31 @@
 
      C                   DOW       SQLCode <> 100
 
-     C                   EVAL      APTRAN = 'Negotiable Assests Sold'
-     C                   EVAL      DATAP = APTRAN +  TXSTAT(1) + ' ' + pDLNO +
-     C                              ' ' + pDTYP + ' ' + pDLST
+     C**********         EVAL      APTRAN = 'Negotiable Assests Sold'                       MD052107
+     C                   EVAL      APTRAN = 'Negotiable Assets Sold'                        MD052107
+     C                   MOVE      pDLNO         wDLNO                                      MD052107
+     C**********         EVAL      DATAP = APTRAN +  TXSTAT(1) + ' ' + pDLNO +              MD052107
+     C**********                    ' ' + pDTYP + ' ' + pDLST                               MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             wDLNO + '      ' + pDTYP + ' '                           MD052107
+     C                              + pDLST                                                 MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   EVAL      XxRtn  = 'R'
-     C                   IF        PMODE = 'V'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -680,9 +905,18 @@
      C+ close DLLIST5
      C/end-exec
       *
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRFXCNet  - Retrieve FX Confirmed Nets                       *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRFXCNet      BEGSR                                                              MD052107
       ** Set file pointer to first record of FXNETMPD
       *
-     c                   IF        CDL002 = 'Y'
+     C**********         IF        CDL002 = 'Y'                                             MD052107
      C/exec SQL
      C+ declare DLLIST6 cursor for
      C+ select AMNETR from FXNETMPD
@@ -722,17 +956,26 @@
 
      C**********         EVAL      APTRAN = 'Negotiable Assests Sold'                       MD042142
      C                   EVAL      APTRAN = 'FX Confirmed Nets'                             MD042142
-     C                   EVAL      DATAP =  APTRAN +  TXSTAT(1) + ' ' +  pAMNETR
+     C**********         EVAL      DATAP =  APTRAN +  TXSTAT(1) + ' ' +  pAMNETR            MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pAMNETR                                                  MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   EVAL      XxRtn  = 'R'
-     C                   IF        PMODE = 'V'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -745,11 +988,21 @@
      C/exec SQL
      C+ close DLLIST6
      C/end-exec
-     C                   ENDIF
+     C**********         ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRDLFee  - Retrieve Dealing Fees                             *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRDLFee       BEGSR                                                              MD052107
       *
       ** Set file pointer to first record of DLFEED
       *
-     C                   IF        CAS009 = 'Y'
+     C**********         IF        CAS009 = 'Y'                                             MD052107
       *
      C/exec SQL
      C+ declare DLLIST7 cursor for
@@ -759,7 +1012,8 @@
      C+       DFFCCY = :YyCcy and
      C+       DFPONS = :XxNost
      C+ order by
-     C+       DFDLNO
+     C**********+       DFDLNO                                                              MD052107
+     C+       DFDLNO, DFDTYP, DFSTYP                                                        MD052107
      C/end-exec
 
      C/exec SQL
@@ -790,18 +1044,29 @@
 
      C                   EVAL      APTRAN = 'Dealing Fees'
      C**********         EVAL      DATAP =pDLNO +  TXSTAT(1) + ' ' + pDTYP +                MD048898
-     C                   EVAL      DATAP =APTRAN +  TXSTAT(1) + ' ' + pDLNO +               MD048898
-     C                              ' ' + pDTYP + ' ' + pDLST                               MD048898
+     C**********         EVAL      DATAP =APTRAN +  TXSTAT(1) + ' ' + pDLNO +      MD048898 MD052107
+     C**********                    ' ' + pDTYP + ' ' + pDLST                      MD048898 MD052107
+     C                   MOVE      pDLNO         wDLNO                                      MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             wDLNO + '      ' + pDTYP + ' '                           MD052107
+     C                              + pDLST                                                 MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   EVAL      XxRtn  = 'R'
-     C                   IF        PMODE = 'V'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -814,11 +1079,20 @@
      C/exec SQL
      C+ close DLLIST7
      C/end-exec
-     C                   ENDIF
+     C**********         ENDIF                                                              MD052107
       *
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRCLSPay - Retrieve CLS Pay-in Schedule                      *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRCLSPay      BEGSR                                                              MD052107
       ** Set file pointer to first record of FXCLSPSD
-      *
-     C                   IF        CDL008 = 'Y'
+      *                                                                                     MD052107
+     C**********         IF        CDL008 = 'Y'
       *
      C/exec SQL
      C+ declare DLLIST8 cursor for
@@ -856,18 +1130,27 @@
      C                   EVAL      APTRAN = 'CLS Pay-in Schedule'                           MD042142
      C**********         EVAL      DATAP =pPYCCY +  TXSTAT(1) + ' ' + pPYNOST +             MD042142
      C**********                   ' ' + pPYVDAT + ' ' + pPYSEQN                            MD042142
-     C                   EVAL      DATAP =APTRAN +  TXSTAT(1) + ' ' + pPYCCY +              MD042142
-     C                             pPYNOST + ' ' + pPYSEQN                                  MD042142
+     C**********         EVAL      DATAP =APTRAN +  TXSTAT(1) + ' ' + pPYCCY +              MD042142
+     C**********                   pPYNOST + ' ' + pPYSEQN                                  MD042142
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pPYCCY + pPYNOST + ' ' + pPYSEQN                         MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   EVAL      XxRtn  = 'R'
-     C                   IF        PMODE = 'V'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -880,11 +1163,20 @@
      C/exec SQL
      C+ close DLLIST8
      C/end-exec
-     C                   ENDIF
+     C**********         ENDIF                                                              MD052107
       *
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRFXNetM - Retrieve FX Netting Multiple Settlements          *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRFXNetM      BEGSR                                                              MD052107
       ** Set file pointer to first record of SDFNMSPD
       *
-     C                   IF        CDL025  = 'Y'
+     C**********         IF        CDL025  = 'Y'                                            MD052107
       *
      C/exec SQL
      C+ declare DLLIST9 cursor for
@@ -926,8 +1218,10 @@
      C                   MOVEL     PLSEQN        CLSEQN            4
      C                   EVAL      APTRAN = 'FX Netting Multiple Settlements'               MD042142
      C**********         EVAL      DATAP =pLCYCD +  TXSTAT(1) + ' ' + pLCUST +              MD042142
-     C                   EVAL      DATAP =APTRAN +  TXSTAT(2) + ' ' + pLCUST +              MD042142
-     C                             ' ' + cLSEQN
+     C**********         EVAL      DATAP =APTRAN +  TXSTAT(2) + ' ' + pLCUST +     MD042142 MD052107
+     C**********                   ' ' + cLSEQN                                             MD052107
+     C                   EVAL      DATAP = TXSTAT(2) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pLCUST + ' ' + cLSEQN                                    MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
@@ -946,9 +1240,10 @@
      C/exec SQL
      C+ close DLLIST9
      C/end-exec
-     C                   ENDIF
+     C**********         ENDIF                                                              MD052107
       *
-     C     VALEXIT       ENDSR
+     C**********     VALEXIT       ENDSR                                                    MD052107
+     C                   ENDSR                                                              MD052107
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1062,6 +1357,8 @@
      C                   EXSR      SRRCFProc
      C                   ENDIF                                                              MD048898
      C                   ENDSR
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
       *****************************************************************
       *                                                               *
       *  SRRCFProc - RCF processing                                   *
@@ -1111,6 +1408,9 @@
       *****************************************************************
       /EJECT
 ** TXSTAT
-BLOCKING DELETION
-INFORMATION
-DEAD TRANSACTION
+BLOCKING NOSTRO ACCOUNT DELETION                                                            MD052107
+FOR INFORMATION ONLY                                                                        MD052107
+DEAD TRANSACTION TO BE REVIEWED                                                             MD052107
+** NOTES                                                                                    MD052107
+Receiving Settlement Leg                                                                    MD052107
+Pay Settlement Leg                                                                          MD052107

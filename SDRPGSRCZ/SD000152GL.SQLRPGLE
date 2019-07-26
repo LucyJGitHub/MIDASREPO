@@ -7,7 +7,8 @@
       *                                                               *
       *  Midas - Standing Data ILE Module                             *
       *                                                               *
-      *  SD0152GL - Nostro Account Activity   - GL.                   *
+      ***SD0152GL*-*Nostro*Account*Activity***-*GL.********************                     MD052107
+      *  SD000152GL - Nostro Account Activity - GL.                   *                     MD052107
       *                                                               *
       *  Function:  This program checks if a Nostro is used by        *
       *             a GL/Retail transactions.                         *
@@ -16,12 +17,14 @@
       *                                                               *
       *   (c) Finastra International Limited. 2017                    *
       *                                                               *
-      *  Last Amend No. MD042142           Date 22Jan18               *
-      *  Prev Amend No. MD048898           Date 11Dec17               *
+      *  Last Amend No. MD052107           Date 02Jul19               *
+      *  Prev Amend No. MD042142           Date 22Jan18               *
+      *                 MD048898           Date 11Dec17               *
       *                 MD038440           Date 27Oct17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052107  - Reformat Nostro Account Activity Report Layout   *
       *  MD042142 - Refine MD038440 and MD048898 fixes.               *
       *           - Applied for MD038440A                             *
       *  MD048898 - No reports produced. conditon RCF processing      *
@@ -46,7 +49,9 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-     D  TXSTAT         S             20A   DIM(3) CTDATA PERRCD(1)
+     D**********  TXSTAT         S             20A   DIM(3) CTDATA PERRCD(1)                MD052107
+     D  TXSTAT         S             36A   DIM(3) CTDATA PERRCD(1)                          MD052107
+     D  NOTES          S             24A   DIM(2) CTDATA PERRCD(1)                          MD052107
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -64,6 +69,7 @@
 
      D PBTBTNB         S              3A
      D PBTBINB         S              2  0
+     D PBTDCIN         S              1A                                                    MD052107
      D nBTBINB         S              2A
      D FULNOST         s              5A
      D PR1TREF         S             15A
@@ -80,7 +86,8 @@
      D PIPDN           S              6A
      D PPNAR           S             30A
      D KACNO           S             17A
-     D APTRAN          S             40A
+     D********** APTRAN          S             40A                                          MD052107
+     D APTRAN          S             19A                                                    MD052107
 
      D PSEQ            S              5
      D PSFILE          S             10
@@ -133,11 +140,17 @@
      C                                    YYBRCA + '-' + YYCNUM + '-' + YYCCY +
      C                                    '-' + YYACOD + '-' + YYACSQ
      C                   EVAL      KACNO= YYBRCA + YYCNUM + YYACOD + YYACSQ
+      *                                                                                     MD052107
+     C                   IF        PMODE <> 'V'                                             MD052107
      C                   WRITE     HEADP1
+     C                   ENDIF                                                              MD052107
       *
      C                   EXSR      SRValv
       *
+     C                   IF        PMODE <> 'V'                                             MD052107
      C                   WRITE     TRAILP1
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
      C                   EVAL      *INLR = *ON
       *
      C                   RETURN
@@ -147,12 +160,57 @@
       *                                                               *
       *****************************************************************
      C     SRValv        BEGSR
+      *                                                                                     MD052107
+      ** Account Transfer                                                                   MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRAccTrnsfr                                              MD052107
+     C                   ENDIF                                                              MD052107
+      ** Customer Exchange                                                                  MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRCustExchg                                              MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+      ** Held Items                                                                         MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRHeldItem                                               MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+      ** Journal Entry                                                                      MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRJrnEntry                                               MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+      ** Standing Journal                                                                   MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRStndJourn                                              MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+      ** Standing Orders                                                                    MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRStndOrdr                                               MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+      ** Stopped Cheque                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRStopChq                                                MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRJrnEntry - Retrieve Journal Entry                          *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRJrnEntry    BEGSR                                                              MD052107
       *
       ** Set file pointer to first record of GLJENPPD
       *
      C/exec SQL
      C+ declare GLLIST1 cursor for
-     C+ select BTBTNB, BTBINB  from GLJENPPD
+     C**********+ select BTBTNB, BTBINB  from GLJENPPD                                      MD052107
+     C+ select BTBTNB, BTBINB, BTDCIN from GLJENPPD                                         MD052107
      C+ where BTCYCD = :YyCcy and
      C+       BTNNBI = :XxNost
      C+ order by
@@ -180,30 +238,51 @@
      C/exec SQL
      C+ fetch next
      C+ from GLLIST1
-     C+ into :pBTBTNB, :pBTBINB
+     C**********+ into :pBTBTNB, :pBTBINB                                                   MD052107
+     C+ into :pBTBTNB, :pBTBINB, :pBTDCIN                                                   MD052107
      C/end-exec
 
      C                   DOW       SQLCode <> 100
 
-     C                   MOVEL     pBTBINB       nBTBINB
+     C**********         MOVEL     pBTBINB       nBTBINB                                    MD052107
+     C                   MOVE      pBTBINB       nBTBINB                                    MD052107
      C                   EVAL      APTRAN = 'Journal Entry'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1)+ ' ' + pBTBTNB +
-     C                             ' ' + nBTBINB
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1)+ ' ' + pBTBTNB +              MD052107
+     C**********                   ' ' + nBTBINB                                            MD052107
+     C                   IF        pBTDCIN = 'D'                                            MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN +                       MD052107
+     C                             ' Batch Number ' + pBTBTNB + ' ' + nBTBINB +             MD052107
+     C                             '                                  ' +                   MD052107
+     C                             NOTES(1)                                                 MD052107
+     C                   ELSE                                                               MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN +                       MD052107
+     C                             ' Batch Number ' + pBTBTNB + ' ' + nBTBINB +             MD052107
+     C                             '                                  ' +                   MD052107
+     C                             NOTES(2)                                                 MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
      C+ from GLLIST1
-     C+ into  :pBTBTNB, :pBTBINB
+     C**********+ into  :pBTBTNB, :pBTBINB                                                  MD052107
+     C+ into :pBTBTNB, :pBTBINB, :pBTDCIN                                                   MD052107
      C/end-exec
 
      C                   ENDDO
@@ -211,6 +290,15 @@
      C/exec SQL
      C+ close GLLIST1
      C/end-exec
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRAccTrnsfr - Retrieve Account Transfer                      *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRAccTrnsfr   BEGSR                                                              MD052107
       *
       **  Set file pointer to first record of GLATMIPD
       *
@@ -251,18 +339,28 @@
      C                   DOW       SQLCode <> 100
 
      C                   EVAL      APTRAN = 'Account Transfer'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pR1TREF +
-     C                              ' ' +  pR1TRTY + ' ' +  pR1TRST
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pR1TREF +             MD052107
+     C**********                    ' ' +  pR1TRTY + ' ' +  pR1TRST                         MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pR1TREF + '                       ' +                    MD052107
+     C                             pR1TRTY + ' ' +  pR1TRST                                 MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -275,6 +373,15 @@
      C/exec SQL
      C+ close GLLIST2
      C/end-exec
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRStopChq - Retrieve Stopped Cheque                          *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRStopChq     BEGSR                                                              MD052107
       *
       **  Set file pointer to first record of STOPCSD
       *
@@ -317,20 +424,30 @@
 
      C                   DOW       SQLCode <> 100
 
-     C                   MOVEL     pSTCR         nSTCR
+     C**********         MOVEL     pSTCR         nSTCR                                      MD052107
+     C                   MOVE      pSTCR         nSTCR                                      MD052107
      C                   EVAL      APTRAN = 'Stopped Cheque'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + nSTCR +
-     C                             ' ' + pSTPN
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + nSTCR +
+     C**********                   ' ' + pSTPN
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             nSTCR + ' ' + pSTPN                                      MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -343,6 +460,15 @@
      C/exec SQL
      C+ close GLLIST3
      C/end-exec
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRHeldItem - Retrieve Held Items                             *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRHeldItem    BEGSR                                                              MD052107
       *
       **  Set file pointer to first record of HELDIHB
       *
@@ -386,19 +512,29 @@
      C                   DOW       SQLCode <> 100
 
      C                   EVAL      APTRAN = 'Held Items'
-     C                   MOVEL     pHIRF         nHIRF
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + nHIRF +
-     C                             ' ' + pHLDN
+     C**********         MOVEL     pHIRF         nHIRF                                      MD052107
+     C                   MOVE      pHIRF         nHIRF                                      MD052107
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + nHIRF +               MD052107
+     C**********                   ' ' + pHLDN                                              MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             nHIRF + ' '+ pHLDN                                       MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -411,6 +547,15 @@
      C/exec SQL
      C+ close GLLIST4
      C/end-exec
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRStndOrdr - Retrieve Standing Orders                        *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRStndOrdr    BEGSR                                                              MD052107
       *
       **  Set file pointer to first record of STANDSB
       *
@@ -459,20 +604,30 @@
 
      C                   DOW       SQLCode <> 100
 
-     C                   MOVEL     pSTOR         nSTOR
+     C**********         MOVEL     pSTOR         nSTOR                                      MD052107
+     C                   MOVE      pSTOR         nSTOR                                      MD052107
      C                   EVAL      APTRAN = 'Standing Order'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1)+' ' + nSTOR +
-     C                              ' ' + pPNAR
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1)+' ' + nSTOR +
+     C**********                    ' ' + pPNAR
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             nSTOR + ' ' + pPNAR                                      MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -485,6 +640,15 @@
      C/exec SQL
      C+ close GLLIST5
      C/end-exec
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRCustExchg - Retrieve Customer Exchange                     *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRCustExchg   BEGSR                                                              MD052107
       *
       **  Set file pointer to first record of CUSEXCE
       *
@@ -534,17 +698,26 @@
      C                   DOW       SQLCode <> 100
 
      C                   EVAL      APTRAN = 'Customer Exchange'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pIPDN
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pIPDN                 MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pIPDN                                                    MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -557,11 +730,22 @@
      C/exec SQL
      C+ close GLLIST6
      C/end-exec
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRStndJourn - Retrieve Standing Journal                      *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRStndJourn   BEGSR                                                              MD052107
+      *                                                                                     MD052107
       ** Set file pointer to first record of GLJESPPD
       *
      C/exec SQL
      C+ declare GLLIST7 cursor for
-     C+ select BTBTNB, BTBINB  from GLJESPPD
+     C**********+ select BTBTNB, BTBINB  from GLJESPPD                                      MD052107
+     C+ select BTBTNB, BTBINB, BTDCIN from GLJESPPD                                         MD052107
      C+ where BTCYCD = :YyCcy and
      C+       BTNNBI = :XxNost
      C+ order by
@@ -589,16 +773,30 @@
      C/exec SQL
      C+ fetch next
      C+ from GLLIST7
-     C+ into :pBTBTNB, :pBTBINB
+     C**********+ into :pBTBTNB, :pBTBINB                                                   MD052107
+     C+ into :pBTBTNB, :pBTBINB, :pBTDCIN                                                   MD052107
      C/end-exec
 
      C                   DOW       SQLCode <> 100
 
      C**********         MOVEL     pBTBTNB       nBTBINB                                    MD042142
-     C                   MOVEL     pBTBINB       nBTBINB                                    MD042142
-     C                   EVAL      APTRAN = 'Spread Journal'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(2)+ ' ' + pBTBTNB +
-     C                              ' ' +  nBTBINB
+     C**********         MOVEL     pBTBINB       nBTBINB                           MD042142 MD052107
+     C                   MOVEL     pBTBINB       nBTBINB                                    MD052107
+     C**********         EVAL      APTRAN = 'Spread Journal'                                MD052107
+     C                   EVAL      APTRAN = 'Standing Journal'                              MD052107
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(2)+ ' ' + pBTBTNB +              MD052107
+     C**********                    ' ' +  nBTBINB                                          MD052107
+     C                   IF        pBTDCIN = 'D'                                            MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN +                       MD052107
+     C                             ' Batch Number ' + pBTBTNB + ' ' + nBTBINB +             MD052107
+     C                             '                                  ' +                   MD052107
+     C                             NOTES(1)                                                 MD052107
+     C                   ELSE                                                               MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN +                       MD052107
+     C                             ' Batch Number ' + pBTBTNB + ' ' + nBTBINB +             MD052107
+     C                             '                                  ' +                   MD052107
+     C                             NOTES(2)                                                 MD052107
+     C                   ENDIF                                                              MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
@@ -609,7 +807,8 @@
      C/exec SQL
      C+ fetch next
      C+ from GLLIST7
-     C+ into  :pBTBTNB, :pBTBINB
+     C**********+ into  :pBTBTNB, :pBTBINB                                                  MD052107
+     C+ into :pBTBTNB, :pBTBINB, :pBTDCIN                                                   MD052107
      C/end-exec
 
      C                   ENDDO
@@ -618,7 +817,8 @@
      C+ close GLLIST7
      C/end-exec
       *
-     C     VALEXIT       ENDSR
+     C**********     VALEXIT       ENDSR                                                    MD052107
+     C                   ENDSR                                                              MD052107
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -665,6 +865,8 @@
      C                   ENDIF                                                              MD048898
       *
      C                   ENDSR
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
       *****************************************************************
       *                                                               *
       *  SRRCFProc - RCF processing                                   *
@@ -714,6 +916,9 @@
       /EJECT
       *****************************************************************
 ** TXSTAT
-BLOCKING DELETION
-INFORMATION
-DEAD TRANSACTION
+BLOCKING NOSTRO ACCOUNT DELETION                                                            MD052107
+FOR INFORMATION ONLY                                                                        MD052107
+DEAD TRANSACTION TO BE REVIEWED                                                             MD052107
+** NOTES                                                                                    MD052107
+Debit                                                                                       MD052107
+Credit                                                                                      MD052107

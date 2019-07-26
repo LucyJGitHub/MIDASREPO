@@ -16,14 +16,16 @@
       *                                                               *
       *   (c) Finastra International Limited. 2017                    *
       *                                                               *
-      *  Last Amend No. MD051081           Date 29May18               *
-      *  Prev Amend No. MD042142           Date 08May18               *
+      *  Last Amend No. MD052107           Date 02Jul19               *
+      *  Prev Amend No. MD051081           Date 29May18               *
+      *                 MD042142           Date 08May18               *
       *                 MD038440A          Date 08May18               *
       *                 MD048898           Date 11Dec17               *
       *                 MD038440           Date 27Oct17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052107  - Reformat Nostro Account Activity Report Layout   *
       *  MD051081 - Program loop, semi colon missing                  *
       *  MD042142 - Refine MD038440 and MD048898 fixes.               *
       *           - Applied for MD038440A                             *
@@ -51,7 +53,9 @@
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
 
-     D  TXSTAT         S             20A   DIM(3) CTDATA PERRCD(1)
+     D**********  TXSTAT         S             20A   DIM(3) CTDATA PERRCD(1)                MD052107
+     D  TXSTAT         S             36A   DIM(3) CTDATA PERRCD(1)                          MD052107
+     D  NOTES          S             24A   DIM(2) CTDATA PERRCD(1)                          MD052107
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -76,6 +80,8 @@
      D pFEFCOD         S              2  0
      D nFEFSEQ         S              2A
      D nFEFCOD         S              2A
+     D pFEFACL         S              5  0                                                  MD052107
+     D nFEFACL         S              5A                                                    MD052107
      D**********pFALOANS              6A                                                    MD042142
      D pFAFACL         S              5  0                                                  MD042142
      D nFAFACL         S              5A                                                    MD042142
@@ -88,7 +94,8 @@
      D nFACT           S              2A
      D nFCNO           S              2A
      D KACNO           S             17A
-     D APTRAN          S             40A
+     D********** APTRAN          S             40A                                          MD052107
+     D APTRAN          S             31A                                                    MD052107
 
      D PSEQ            S              5
      D PSFILE          S             10
@@ -140,11 +147,16 @@
      C                                    YYBRCA + '-' + YYCNUM + '-' + YYCCY +
      C                                    '-' + YYACOD + '-' + YYACSQ
      C                   EVAL      KACNO= YYBRCA + YYCNUM + YYACOD + YYACSQ
+      *                                                                                     MD052107
+     C                   IF        PMODE <> 'V'                                             MD052107
      C                   WRITE     HEADP1
+     C                   ENDIF                                                              MD052107
       *
      C                   EXSR      SRValv
       *
+     C                   IF        PMODE <> 'V'                                             MD052107
      C                   WRITE     TRAILP1
+     C                   ENDIF                                                              MD052107
      C                   EVAL      *INLR = *ON
       *
      C                   RETURN
@@ -154,6 +166,40 @@
       *                                                               *
       *****************************************************************
      C     SRValv        BEGSR
+      *                                                                                     MD052107
+      **  Customer Lending                                                                  MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRCustLend                                               MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+      **  Fees                                                                              MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRLendFee                                                MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+      **  Fee Settlements                                                                   MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRFeeSett                                                MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+      **  Loan Events                                                                       MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRLoanEvnt                                               MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+      **  Rollovers                                                                         MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRRollOver                                               MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *  SRCustLend - Retrieve Customer Lending transactions          *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRCustLend    BEGSR                                                              MD052107
       *
       ** Set file pointer to first record of CLOANCL
       *
@@ -171,7 +217,8 @@
      C+       RECI = 'D' and                                                               MD038440A
      C+       PTYP in (61, 62, 63, 70, 80, 64, 65, 68, 71 )
      C+ order by
-     C+       LNRF
+     C**********+       LNRF                                                                MD052107
+     C+       LNRF, VDAT DESC, LTYP, SUTP                                                   MD052107
      C/end-exec
 
      C/exec SQL
@@ -204,39 +251,54 @@
      C                   EVAL      APTRAN = 'Customer Lending'
      C                   IF        PPONS = XXNOST                                          MD038440A
      C                   IF        PVDAT <  BJRDNB
-     C                   EVAL      DATAP = APTRAN + TXSTAT(3) + ' ' + pLNRF +
-     C                             ' ' + pLTYP + ' ' + pSUTP
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(3) + ' ' + pLNRF +               MD052107
+     C**********                   ' ' + pLTYP + ' ' + pSUTP                                MD052107
+     C                   EVAL      DATAP = TXSTAT(3) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pLNRF + '         ' + pLTYP + ' '  +                     MD052107
+     C                             pSUTP + '         ' + NOTES(2)                           MD052107
      C                   ELSE
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pLNRF +
-     C                             ' ' + pLTYP + ' ' + pSUTP
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pLNRF +               MD052107
+     C**********                   ' ' + pLTYP + ' ' + pSUTP                                MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pLNRF + '      ' + pLTYP + ' '  +                        MD052107
+     C                             pSUTP + '         ' + NOTES(2)                           MD052107
      C                   IF        PMODE = 'V'
      C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
+     C**********         GOTO      VALEXIT                                                  MD052107
      C                   ENDIF
      C                   ENDIF
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
+     C                   ENDIF                                                             MD052107
      C                   ENDIF                                                             MD038440A
       *                                                                                    MD038440A
      C                   IF        PRONS = XXNOST                                          MD038440A
      C                   IF        PVDAT <  BJRDNB                                         MD038440A
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pLNRF +              MD038440A
-     C                             ' ' + pLTYP + ' ' + pSUTP                               MD038440A
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pLNRF +     MD038440A MD052107
+     C**********                   ' ' + pLTYP + ' ' + pSUTP                      MD038440A MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pLNRF + '         ' + pLTYP + ' '  +                     MD052107
+     C                             pSUTP + '         ' + NOTES(1)                           MD052107
      C                   IF        PMODE = 'V'                                             MD038440A
      C                   EVAL      XxRtn  = 'R'                                            MD038440A
-     C                   GOTO      VALEXIT                                                 MD038440A
+     C**********         GOTO      VALEXIT                                        MD038440A MD052107
      C                   ENDIF                                                             MD038440A
      C                   ENDIF                                                             MD038440A
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON                                             MD038440A
      C                   WRITE     HEADP1                                                  MD038440A
      C                   EVAL      *IN60 = *OFF                                            MD038440A
      C                   ENDIF                                                             MD038440A
       *                                                                                    MD038440A
      C                   WRITE     DETAIL1                                                 MD038440A
+     C                   ENDIF                                                              MD052107
      C                   ENDIF                                                             MD038440A
 
      C/exec SQL
@@ -266,7 +328,8 @@
      C+       RECI = 'D' and                                                               MD038440A
      C+       PTYP in (66, 67, 69, 72)                                                     MD038440A
      C+ order by
-     C+       LNRF
+     C**********+       LNRF                                                                MD052107
+     C+       LNRF, VDAT DESC, LTYP, SUTP                                                   MD052107
      C/end-exec
 
      C/exec SQL
@@ -299,39 +362,54 @@
      C                   EVAL      APTRAN = 'Customer Lending'
      C                   IF        PRONS =  XXNOST                                         MD038440A
      C                   IF        PVDAT <  BJRDNB
-     C                   EVAL      DATAP = APTRAN + TXSTAT(3) + ' ' + pLNRF +
-     C                             ' ' + pLTYP + ' ' + pSUTP
+     C***********        EVAL      DATAP = APTRAN + TXSTAT(3) + ' ' + pLNRF +               MD052107
+     C***********                  ' ' + pLTYP + ' ' + pSUTP                                MD052107
+     C                   EVAL      DATAP = TXSTAT(3) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pLNRF + '         ' + pLTYP + ' '  +                     MD052107
+     C                             pSUTP + '         ' + NOTES(1)                           MD052107
      C                   ELSE
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pLNRF +
-     C                             ' ' + pLTYP + ' ' + pSUTP
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pLNRF +               MD052107
+     C**********                   ' ' + pLTYP + ' ' + pSUTP                                MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pLNRF + '         ' + pLTYP + ' '  +                     MD052107
+     C                             pSUTP + '         ' + NOTES(1)                           MD052107
      C                   IF        PMODE = 'V'
      C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
+     C**********         GOTO      VALEXIT                                                  MD052107
      C                   ENDIF
      C                   ENDIF
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
+     C                   ENDIF                                                              MD052107
      C                   ENDIF                                                             MD038440A
       *                                                                                    MD038440A
      C                   IF        PPONS =  XXNOST                                         MD038440A
      C                   IF        PVDAT <  BJRDNB                                         MD038440A
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pLNRF +              MD038440A
-     C                             ' ' + pLTYP + ' ' + pSUTP                               MD038440A
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pLNRF +     MD038440A MD052107
+     C**********                   ' ' + pLTYP + ' ' + pSUTP                      MD038440A MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pLNRF + '         ' + pLTYP + ' '  +                     MD052107
+     C                             pSUTP + '         ' + NOTES(2)                           MD052107
      C                   IF        PMODE = 'V'                                             MD038440A
      C                   EVAL      XxRtn  = 'R'                                            MD038440A
-     C                   GOTO      VALEXIT                                                 MD038440A
+     C**********         GOTO      VALEXIT                                                 MD038440A
      C                   ENDIF                                                             MD038440A
      C                   ENDIF                                                             MD038440A
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON                                             MD038440A
      C                   WRITE     HEADP1                                                  MD038440A
      C                   EVAL      *IN60 = *OFF                                            MD038440A
      C                   ENDIF                                                             MD038440A
       *                                                                                    MD038440A
      C                   WRITE     DETAIL1                                                 MD038440A
+     C                   ENDIF                                                              MD052107
      C                   ENDIF                                                             MD038440A
 
      C/exec SQL
@@ -347,17 +425,28 @@
      C/exec SQL
      C+ close LELIST1B
      C/end-exec
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *  SRLendFee - Retrieve Customer Lending Fees                   *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRLendFee     BEGSR                                                              MD052107
+      *                                                                                     MD052107
       ** Set file pointer to first record of LEFEED
       *
      C/exec SQL
      C+ declare LELIST2  cursor for
-     C+ select FELOAN, FEFSEQ, FEFCOD from LEFEED
+     C**********+ select FELOAN, FEFSEQ, FEFCOD from LEFEED                                 MD052107
+     C+ select FEFACL, FELOAN, FEFSEQ, FEFCOD from LEFEED                                   MD052107
      C+ where FEFCCY = :YyCcy and
      C+       RONS = :XxNost or
      C+       FEFCCY = :YyCcy and
      C+       FEOURS = :XxNost
      C+ order by
-     C+       FELOAN
+     C**********+       FELOAN                                                              MD052107
+     C+       FEFACL DESC, FELOAN                                                           MD052107
      C/end-exec
 
      C/exec SQL
@@ -381,31 +470,53 @@
      C/exec SQL
      C+ fetch next
      C+ from LELIST2
-     C+ into :pFELOAN, :pFEFSEQ, :pFEFCOD
+     C**********+ into :pFELOAN, :pFEFSEQ, :pFEFCOD                                         MD052107
+     C+ into :pFEFACL, :pFELOAN, :pFEFSEQ, :pFEFCOD                                         MD052107
      C/end-exec
 
      C                   DOW       SQLCode <> 100
 
-     C                   MOVEL     pFEFSEQ       nFEFSEQ
-     C                   MOVEL     pFEFCOD       nFEFCOD
-     C                   EVAL      APTRAN = 'Fees'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1)+ ' ' + pFELOAN +
-     C                             ' ' +  nFEFSEQ + ' ' + nFEFCOD
+     C**********         MOVEL     pFEFSEQ       nFEFSEQ                                    MD052107
+     C**********         MOVEL     pFEFCOD       nFEFCOD                                    MD052107
+     C                   MOVE      pFEFSEQ       nFEFSEQ                                    MD052107
+     C                   MOVE      pFEFCOD       nFEFCOD                                    MD052107
+     C**********         EVAL      APTRAN = 'Fees'                                          MD052107
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1)+ ' ' + pFELOAN +              MD052107
+     C**********                   ' ' +  nFEFSEQ + ' ' + nFEFCOD                           MD052107
+     C                   IF        pFEFACL <> 0                                             MD052107
+     C                   MOVE      pFEFACL       nFEFACL                                    MD052107
+     C                   EVAL      APTRAN = 'Facility Fee'                                  MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             nFEFACL + ' ' + nFEFSEQ + ' '  +                         MD052107
+     C                             nFEFCOD                                                  MD052107
+     C                   ELSE                                                               MD052107
+     C                   EVAL      APTRAN = 'Loan Fee'                                      MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pFELOAN + ' ' + nFEFSEQ + ' '  +                         MD052107
+     C                             nFEFCOD                                                  MD052107
+     C                   ENDIF                                                              MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
      C+ from LELIST2
-     C+ into :pFELOAN, :pFEFSEQ, :pFEFCOD
+     C**********+ into :pFELOAN, :pFEFSEQ, :pFEFCOD                                         MD052107
+     C+ into :pFEFACL, :pFELOAN, :pFEFSEQ, :pFEFCOD                                         MD052107
      C/end-exec
 
      C                   ENDDO
@@ -413,6 +524,14 @@
      C/exec SQL
      C+ close LELIST2
      C/end-exec
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      ***********************t*****************************************                     MD052107
+      *  SRFeeSett - Retrieve Fee Settlements                         *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRFeeSett     BEGSR                                                              MD052107
       *
       ** Set file pointer to first record of LEFEEAD
       *
@@ -420,10 +539,16 @@
      C+ declare LELIST3  cursor for
      C**********+ select FALOAN, FAFSEQ   from LEFEEAD                                      MD042142
      C+ select FAFACL, FAFSEQ   from LEFEEAD                                                MD042142
-     C+ where FAFCCY = :YyCcy and
-     C+       RONS = :XxNost or
-     C+       FAFCCY = :YyCcy and
-     C+       FAOURS = :XxNost
+     C+ where (FAFCCY = :YyCcy and                                                          MD052107
+     C+       FAOURS = :XxNost) or                                                          MD052107
+     C+       (FASCCY = :YyCcy and                                                          MD052107
+     C+       FAOURS = :XxNost) or                                                          MD052107
+     C+       (FAICCY = :XxNost and                                                         MD052107
+     C+       FAOURS = :XxNost)                                                             MD052107
+     C**********+ where FAFCCY = :YyCcy and                                                 MD052107
+     C**********+       RONS = :XxNost or                                                   MD052107
+     C**********+       FAFCCY = :YyCcy and                                                 MD052107
+     C**********+       FAOURS = :XxNost                                                    MD052107
      C+ order by
      C********FALOAN                                                                        MD042142
      C+       FAFACL                                                                        MD042142
@@ -456,22 +581,32 @@
 
      C                   DOW       SQLCode <> 100
 
-     C                   MOVEL     pFAFSEQ       nFAFSEQ
-     C                   MOVEL     pFAFACL       nFAFACL                                    MD042142
+     C**********         MOVEL     pFAFSEQ       nFAFSEQ                                    MD052107
+     C**********         MOVEL     pFAFACL       nFAFACL                           MD042142 MD052107
+     C                   MOVE      pFAFSEQ       nFAFSEQ                                    MD052107
+     C                   MOVE      pFAFACL       nFAFACL                                    MD052107
      C                   EVAL      APTRAN = 'Fee Settlements'
      C**********         EVAL      DATAP = APTRAN + TXSTAT(1)+ ' ' + pFALOAN +              MD042142
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1)+ ' ' + nFAFACL +              MD042142
-     C                             ' ' + nFAFSEQ
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1)+ ' ' + nFAFACL +     MD042142 MD052107
+     C**********                   ' ' + nFAFSEQ                                            MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             nFAFACL + ' ' + nFAFSEQ                                  MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -485,6 +620,14 @@
      C/exec SQL
      C+ close LELIST3
      C/end-exec
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      ***********************t*****************************************                     MD052107
+      *  SRLoanEvnt - Retrieve Loan Events                            *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRLoanEvnt    BEGSR                                                              MD052107
       *
       ** Set file pointer to first record of LOAMSDK
       *
@@ -540,18 +683,27 @@
      C                   DOW       SQLCode <> 100
 
      C                   EVAL      APTRAN = 'Loan Events'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pLNRF +
-     C                             ' ' + pLTYP +      ' ' + pSUTP
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pLNRF +               MD052107
+     C**********                   ' ' + pLTYP +      ' ' + pSUTP                           MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pLNRF + '         ' + pLTYP + ' '  +                     MD052107
+     C                             pSUTP                                                    MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -564,6 +716,14 @@
      C/exec SQL
      C+ close LELIST4
      C/end-exec
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      ***********************t*****************************************                     MD052107
+      *  SRRollOver - Retrieve Rollovers                              *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRRollOver    BEGSR                                                              MD052107
       *
       ** Set file pointer to first record of CLOANCK
       *
@@ -605,17 +765,25 @@
      C                   DOW       SQLCode <> 100
 
      C                   EVAL      APTRAN = 'Rollover'
-     C                   EVAL      DATAP = APTRAN +  TXSTAT(1) + ' ' + pLNRF
+     C**********         EVAL      DATAP = APTRAN +  TXSTAT(1) + ' ' + pLNRF                MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pLNRF                                                    MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -628,6 +796,14 @@
      C/exec SQL
      C+ close LELIST7
      C/end-exec
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      ***********************t*****************************************                     MD052107
+      *  SRFacility - Retrieve Facility                               *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRFacility    BEGSR                                                              MD052107
       *
       ** Set file pointer to first record of FCLTYFM
       *
@@ -671,18 +847,27 @@
      C                   MOVEL     pFACT         nFACT
      C                   MOVEL     pFCNO         nFCNO
      C                   EVAL      APTRAN = 'Facility'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pCNUM +
-     C                               ' ' +   nFACT + ' ' +  nFCNO
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pCNUM +               MD052107
+     C**********                     ' ' +   nFACT + ' ' +  nFCNO                           MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pCNUM + ' ' + nFACT + ' '                                MD052107
+     C                             + nFCNO                                                  MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -696,7 +881,8 @@
      C+ close LELIST8
      C/end-exec
       *
-     C     VALEXIT       ENDSR
+     C**********     VALEXIT       ENDSR                                                    MD052107
+     C                   ENDSR                                                              MD052107
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -738,6 +924,8 @@
      C                   ENDIF                                                              MD048898
       *
      C                   ENDSR
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
       *****************************************************************
       *                                                               *
       *  SRRCFProc - RCF processing                                   *
@@ -787,6 +975,9 @@
       /EJECT
       ********************************************************************
 ** TXSTAT
-BLOCKING DELETION
-INFORMATION
-DEAD TRANSACTION
+BLOCKING NOSTRO ACCOUNT DELETION                                                            MD052107
+FOR INFORMATION ONLY                                                                        MD052107
+DEAD TRANSACTION TO BE REVIEWED                                                             MD052107
+** NOTES                                                                                    MD052107
+Receiving Settlement Leg                                                                    MD052107
+Pay Settlement Leg                                                                          MD052107

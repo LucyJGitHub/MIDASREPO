@@ -7,7 +7,8 @@
       *                                                               *
       *  Midas - Standing Data ILE Module                             *
       *                                                               *
-      *  SD0152FT - Nostro Account Activity   - FT.                   *
+      ***SD0152FT*-*Nostro*Account*Activity***-*FT.********************                     MD052107
+      *  SD000152FT - Nostro Account Activity - FT.                   *                     MD052107
       *                                                               *
       *  Function:  This program checks if a Nostro is used by        *
       *             a Fund Transfer transactions.                     *
@@ -16,13 +17,15 @@
       *                                                               *
       *   (c) Finastra International Limited. 2017                    *
       *                                                               *
-      *  Last Amend No. MD042142           Date 08May18               *
-      *  Prev Amend No. MD038440A          Date 08May18               *
+      *  Last Amend No. MD052107           Date 02Jul19               *
+      *  Prev Amend No. MD042142           Date 08May18               *
+      *                 MD038440A          Date 08May18               *
       *                 MD048898           Date 11Dec17               *
       *                 MD038440           Date 27Oct17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052107  - Reformat Nostro Account Activity Report Layout   *
       *  MD042142 - Refine MD038440 and MD048898 fixes.               *
       *           - Applied for MD038440A                             *
       *  MD038440A - Date on report missing. Retrieve SDBANK          *
@@ -48,7 +51,9 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-     D  TXSTAT         S             20A   DIM(3) CTDATA PERRCD(1)
+     D**********  TXSTAT         S             20A   DIM(3) CTDATA PERRCD(1)                MD052107
+     D  TXSTAT         S             36A   DIM(3) CTDATA PERRCD(1)                          MD052107
+     D  NOTES          S             24A   DIM(2) CTDATA PERRCD(1)                          MD052107
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -127,11 +132,17 @@
      C                                    YYBRCA + '-' + YYCNUM + '-' + YYCCY +
      C                                    '-' + YYACOD + '-' + YYACSQ
      C                   EVAL      KACNO= YYBRCA + YYCNUM + YYACOD + YYACSQ
+      *                                                                                     MD052107
+     C                   IF        PMODE <> 'V'                                             MD052107
      C                   WRITE     HEADP1
+     C                   ENDIF                                                              MD052107
       *
      C                   EXSR      SRValv
       *
+     C                   IF        PMODE <> 'V'                                             MD052107
      C                   WRITE     TRAILP1
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
      C                   EVAL      *INLR = *ON
       *
      C                   RETURN
@@ -141,6 +152,66 @@
       *                                                               *
       *****************************************************************
      C     SRValv        BEGSR
+      *                                                                                     MD052107
+      ** Cheques for Collection (Debit)                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRChqColDr                                               MD052107
+     C                   ENDIF                                                              MD052107
+      ** Cheques for Collection (Credit)                                                    MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRChqColCr                                               MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+      ** Cheques to be Paid (Debit)                                                         MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRChqPayDr                                               MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+      ** Cheques to be Paid (Crebit)                                                        MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRChqPayCr                                               MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+      ** Ext. Settlement Instruction                                                        MD052107
+     C                   IF        CFT045 = 'Y'                                             MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRExSett                                                 MD052107
+     C                   ENDIF                                                              MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+      ** Incoming Payment                                                                   MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRInPaymnt                                               MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+      ** Nostro Transfers                                                                   MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SRNosTrnsfr                                              MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+      ** Outgoing Payment                                                                   MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+     C                   EXSR      SROutPaymnt                                              MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        CFT006 = 'Y'                                             MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
+      ** Request for Transfer                                                               MD052107
+     C                   EXSR      SRReqTrnsfr                                              MD052107
+      ** Customer Credit Transfer                                                           MD052107
+     C                   EXSR      SRCusCrTrnsfr                                            MD052107
+     C                   ENDIF                                                              MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SROutPaymnt  - Retrieve Outgoing Payments                    *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SROutPaymnt   BEGSR                                                              MD052107
       *
       ** Set file pointer to first record of OTPAYDD
       *
@@ -161,7 +232,8 @@
      C+       ORC1 = :FulNost  and
      C+       RECI = 'D'
      C+ order by
-     C+       PREF
+     C**********+       PREF                                                                MD052107
+     C+       PREF, PYTP, PYST                                                              MD052107
      C/end-exec
 
      C/exec SQL
@@ -191,18 +263,28 @@
      C                   DOW       SQLCode <> 100
 
      C                   EVAL      APTRAN = 'Outgoing Payment'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pPREF +
-     C                             ' ' + pPYTP +  ' ' + pPYST
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pPREF +
+     C**********                   ' ' + pPYTP +  ' ' + pPYST
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pPREF + '  ' + pPYTP + ' '                               MD052107
+     C                              + pPYST                                                 MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -215,6 +297,15 @@
      C/exec SQL
      C+ close FTLIST1
      C/end-exec
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRInPaymnt  - Retrieve Incoming Payments                     *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRInPaymnt    BEGSR                                                              MD052107
       *
       ** Set file pointer to first record of INPAYDD
       *
@@ -238,7 +329,8 @@
      C+       INB1 = :FulNost   and
      C+       RECI = 'D'
      C+ order by
-     C+       PREF
+     C**********+       PREF                                                                MD052107
+     C+       PREF, PYTP, PYST                                                              MD052107
      C/end-exec
 
      C/exec SQL
@@ -268,18 +360,28 @@
      C                   DOW       SQLCode <> 100
 
      C                   EVAL      APTRAN = 'Incoming Payment'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pPREF +
-     C                             ' ' + pPYTP + ' ' + pPYST
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pPREF +               MD052107
+     C**********                   ' ' + pPYTP + ' ' + pPYST                                MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pPREF + '  ' + pPYTP + ' '                               MD052107
+     C                              + pPYST                                                 MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -292,6 +394,15 @@
      C/exec SQL
      C+ close FTLIST2
      C/end-exec
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRChqColDr  - Retrieve Cheques for Collection (Debit)        *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRChqColDr    BEGSR                                                              MD052107
       *
       ** Set file pointer to first record of CQCODDD
       *
@@ -302,7 +413,8 @@
      C+       RCCO = :XxNost or
      C+       COB1 = :FulNost
      C+ order by
-     C+       PREF
+     C**********+       PREF                                                                MD052107
+     C+       PREF, PYTP, PYST                                                              MD052107
      C/end-exec
 
      C/exec SQL
@@ -332,18 +444,28 @@
      C                   DOW       SQLCode <> 100
 
      C                   EVAL      APTRAN = 'Cheques for Collection'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pPREF +
-     C                             ' ' + pPYTP + ' ' + pPYST
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pPREF +               MD052107
+     C**********                   ' ' + pPYTP + ' ' + pPYST                                MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pPREF + '  ' + pPYTP + ' '                               MD052107
+     C                              + pPYST + '         ' + NOTES(1)                        MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -356,12 +478,22 @@
      C/exec SQL
      C+ close FTLIST3
      C/end-exec
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRChqColCr  - Retrieve Cheques for Collection (Credit)       *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRChqColCr    BEGSR                                                              MD052107
       *
       ** Set file pointer to first record of CQCOCDD
       *
      C/exec SQL
      C+ declare FTLIST4 cursor for
-     C+ select PREF, CQSQ, CRPT from CQCOCDD
+     C**********+ select PREF, CQSQ, CRPT from CQCOCDD                                      MD052107
+     C+ select PREF from CQCOCDD                                                            MD052107
      C+ where CRCY = :YyCcy and
      C+       CRPY  = :XxNost or
      C+       CRCY = :YyCcy and
@@ -391,29 +523,40 @@
      C/exec SQL
      C+ fetch next
      C+ from FTLIST4
-     C+ into :pPREF, :pPYTP, :pPYST
+     C**********+ into :pPREF, :pPYTP, :pPYST                                               MD052107
+     C+ into :pPREF                                                                         MD052107
      C/end-exec
 
      C                   DOW       SQLCode <> 100
 
      C                   EVAL      APTRAN = 'Cheques for Collection'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' '  + pPREF +
-     C                              ' ' + pPYTP +   ' ' + pPYST
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pPREF +               MD052107
+     C**********                   ' ' + pPYTP + ' ' + pPYST                                MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pPREF + '                ' + NOTES(2)                    MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
      C+ from FTLIST4
-     C+ into :pPREF, :pPYTP, :pPYST
+     C**********+ into :pPREF, :pPYTP, :pPYST                                               MD052107
+     C+ into :pPREF                                                                         MD052107
      C/end-exec
 
      C                   ENDDO
@@ -421,6 +564,15 @@
      C/exec SQL
      C+ close FTLIST4
      C/end-exec
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRChqPayCr  - Retrieve Cheques to be Paid (Credit)           *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRChqPayCr    BEGSR                                                              MD052107
       *
       ** Set file pointer to first record of CQPACDD
       *
@@ -435,7 +587,8 @@
      C+       RCO1 = :FulNost or
      C+       ACB1 = :FulNost
      C+ order by
-     C+       PREF
+     C**********+       PREF                                                                MD052107
+     C+       PREF, PYTP, PYST                                                              MD052107
      C/end-exec
 
      C/exec SQL
@@ -464,19 +617,30 @@
 
      C                   DOW       SQLCode <> 100
 
-     C                   EVAL      APTRAN = 'Cheques for Paid'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pPREF +
-     C                             ' ' + pPYTP + ' ' + pPYST
+     C**********         EVAL      APTRAN = 'Cheques for Paid'                              MD052107
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pPREF +               MD052107
+     C**********                   ' ' + pPYTP + ' ' + pPYST                                MD052107
+     C                   EVAL      APTRAN = 'Cheques to be Paid'                            MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pPREF + '  ' + pPYTP + ' '                               MD052107
+     C                              + pPYST + '         ' + NOTES(2)                        MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -489,6 +653,15 @@
      C/exec SQL
      C+ close FTLIST5
      C/end-exec
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRChqPayDr  - Retrieve Cheques to be Paid (Debit)            *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRChqPayDr    BEGSR                                                              MD052107
       *
       ** Set file pointer to first record of CQPADDD
       *
@@ -529,18 +702,28 @@
 
      C                   DOW       SQLCode <> 100
 
-     C                   EVAL      APTRAN = 'Cheques for Paid'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pPREF
+     C**********         EVAL      APTRAN = 'Cheques for Paid'                              MD052107
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pPREF                 MD052107
+     C                   EVAL      APTRAN = 'Cheques to be Paid'                            MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pPREF + '                ' + NOTES(1)                    MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -553,10 +736,17 @@
      C/exec SQL
      C+ close FTLIST6
      C/end-exec
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRExSett  - Retrieve Extended Settlement Instruction         *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRExSett      BEGSR                                                              MD052107
       *
       ** Set file pointer to first record of SDOPESPD
-      *
-     C                   IF        CFT045 = 'Y'
       *
      C/exec SQL
      C+ declare FTLIST7 cursor for
@@ -595,7 +785,9 @@
 
      C                   EVAL      APTRAN = 'Ext. Settlement Instruction'
      C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pESESIN               MD042142
-     C                   EVAL      DATAP = APTRAN + TXSTAT(2) + ' ' + pESESIN               MD042142
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(2) + ' ' + pESESIN      MD042142 MD052107
+     C                   EVAL      DATAP = TXSTAT(2) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pESESIN                                                  MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
@@ -614,8 +806,15 @@
      C/exec SQL
      C+ close FTLIST7
      C/end-exec
-
-     C                   ENDIF
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRNosTrnsfr  - Retrieve Nostro Transfers                     *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRNosTrnsfr   BEGSR                                                              MD052107
       *
       ** Set file pointer to first record of NTRANDD
       *
@@ -627,7 +826,8 @@
      C+       CCY = :YyCcy and
      C+       ACBN = :XxNost
      C+ order by
-     C+       TFRF
+     C**********+       TFRF                                                                MD052107
+     C+       TFRF, PYTP, PYST                                                              MD052107
      C/end-exec
 
      C/exec SQL
@@ -657,18 +857,28 @@
      C                   DOW       SQLCode <> 100
 
      C                   EVAL      APTRAN = 'Nostro Transfers'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pPREF +
-     C                              ' ' + pPYTP +  ' ' + pPYST
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pPREF +               MD052107
+     C**********                    ' ' + pPYTP +  ' ' + pPYST                              MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pPREF + '  ' + pPYTP + ' '                               MD052107
+     C                              + pPYST                                                 MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -681,17 +891,26 @@
      C/exec SQL
      C+ close FTLIST8
      C/end-exec
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRReqTrnsfr  - Retrieve Request for Transfer                 *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRReqTrnsfr   BEGSR                                                              MD052107
       *
       ** Set file pointer to first record of FT101HPD
       *
-     C                   IF        CFT006 = 'Y'
      C/exec SQL
      C+ declare FTLIST9 cursor for
      C+ select RFTID, PYTP, PYST   from FT101HPD
      C+ where HOCUS1 = :FulNost or
      C+       RFTDST = :FulNost
      C+ order by
-     C+       RFTID
+     C**********+       RFTID                                                               MD052107
+     C+       RFTID, PYTP, PYST                                                             MD052107
      C/end-exec
 
      C/exec SQL
@@ -721,18 +940,28 @@
      C                   DOW       SQLCode <> 100
 
      C                   EVAL      APTRAN = 'Request for Transfer'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pRFTID +
-     C                             ' ' + pPYTP +   ' ' + pPYST
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pRFTID +              MD052107
+     C**********                   ' ' + pPYTP +   ' ' + pPYST                              MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pPREF + '  ' + pPYTP + ' '                               MD052107
+     C                              + pPYST                                                 MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -745,10 +974,17 @@
      C/exec SQL
      C+ close FTLIST9
      C/end-exec
+     C                   ENDSR                                                              MD052107
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
+      *****************************************************************                     MD052107
+      *                                                               *                     MD052107
+      *  SRCusCrTrnsfr - Retrieve Customer Credit Transfer            *                     MD052107
+      *                                                               *                     MD052107
+      *****************************************************************                     MD052107
+     C     SRCusCrTrnsfr BEGSR                                                              MD052107
       *
       ** Set file pointer to first record of FT102HPD
-      *
-     C
       *
      C/exec SQL
      C+ declare FTLIST10 cursor for
@@ -756,7 +992,8 @@
      C+ where TOCUS1 = :FulNost or
      C+       CCTDST = :FulNost
      C+ order by
-     C+       FILREF
+     C**********+       FILREF                                                              MD052107
+     C+       FILREF, CCTTYP, CCTTST                                                        MD052107
      C/end-exec
 
      C/exec SQL
@@ -786,18 +1023,28 @@
      C                   DOW       SQLCode <> 100
 
      C                   EVAL      APTRAN = 'Customer Credit Transfer'
-     C                   EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pFILREF +
-     C                                   ' ' +  pCCTTYP +   ' ' + pCCTTST
+     C**********         EVAL      DATAP = APTRAN + TXSTAT(1) + ' ' + pFILREF +             MD052107
+     C**********                         ' ' +  pCCTTYP +   ' ' + pCCTTST                   MD052107
+     C                   EVAL      DATAP = TXSTAT(1) + ' ' + APTRAN + ' ' +                 MD052107
+     C                             pFILREF + '  ' + pCCTTYP + ' '                           MD052107
+     C                              + pCCTTST                                               MD052107
+      *                                                                                     MD052107
+     C                   IF        PMODE = 'V'                                              MD052107
+     C                   EVAL      XxRtn  = 'R'                                             MD052107
+     C                   ENDIF                                                              MD052107
+      *                                                                                     MD052107
+     C                   IF        XxRtn <> 'R'                                             MD052107
      C                   IF        *IN60 = *ON
      C                   WRITE     HEADP1
      C                   EVAL      *IN60 = *OFF
      C                   ENDIF
       *
      C                   WRITE     DETAIL1
-     C                   IF        PMODE = 'V'
-     C                   EVAL      XxRtn  = 'R'
-     C                   GOTO      VALEXIT
-     C                   ENDIF
+     C                   ENDIF                                                              MD052107
+     C**********         IF        PMODE = 'V'                                              MD052107
+     C**********         EVAL      XxRtn  = 'R'                                             MD052107
+     C**********         GOTO      VALEXIT                                                  MD052107
+     C**********         ENDIF                                                              MD052107
 
      C/exec SQL
      C+ fetch next
@@ -810,9 +1057,8 @@
      C/exec SQL
      C+ close FTLIST10
      C/end-exec
-     C                   ENDIF
-      *
-     C     VALEXIT       ENDSR
+     C**********     VALEXIT       ENDSR                                                    MD052107
+     C                   ENDSR                                                              MD052107
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -880,6 +1126,8 @@
      C                   ENDIF                                                              MD048898
       *
      C                   ENDSR
+      *****************************************************************                     MD052107
+      /EJECT                                                                                MD052107
       *****************************************************************
       *                                                               *
       *  SRRCFProc - RCF processing                                   *
@@ -929,6 +1177,9 @@
       /EJECT
       *****************************************************************
 ** TXSTAT
-BLOCKING DELETION
-INFORMATION
-DEAD TRANSACTION
+BLOCKING NOSTRO ACCOUNT DELETION                                                            MD052107
+FOR INFORMATION ONLY                                                                        MD052107
+DEAD TRANSACTION TO BE REVIEWED                                                             MD052107
+** NOTES                                                                                    MD052107
+Debit                                                                                       MD052107
+Credit                                                                                      MD052107

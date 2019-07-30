@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1021393          Date 13Nov18               *
-      *  Prev Amend No. 224697             Date 13Nov18               *
+      *  Last Amend No. MD053978           Date 25Jul19               *
+      *  Prev Amend No. AR1021393          Date 13Nov18               *
+      *                 224697             Date 13Nov18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034366           Date 09Sep15               *
       *                 MD042832           Date 23Nov16               *
@@ -130,6 +131,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053978 - Cannot amend TI account flag from Y to N.         *
+      *           - Missing codes by MD034725.                        *
       *  AR1021393 - Wrong balances on account statement. Use balance *
       *              from GLACBTPD only if a/c not opened on rundate. *
       *              (Child: AR1021396)                               *
@@ -2794,6 +2797,13 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   EVAL      AC_A5TIAN=AMA5TIAN
      C                   EVAL      AC_A5TIAS=AMA5TIAS
      C                   ENDIF
+      *                                                                                     MD053978
+      ** If CTI006 is on, save TI field                                                     MD053978
+      *                                                                                     MD053978
+     C                   IF        CTI006 = 'Y'                                             MD053978
+     C                   EVAL      AC_A5TIAC = AMA5TIAC                                     MD053978
+     C                   ENDIF                                                              MD053978
+      *                                                                                     MD053978
       ** If International Banking Account Numer is on (CFT004)                  CFT004
       ** move field in.                                                         CFT004
      C                   IF        CFT004='Y'                                   CFT004
@@ -7298,7 +7308,7 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
       /EJECT                                                                                  CSD015
       *****************************************************************                       CSD015
 **  CPY@
-(c) Finastra International Limited 2001            
+(c) Finastra International Limited 2001
 ** CMD1
 OVRDBF FILE(GLACSHL0) TOFILE(GLACSHL0) SHARE(*NO)
 ** CMD2
